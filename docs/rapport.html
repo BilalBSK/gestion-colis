@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Rapport - Gestion des colis et optimisation du chargement d'un camion</title>
+<style>
+  /* Mise en page sobre, type document Word : texte noir sur fond blanc */
+  @page {
+    size: A4;
+    margin: 2.5cm 2.5cm 2.5cm 2.5cm;
+    @bottom-center { content: counter(page); font-family: Arial, Helvetica, sans-serif; font-size: 10pt; }
+  }
+  @page :first { @bottom-center { content: none; } }
+
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; line-height: 1.5; color: #000; background: #fff; }
+  h1 { font-size: 16pt; font-weight: bold; margin: 0 0 14pt 0; page-break-before: always; }
+  h2 { font-size: 13pt; font-weight: bold; margin: 20pt 0 8pt 0; page-break-after: avoid; }
+  h3 { font-size: 11pt; font-weight: bold; margin: 14pt 0 6pt 0; page-break-after: avoid; }
+  p  { margin: 0 0 9pt 0; text-align: justify; }
+  ul, ol { margin: 0 0 9pt 0; padding-left: 22pt; }
+  li { margin-bottom: 3pt; }
+
+  table { border-collapse: collapse; width: 100%; margin: 6pt 0 14pt 0; font-size: 10pt; page-break-inside: avoid; }
+  th, td { border: 1px solid #000; padding: 4pt 6pt; text-align: left; vertical-align: top; }
+  th { font-weight: bold; background: #fff; }
+
+  code, pre { font-family: "Courier New", Courier, monospace; font-size: 9.5pt; }
+  pre { border: 1px solid #000; padding: 6pt 8pt; margin: 6pt 0 12pt 0; white-space: pre-wrap; page-break-inside: avoid; }
+
+  figure { margin: 10pt 0 16pt 0; text-align: center; page-break-inside: avoid; }
+  figure img { max-width: 100%; border: 1px solid #000; }
+  figcaption { font-size: 10pt; font-style: italic; margin-top: 4pt; }
+
+  /* Page de garde */
+  .garde { height: 24cm; display: flex; flex-direction: column; justify-content: center; text-align: center; }
+  .garde .matiere { font-size: 13pt; margin-bottom: 30pt; }
+  .garde .titre { font-size: 22pt; font-weight: bold; line-height: 1.3; margin-bottom: 12pt; }
+  .garde .sous-titre { font-size: 14pt; margin-bottom: 60pt; }
+  .garde table { width: auto; margin: 0 auto; font-size: 11pt; }
+  .garde td { white-space: nowrap; }
+  .garde td { border: none; padding: 3pt 6pt; }
+  .garde td:first-child { font-weight: bold; text-align: right; width: 40%; }
+
+  /* Sommaire */
+  .sommaire ol { list-style: none; padding-left: 0; }
+  .sommaire li { margin-bottom: 5pt; }
+  .sommaire ol ol { padding-left: 18pt; margin-top: 3pt; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- PAGE DE GARDE                                                -->
+<!-- ============================================================ -->
+<div class="garde">
+  <div class="matiere">Projet informatique</div>
+  <div class="titre">Gestion des colis et optimisation<br>du chargement d'un camion</div>
+  <div class="sous-titre">Rapport technique</div>
+  <table>
+    <tr><td>Auteur :</td><td>[Prénom NOM]</td></tr>
+    <tr><td>Langage :</td><td>Python 3</td></tr>
+    <tr><td>Date :</td><td>Octobre 2026</td></tr>
+    <tr><td>Dépôt GitHub :</td><td>https://github.com/BilalBSK/gestion-colis</td></tr>
+  </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SOMMAIRE                                                     -->
+<!-- ============================================================ -->
+<h1 class="sommaire-titre">Sommaire</h1>
+<div class="sommaire">
+<ol>
+  <li>1. Introduction et choix du langage</li>
+  <li>2. Organisation du projet</li>
+  <li>3. Modélisation des données</li>
+  <li>4. Gestion des colis : ajout, affichage, recherche</li>
+  <li>5. Tri des colis</li>
+  <li>6. Interface utilisateur</li>
+  <li>7. Passage à l'échelle</li>
+  <li>8. Optimisation du chargement du camion</li>
+  <li>9. Prise en compte de la priorité</li>
+  <li>10. Étude des performances</li>
+  <li>11. Synthèse des choix algorithmiques majeurs</li>
+  <li>12. Questions de réflexion</li>
+  <li>13. Conclusion</li>
+</ol>
+</div>
+
+<!-- ============================================================ -->
+<!-- 1. INTRODUCTION                                              -->
+<!-- ============================================================ -->
+<h1>1. Introduction et choix du langage</h1>
+
+<h2>1.1 Contexte</h2>
+<p>Une entreprise de livraison prépare chaque jour le chargement de ses camions à partir d'une liste
+de colis. Chaque colis est décrit par un identifiant, un poids, une valeur, une priorité et une destination.</p>
+<p>Le programme réalisé doit répondre à deux besoins :</p>
+<ul>
+  <li><b>gérer les colis</b> : ajouter, afficher, rechercher et trier une collection pouvant contenir
+  jusqu'à 100 000 colis, voire davantage ;</li>
+  <li><b>préparer un camion</b> : choisir les colis à charger sans dépasser la capacité du camion, en
+  transportant la plus grande valeur possible et en favorisant les colis prioritaires.</li>
+</ul>
+
+<h2>1.2 Choix du langage : Python</h2>
+<p>Le projet est réalisé en <b>Python 3</b>, avec la bibliothèque standard uniquement. Ce choix repose
+sur trois raisons :</p>
+<ul>
+  <li><b>Lisibilité.</b> Le code Python reste proche du pseudo-code. L'évaluation portant d'abord sur les
+  choix algorithmiques, on peut se concentrer sur les algorithmes plutôt que sur la gestion manuelle de la
+  mémoire (allocation, libération, tailles de tableaux).</li>
+  <li><b>Outils intégrés.</b> La bibliothèque standard fournit tout le nécessaire pour tester
+  (<code>unittest</code>), mesurer les temps d'exécution (<code>time</code>) et la mémoire
+  (<code>tracemalloc</code>), et lire des fichiers CSV (<code>csv</code>).</li>
+  <li><b>Structures de données prêtes à l'emploi</b> (listes dynamiques, dictionnaires), dont le
+  fonctionnement interne et la complexité sont connus et seront expliqués.</li>
+</ul>
+<p><b>Contrepartie assumée :</b> Python est un langage interprété. Une même boucle s'exécute en général
+10 à 100 fois plus lentement qu'en C. Cela ne change pas les complexités, mais cela change les temps
+mesurés. L'étude des performances en tiendra compte.</p>
+<p><b>Respect du sujet (partie 9) :</b> les algorithmes qui constituent le cœur du travail (tris,
+optimisation du chargement) sont <b>implémentés à la main</b>, et leur fonctionnement est expliqué dans
+ce rapport. Lorsqu'une fonction native est utilisée pour une opération courante, l'algorithme sous-jacent
+et sa complexité sont précisés. Aucune bibliothèque externe n'est utilisée.</p>
+
+<!-- ============================================================ -->
+<!-- 2. ORGANISATION DU PROJET                                    -->
+<!-- ============================================================ -->
+<h1>2. Organisation du projet</h1>
+
+<h2>2.1 Arborescence</h2>
+<p>Le dépôt respecte l'organisation demandée (dossier <code>src/</code>, <code>README.md</code>,
+<code>rapport.pdf</code>), complétée par trois dossiers utiles :</p>
+<pre>projet/
+├── src/          code source du programme
+├── tests/        tests unitaires
+├── docs/         source de ce rapport et captures d'écran
+├── outils/       script de génération du rapport PDF
+├── README.md     présentation et mode d'emploi
+└── rapport.pdf   ce rapport</pre>
+
+<h2>2.2 Démarche de travail</h2>
+<p>Le projet a été réalisé par étapes successives. Chaque étape a été <b>validée</b> (tests unitaires et
+exécution du programme) avant de passer à la suivante, puis enregistrée par un commit sur le dépôt
+GitHub. L'historique des commits reflète donc la progression du travail.</p>
+
+</body>
+</html>
