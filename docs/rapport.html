@@ -967,7 +967,9 @@ moins.</p>
 </figure>
 
 <h2>8.6 Utilisation depuis le menu</h2>
-<p>L'option 5 demande la capacité (50 kg par défaut, comme dans le sujet) et calcule le chargement optimal.
+<p>L'option 5 demande la capacité (50 kg par défaut, comme dans le sujet), puis la règle de sélection
+présentée dans la partie 9. Dans cette partie, on choisit la règle 1 (valeur seule), qui correspond à la
+partie 5 du sujet. Le programme calcule alors le chargement optimal.
 Pour mettre en évidence l'intérêt de la méthode exacte, elle affiche aussi le résultat qu'aurait donné le
 glouton. L'option 6 détaille le dernier chargement : colis chargés, poids, taux de remplissage, valeur. La
 collection n'est pas modifiée : on peut préparer plusieurs camions de capacités différentes et les comparer.</p>
@@ -983,7 +985,7 @@ collection n'est pas modifiée : on peut préparer plusieurs camions de capacit�
 cases et la mémoire nécessaire, puis demande une confirmation :</p>
 <figure>
   <img src="captures/etape6_grand.png" style="width: 72%;" alt="Camion de 1&nbsp;000 kg parmi 100&nbsp;000 colis">
-  <figcaption>Figure 27 - Camion de 1&nbsp;000 kg parmi 100&nbsp;000 colis : confirmation, calcul en 2,07 s</figcaption>
+  <figcaption>Figure 27 - Camion de 1&nbsp;000 kg parmi 100&nbsp;000 colis : confirmation, calcul en 2,06 s</figcaption>
 </figure>
 
 <h2>8.7 Coût mesuré</h2>
@@ -1018,6 +1020,199 @@ dynamique. Il fait d'abord varier n avec W = 1&nbsp;000 kg, puis W avec n = 10&n
 <p>La programmation dynamique répond donc au besoin pour les quatre niveaux du sujet. Son coût en O(n &times; W)
 peut toutefois être fortement réduit sans perdre l'optimalité : c'est l'objet de l'étude des performances
 (partie 10).</p>
+
+<!-- ============================================================ -->
+<!-- 9. PRISE EN COMPTE DE LA PRIORITÉ (étape 7)                  -->
+<!-- ============================================================ -->
+<h1>9. Prise en compte de la priorité</h1>
+
+<h2>9.1 Objectif</h2>
+<p>L'entreprise souhaite favoriser les colis dont la priorité est importante. Le sujet n'impose aucune
+formule : il demande une règle cohérente qui tienne compte du poids, de la valeur et de la priorité. On
+rappelle la convention de la partie 3 : <b>5 est la priorité la plus forte</b>. Les données de la
+partie 6.1 du sujet sont :</p>
+<table>
+  <tr><th>Colis</th><th class="n">Poids</th><th class="n">Valeur</th><th class="n">Priorité</th></tr>
+  <tr><td>A</td><td class="n">8 kg</td><td class="n">20</td><td class="n">5</td></tr>
+  <tr><td>B</td><td class="n">6 kg</td><td class="n">25</td><td class="n">1</td></tr>
+  <tr><td>C</td><td class="n">5 kg</td><td class="n">18</td><td class="n">4</td></tr>
+  <tr><td>D</td><td class="n">4 kg</td><td class="n">14</td><td class="n">3</td></tr>
+</table>
+<p>Avec un camion de 14 kg, la partie 8 charge A + B (valeur 45). Or B est le colis le <b>moins</b>
+prioritaire (priorité 1). L'objectif est qu'une règle tenant compte de la priorité puisse préférer un
+chargement plus prioritaire, au prix d'un peu de valeur.</p>
+
+<h2>9.2 Principe : changer ce que l'on maximise, pas l'algorithme</h2>
+<p>La programmation dynamique de la partie 8 maximise une somme d'« utilités » sous la contrainte de poids.
+Jusqu'ici, l'utilité d'un colis était sa valeur. Pour prendre en compte la priorité, il suffit de
+<b>définir une autre utilité</b>, qui dépend de la valeur et de la priorité, et de la donner au même
+algorithme (fonction <code>fabrique_utilite</code> de <code>src/chargement.py</code>). Ce choix a trois
+avantages :</p>
+<ul>
+  <li>le chargement obtenu est <b>optimal pour la règle choisie</b>, avec la même preuve que dans la partie 8 ;</li>
+  <li>la complexité ne change pas : O(n &times; W) en temps et en mémoire ;</li>
+  <li>le code de l'algorithme n'est ni dupliqué ni modifié. Les trois règles partagent la même implémentation,
+  déjà vérifiée.</li>
+</ul>
+<p>Les trois critères demandés par le sujet ont chacun un rôle précis :</p>
+<table>
+  <tr><th>Critère</th><th>Rôle dans la sélection</th></tr>
+  <tr><td>Poids</td><td><b>Contrainte stricte</b> de la programmation dynamique : le poids total ne dépasse jamais la capacité.</td></tr>
+  <tr><td>Valeur</td><td><b>Base de l'utilité</b> : à priorité égale, le colis de plus grande valeur est toujours préféré.</td></tr>
+  <tr><td>Priorité</td><td><b>Coefficient multiplicateur</b> de la valeur : plus la priorité est forte, plus le colis « compte ».</td></tr>
+</table>
+
+<h2>9.3 Règle retenue : la valeur pondérée par la priorité</h2>
+<pre>utilité(colis) = valeur x ( 1 + alpha x (priorité - 1) / 4 )        avec alpha &gt;= 0</pre>
+<p>Le coefficient appliqué à la valeur va de 1 pour une priorité 1 à 1 + &alpha; pour une priorité 5.
+Le paramètre <b>&alpha;</b> règle l'importance accordée à la priorité. Par défaut, &alpha; = 1 :</p>
+<table>
+  <tr><th>Priorité</th><th class="n">1</th><th class="n">2</th><th class="n">3</th><th class="n">4</th><th class="n">5</th></tr>
+  <tr><td>Coefficient (&alpha; = 1)</td><td class="n">1</td><td class="n">1,25</td><td class="n">1,5</td><td class="n">1,75</td><td class="n">2</td></tr>
+  <tr><td>Coefficient (&alpha; = 0,5)</td><td class="n">1</td><td class="n">1,125</td><td class="n">1,25</td><td class="n">1,375</td><td class="n">1,5</td></tr>
+</table>
+<p><b>Application à l'exemple 6.1</b> (&alpha; = 1, W = 14 kg). Les utilités valent A = 20 &times; 2 = 40,
+B = 25 &times; 1 = 25, C = 18 &times; 1,75 = 31,5 et D = 14 &times; 1,5 = 21. Les combinaisons qui tiennent dans
+14 kg sont :</p>
+<table>
+  <tr><th>Combinaison</th><th class="n">Poids</th><th class="n">Valeur réelle</th><th class="n">Utilité</th><th class="n">Priorité moyenne</th></tr>
+  <tr><td>A + B</td><td class="n">14 kg</td><td class="n">45</td><td class="n">65</td><td class="n">3,0</td></tr>
+  <tr><td><b>A + C</b></td><td class="n">13 kg</td><td class="n">38</td><td class="n"><b>71,5</b></td><td class="n">4,5</td></tr>
+  <tr><td>A + D</td><td class="n">12 kg</td><td class="n">34</td><td class="n">61</td><td class="n">4,0</td></tr>
+  <tr><td>B + C</td><td class="n">11 kg</td><td class="n">43</td><td class="n">56,5</td><td class="n">2,5</td></tr>
+  <tr><td>C + D</td><td class="n">9 kg</td><td class="n">32</td><td class="n">52,5</td><td class="n">3,5</td></tr>
+  <tr><td>B + D</td><td class="n">10 kg</td><td class="n">39</td><td class="n">46</td><td class="n">2,0</td></tr>
+</table>
+<p>La règle choisit <b>A + C</b>. B (priorité 1) est remplacé par C (priorité 4) : la valeur transportée passe
+de 45 à 38, mais la priorité moyenne passe de 3,0 à 4,5. Le programme affiche explicitement ce compromis
+(figure 31).</p>
+<p><b>Rôle de &alpha;.</b> A + B a pour utilité 45 + 20&alpha;, et A + C a pour utilité 38 + 33,5&alpha;. A + C
+l'emporte dès que 13,5&alpha; &gt; 7, c'est-à-dire &alpha; &gt; 0,52. Avec &alpha; = 0,5, le programme garde donc
+A + B (figure 32), et avec &alpha; = 1, il choisit A + C. L'entreprise fixe ainsi elle-même le prix qu'elle accepte
+de payer en valeur pour servir les colis importants.</p>
+
+<h3>Justification</h3>
+<ul>
+  <li><b>La règle tient compte des trois critères</b>, chacun dans un rôle clair : le poids comme contrainte,
+  la valeur comme base, la priorité comme coefficient.</li>
+  <li><b>Elle est réglable et continue.</b> Avec &alpha; = 0, on retrouve exactement la règle de la partie 5, et
+  plus &alpha; augmente, plus la priorité pèse. Il n'y a pas de seuil arbitraire.</li>
+  <li><b>Elle est multiplicative.</b> La priorité augmente l'utilité <i>proportionnellement</i> à la valeur :
+  un colis prioritaire sans valeur ne prend pas la place d'un colis utile, et deux colis de même priorité
+  restent départagés par leur valeur. Une règle additive (valeur + &beta; &times; priorité) mélangerait deux
+  grandeurs sans unité commune : l'effet de &beta; dépendrait de l'ordre de grandeur des valeurs.</li>
+  <li><b>Elle conserve l'optimalité et la complexité</b> de la programmation dynamique (9.2). Les utilités
+  pouvant être décimales, les sommes sont calculées en nombres à virgule flottante. Les écarts d'arrondi,
+  de l'ordre de 10<sup>-15</sup>, ne peuvent départager que deux chargements d'utilité pratiquement égale :
+  retenir l'un ou l'autre est alors sans conséquence.</li>
+</ul>
+
+<h2>9.4 Règles alternatives</h2>
+<p><b>Priorité stricte (implémentée, règle 3 du menu).</b> On veut qu'un colis de priorité p passe avant
+<i>n'importe quel</i> ensemble de colis moins prioritaires. On pose :</p>
+<pre>utilité(colis) = (valeur + 1) x B^(priorité - 1)
+avec  B = 1 + somme des (valeur + 1) de tous les colis</pre>
+<p>Tous les colis de priorité inférieure à p réunis ont une utilité totale strictement inférieure à
+B<sup>p-1</sup>, donc à l'utilité d'un seul colis de priorité p. Maximiser la somme revient ainsi à maximiser
+<b>d'abord</b> ce qui est chargé en priorité 5, puis en priorité 4, etc. : c'est un <b>ordre lexicographique</b>.
+Le « + 1 » permet de compter aussi un colis prioritaire de valeur nulle. Les entiers Python n'ayant pas de
+taille limite, le calcul reste exact. Pour l'exemple 6.1, on a B = 82 et la règle choisit aussi A + C. Cette
+règle convient lorsque les priorités traduisent des engagements contractuels. Elle peut cependant sacrifier
+beaucoup de valeur : avec 9 kg, elle charge A seul (valeur 20) plutôt que C + D (valeur 32), et un test vérifie
+qu'un colis de priorité 5 et de valeur 1 est préféré à deux colis de valeur 100.</p>
+<table>
+  <tr><th>Règle</th><th>Avantages</th><th>Inconvénients</th></tr>
+  <tr><td><b>Valeur pondérée (retenue)</b></td><td>Compromis réglable par &alpha;, généralise la partie 5, optimale pour la règle.</td><td>&alpha; doit être choisi par l'entreprise.</td></tr>
+  <tr><td>Priorité stricte (implémentée)</td><td>Aucun colis prioritaire n'est jamais sacrifié pour des colis moins prioritaires.</td><td>Peut perdre beaucoup de valeur ; calcul sur de très grands entiers, environ 40 % plus lent (9.6).</td></tr>
+  <tr><td>Colis obligatoires au-dessus d'un seuil</td><td>Très simple à expliquer : « tous les colis de priorité 5 partent ».</td><td>Impossible si les colis obligatoires dépassent la capacité. Le seuil est arbitraire, et un colis de priorité 4 compte autant qu'un colis de priorité 1.</td></tr>
+  <tr><td>Somme additive : valeur + &beta; &times; priorité</td><td>Simple.</td><td>Mélange deux grandeurs sans unité commune : le bon &beta; dépend des données.</td></tr>
+  <tr><td>Trier par priorité puis charger dans l'ordre</td><td>Très rapide, en O(n) avec le tri par comptage.</td><td>Glouton : ni la capacité ni la valeur ne sont optimisées.</td></tr>
+</table>
+
+<h2>9.5 Comparaison des règles sur l'exemple du sujet</h2>
+<p>Le script <code>outils/etude_priorite.py</code> applique chaque règle aux colis A, B, C, D pour toutes les
+capacités de 8 à 23 kg :</p>
+<figure>
+  <img src="captures/etape7_exemple.png" style="width: 90%;" alt="Comparaison des règles sur l'exemple">
+  <figcaption>Figure 29 - Chargement obtenu selon la règle, pour les colis A, B, C, D et des capacités de 8 à 23 kg</figcaption>
+</figure>
+<ul>
+  <li>La règle <b>valeur seule</b> charge souvent B, le colis le moins prioritaire (par exemple A + B à 14 kg,
+  B + C + D de 15 à 17 kg).</li>
+  <li>La règle <b>pondérée</b> remplace B par des colis plus prioritaires dès que la perte de valeur est modérée.
+  Plus &alpha; est grand, plus elle accepte de perdre de la valeur (à 15 kg : B + C + D = 57 pour &alpha; = 1, mais
+  A + C = 38 pour &alpha; = 2).</li>
+  <li>La règle <b>stricte</b> place toujours A (priorité 5) en premier, même quand cela coûte cher : A seul
+  (valeur 20) de 9 à 11 kg.</li>
+  <li>Quand tout tient dans le camion (23 kg), toutes les règles chargent les quatre colis : la priorité n'a
+  d'effet que lorsqu'il faut faire un choix.</li>
+</ul>
+
+<h2>9.6 Effet à grande échelle</h2>
+<p>Sur 10&nbsp;000 colis générés (dont 1&nbsp;944 de priorité 5) et un camion de 1&nbsp;000 kg :</p>
+<table>
+  <tr><th>Règle</th><th class="n">Valeur</th><th class="n">% du maximum</th><th class="n">Priorité moyenne</th><th class="n">Colis p5</th><th class="n">Colis p1</th><th class="n">Temps</th></tr>
+  <tr><td>Valeur seule</td><td class="n">4&nbsp;000</td><td class="n">100,0 %</td><td class="n">3,06</td><td class="n">33</td><td class="n">26</td><td class="n">212 ms</td></tr>
+  <tr><td>Pondérée, &alpha; = 0,25</td><td class="n">3&nbsp;988</td><td class="n">99,7 %</td><td class="n">4,99</td><td class="n">101</td><td class="n">0</td><td class="n">205 ms</td></tr>
+  <tr><td>Pondérée, &alpha; = 1</td><td class="n">3&nbsp;987</td><td class="n">99,7 %</td><td class="n">5,00</td><td class="n">97</td><td class="n">0</td><td class="n">206 ms</td></tr>
+  <tr><td>Pondérée, &alpha; = 5</td><td class="n">3&nbsp;987</td><td class="n">99,7 %</td><td class="n">5,00</td><td class="n">97</td><td class="n">0</td><td class="n">206 ms</td></tr>
+  <tr><td>Stricte</td><td class="n">3&nbsp;976</td><td class="n">99,4 %</td><td class="n">5,00</td><td class="n">113</td><td class="n">0</td><td class="n">293 ms</td></tr>
+</table>
+<figure>
+  <img src="captures/etape7_echelle.png" style="width: 86%;" alt="Effet des règles sur 10&nbsp;000 colis">
+  <figcaption>Figure 30 - Compromis valeur / priorité selon la règle, pour 10&nbsp;000 colis et un camion de 1&nbsp;000 kg</figcaption>
+</figure>
+<ul>
+  <li>Avec beaucoup de colis, on trouve parmi les colis de priorité 5 assez de colis rentables pour remplir le
+  camion. La règle pondérée fait ainsi passer la priorité moyenne de 3,06 à 5,00 pour seulement
+  <b>0,3 % de valeur en moins</b>. <b>Plus le choix est large, moins la priorité coûte cher.</b></li>
+  <li>Sur les petites instances, au contraire, le coût peut être important : 7 de valeur sur 45 dans l'exemple
+  6.1. C'est précisément pour cela que &alpha; est réglable.</li>
+  <li>Le temps de calcul est le même pour les règles valeur et pondérée (environ 206 ms). La règle stricte est
+  environ 40 % plus lente : B<sup>4</sup> dépasse 10<sup>22</sup>, et les additions se font sur de très grands
+  entiers, plus coûteux que des nombres ordinaires.</li>
+</ul>
+
+<h2>9.7 Utilisation depuis le menu</h2>
+<p>L'option 5 propose les trois règles, la règle pondérée étant choisie par défaut (Entrée). Pour cette règle,
+elle demande &alpha;, avec 1 par défaut ; la virgule est acceptée. Quand la règle n'est pas « valeur seule », le
+programme calcule aussi le chargement sans priorité et affiche ce que la priorité <b>coûte</b> en valeur et
+ce qu'elle <b>apporte</b> en priorité moyenne. L'option 6 indique la règle utilisée, la priorité moyenne et le
+nombre de colis chargés pour chaque priorité.</p>
+<figure>
+  <img src="captures/etape7_menu_ponderee.png" style="width: 72%;" alt="Règle pondérée dans le menu">
+  <figcaption>Figure 31 - Exemple 6.1, camion de 14 kg, règle pondérée (&alpha; = 1) : A + C, la priorité coûte 7 de valeur</figcaption>
+</figure>
+<figure>
+  <img src="captures/etape7_menu_regles.png" style="width: 72%;" alt="Règle stricte et alpha = 0,5">
+  <figcaption>Figure 32 - Même exemple : règle stricte (A + C), puis règle pondérée avec &alpha; = 0,5 (A + B, inchangé)</figcaption>
+</figure>
+
+<h2>9.8 Synthèse du choix</h2>
+<table>
+  <tr><td class="k">Problème</td><td>Favoriser les colis prioritaires lors du chargement, sans dépasser la capacité et sans négliger la valeur.</td></tr>
+  <tr><td class="k">Solution</td><td>Maximiser, par la programmation dynamique de la partie 8, l'utilité valeur &times; (1 + &alpha; &times; (priorité - 1) / 4).</td></tr>
+  <tr><td class="k">Temps</td><td>O(n &times; W), inchangé. Calculer les utilités coûte O(n).</td></tr>
+  <tr><td class="k">Espace</td><td>O(n &times; W) octets, inchangé.</td></tr>
+  <tr><td class="k">Alternatives</td><td>Priorité stricte (lexicographique, implémentée), colis obligatoires, somme additive, tri par priorité suivi d'un glouton.</td></tr>
+  <tr><td class="k">Justification</td><td>Règle cohérente avec les trois critères, réglable, qui généralise la partie 5 (&alpha; = 0) et donne un chargement <b>optimal pour la règle</b>, en réutilisant un algorithme déjà prouvé.</td></tr>
+</table>
+
+<h2>9.9 Validation de l'étape</h2>
+<p>Quinze tests (<code>tests/test_priorite.py</code>) vérifient :</p>
+<ul>
+  <li>les utilités et le résultat exact de l'exemple 6.1 : A + C, utilité 71,5, valeur 38, priorité moyenne 4,5 ;</li>
+  <li>que &alpha; = 0 redonne la règle valeur, et la bascule entre &alpha; = 0,5 (A + B) et &alpha; = 0,6 (A + C) ;</li>
+  <li>la règle stricte, y compris par une <b>vérification indépendante de sa formule</b> : sur 150 instances,
+  on énumère tous les chargements possibles et l'on vérifie que le programme obtient le meilleur vecteur
+  (priorité 5, priorité 4, ..., priorité 1) au sens lexicographique ;</li>
+  <li>sur 300 instances et pour les trois règles, l'égalité entre programmation dynamique et force brute ;</li>
+  <li>les saisies du menu : règle par défaut, &alpha; avec une virgule, &alpha; invalide ou négatif.</li>
+</ul>
+<figure>
+  <img src="captures/etape7_tests.png" alt="Tests de l'étape 7">
+  <figcaption>Figure 33 - Exécution des tests de l'étape 7 : 15 tests réussis</figcaption>
+</figure>
 
 </body>
 </html>

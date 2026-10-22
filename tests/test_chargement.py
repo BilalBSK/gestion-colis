@@ -121,23 +121,24 @@ class TestMenuCamion(unittest.TestCase):
         self.assertIn("utilisez d'abord l'option 5", self.session("6\n0\n"))
 
     def test_capacite_par_defaut_50_kg(self):
-        sortie = self.session("5\n\n0\n")
+        sortie = self.session("5\n\n1\n0\n")                  # règle 1 : valeur seule
         self.assertIn("5 colis, 30 / 50 kg, valeur totale 110", sortie)
 
     def test_donnees_du_sujet_20_kg(self):
-        sortie = self.session("5\n20\n6\n0\n")
+        sortie = self.session("5\n20\n1\n6\n0\n")
         self.assertIn("3 colis, 19 / 20 kg, valeur totale 80", sortie)
-        self.assertIn("valeur 70  -> 10 de moins que l'optimum", sortie)
+        self.assertIn("4 colis, 18 / 20 kg, valeur totale 70", sortie)          # glouton
+        self.assertIn("moins bon que l'optimum", sortie)
         self.assertIn("remplissage 95.0 %", sortie)
 
     def test_colis_a_b_c_d_14_kg(self):
-        sortie = self.session("9\n1\ndonnees/colis_camion.csv\n5\n14\n6\n0\n")
+        sortie = self.session("9\n1\ndonnees/colis_camion.csv\n5\n14\n1\n6\n0\n")
         self.assertIn("2 colis, 14 / 14 kg, valeur totale 45", sortie)
-        self.assertIn("valeur 43  -> 2 de moins que l'optimum", sortie)
+        self.assertIn("2 colis, 11 / 14 kg, valeur totale 43", sortie)          # glouton
 
     def test_confirmation_pour_un_tres_gros_calcul(self):
-        sortie = self.session("8\n4\n\n5\n1000\nn\n6\n0\n")
-        self.assertIn("Attention : 100000 colis x 1001 capacités", sortie)
+        sortie = self.session("8\n4\n\n5\n1000\n1\nn\n6\n0\n")
+        self.assertIn("Attention : 1 x 100000 colis x 1001 capacités", sortie)
         self.assertNotIn("Chargement optimal", sortie)
         self.assertIn("utilisez d'abord l'option 5", sortie)
 

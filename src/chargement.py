@@ -3,8 +3,8 @@
 Chaque colis est soit chargé entièrement, soit laissé (pas de fraction). On
 cherche le sous-ensemble de colis de poids total <= capacité qui maximise la
 somme des « utilités ». Par défaut, l'utilité d'un colis est sa valeur ; la
-prise en compte de la priorité (partie 9 du rapport) remplacera simplement
-cette fonction.
+prise en compte de la priorité (partie 9 du rapport) remplace simplement
+cette fonction (voir fabrique_utilite).
 
 Trois méthodes :
   - sac_a_dos_dp : programmation dynamique. EXACTE (toujours optimale).
@@ -17,14 +17,59 @@ Trois méthodes :
 
 from dataclasses import dataclass, field
 
+from colis import PRIORITE_MAX, PRIORITE_MIN
 from tris import tri_fusion
 
 FORCE_BRUTE_MAX = 20  # 2^20 ~ 1 million de combinaisons
+ALPHA_PAR_DEFAUT = 1.0
+
+# Règles de sélection (partie 9 du rapport) : nom court -> description
+REGLES = {
+    "valeur": "valeur seule",
+    "ponderee": "valeur pondérée par la priorité",
+    "stricte": "priorité stricte",
+}
 
 
 def utilite_valeur(colis):
     """Critère de la partie 5 du sujet : on maximise la valeur transportée."""
     return colis.valeur
+
+
+def fabrique_utilite(regle, colis=(), alpha=ALPHA_PAR_DEFAUT):
+    """Renvoie la fonction d'utilité de la règle demandée.
+
+    - "valeur"   : utilité = valeur.
+    - "ponderee" : utilité = valeur x (1 + alpha x (priorité - 1) / 4).
+                   Le coefficient va de 1 (priorité 1) à 1 + alpha (priorité 5) :
+                   avec alpha = 1, un colis de priorité 5 « compte double » ;
+                   avec alpha = 0, on retrouve exactement la règle « valeur ».
+    - "stricte"  : utilité = (valeur + 1) x B^(priorité - 1), où B dépasse la
+                   somme des (valeur + 1) de tous les colis. Un colis de
+                   priorité p vaut alors plus que TOUS les colis de priorité
+                   < p réunis : on maximise d'abord ce qui est chargé en
+                   priorité 5, puis en priorité 4, etc. (ordre lexicographique).
+                   « + 1 » : un colis prioritaire sans valeur compte quand même.
+                   Les entiers Python n'ont pas de limite : le calcul est exact.
+    ``colis`` ne sert qu'à la règle stricte (calcul de B) : O(n).
+    """
+    if regle == "valeur":
+        return utilite_valeur
+    if regle == "ponderee":
+        if alpha < 0:
+            raise ValueError("alpha doit être positif ou nul")
+        etendue = PRIORITE_MAX - PRIORITE_MIN
+
+        def utilite_ponderee(c):
+            return c.valeur * (1 + alpha * (c.priorite - PRIORITE_MIN) / etendue)
+        return utilite_ponderee
+    if regle == "stricte":
+        base = sum(c.valeur + 1 for c in colis) + 1
+
+        def utilite_stricte(c):
+            return (c.valeur + 1) * base ** (c.priorite - PRIORITE_MIN)
+        return utilite_stricte
+    raise ValueError(f"règle inconnue : {regle!r} (attendu : {', '.join(REGLES)})")
 
 
 @dataclass
@@ -33,7 +78,8 @@ class Chargement:
     capacite: int
     colis: list = field(default_factory=list)
     methode: str = ""
-    score: float = 0          # somme des utilités (= valeur totale par défaut)
+    score: float = 0          # somme des utilités (= valeur totale pour la règle « valeur »)
+    regle: str = REGLES["valeur"]
 
     @property
     def poids_total(self):
@@ -46,6 +92,18 @@ class Chargement:
     @property
     def taux_remplissage(self):
         return self.poids_total / self.capacite if self.capacite else 0.0
+
+    @property
+    def priorite_moyenne(self):
+        return sum(c.priorite for c in self.colis) / len(self.colis) if self.colis else 0.0
+
+    @property
+    def par_priorite(self):
+        """Nombre de colis chargés pour chaque priorité, de la plus forte à la plus faible."""
+        compte = {p: 0 for p in range(PRIORITE_MAX, PRIORITE_MIN - 1, -1)}
+        for c in self.colis:
+            compte[c.priorite] += 1
+        return compte
 
 
 def _verifier_capacite(capacite):
@@ -152,3 +210,24 @@ def force_brute(colis, capacite, utilite=utilite_valeur):
             meilleur_score, meilleur_masque = score, masque
     selection = [c for i, c in enumerate(colis) if meilleur_masque >> i & 1]
     return Chargement(capacite, selection, "force brute", meilleur_score)
+
+
+# ---------------------------------------------------------------------- #
+# Point d'entrée utilisé par l'interface
+# ---------------------------------------------------------------------- #
+METHODES = {"dp": sac_a_dos_dp, "glouton": glouton, "force_brute": force_brute}
+
+
+def preparer_camion(colis, capacite, regle="valeur", alpha=ALPHA_PAR_DEFAUT, methode="dp"):
+    """Prépare un camion selon une règle de sélection et une méthode de calcul.
+
+    La règle ne fait que fournir la fonction d'utilité : l'algorithme, sa
+    complexité et sa garantie d'optimalité sont ceux de la méthode choisie.
+    """
+    if methode not in METHODES:
+        raise ValueError(f"méthode inconnue : {methode!r} (attendu : {', '.join(METHODES)})")
+    colis = list(colis)
+    utilite = fabrique_utilite(regle, colis, alpha)
+    resultat = METHODES[methode](colis, capacite, utilite)
+    resultat.regle = REGLES[regle] + (f" (alpha = {alpha:g})" if regle == "ponderee" else "")
+    return resultat

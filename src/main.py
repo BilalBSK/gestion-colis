@@ -10,11 +10,12 @@ import os
 import time
 
 from affichage import ENTETE, SEPARATEUR, ligne, page
-from chargement import glouton, sac_a_dos_dp
+from chargement import ALPHA_PAR_DEFAUT, REGLES
+from chargement import preparer_camion as calculer_chargement
 from colis import PRIORITE_MAX, PRIORITE_MIN, Colis
 from generateur import NIVEAUX, generer_colis
 from gestion import GestionColis
-from saisie import Abandon, lire_entier, lire_oui_non, lire_texte
+from saisie import Abandon, lire_entier, lire_oui_non, lire_reel, lire_texte
 from stockage import ecrire_csv
 
 RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -39,6 +40,13 @@ MENU = """
 0. Quitter
 """
 
+# Option 5 : règles de sélection, dans l'ordre du menu (la règle 2 est recommandée)
+REGLES_MENU = (
+    ("valeur", "Valeur seule (maximise la valeur transportée)"),
+    ("ponderee", "Valeur pondérée par la priorité (recommandée)"),
+    ("stricte", "Priorité stricte (les colis les plus prioritaires d'abord)"),
+)
+
 # Option 4 : (libellé, critère passé à GestionColis.trier, algorithme utilisé)
 TRIS = (
     ("Par poids", "poids", "tri fusion"),
@@ -55,6 +63,12 @@ def formater_duree(secondes):
     if secondes < 1:
         return f"{secondes * 1e3:.1f} ms"
     return f"{secondes:.2f} s"
+
+
+def resume(chargement):
+    """Résumé d'un chargement sur une ligne."""
+    return (f"{len(chargement.colis)} colis, {chargement.poids_total} / {chargement.capacite} kg, "
+            f"valeur totale {chargement.valeur_totale}, priorité moyenne {chargement.priorite_moyenne:.2f}")
 
 
 class Application:
@@ -163,29 +177,49 @@ class Application:
             return
         capacite = lire_entier(f"Capacité du camion en kg [{CAPACITE_PAR_DEFAUT}] : ",
                                minimum=0, defaut=CAPACITE_PAR_DEFAUT)
+        print("Règle de sélection :")
+        for numero, (_, description) in enumerate(REGLES_MENU, start=1):
+            print(f"  {numero}. {description}")
+        regle = REGLES_MENU[lire_entier("Choix [2] : ", 1, len(REGLES_MENU), defaut=2) - 1][0]
+        alpha = ALPHA_PAR_DEFAUT
+        if regle == "ponderee":
+            alpha = lire_reel("Importance de la priorité alpha (0 = ignorée, 1 = une priorité 5 "
+                              "compte double) [1] : ", minimum=0, defaut=ALPHA_PAR_DEFAUT)
         colis = self.gestion.lister()
-        # Coût de la programmation dynamique : (nombre de colis) x (capacité + 1) cases
-        cases = len(colis) * (capacite + 1)
+        # Coût de la programmation dynamique : (nombre de colis) x (capacité + 1) cases,
+        # deux fois si l'on calcule aussi le chargement de référence « valeur seule »
+        calculs = 1 if regle == "valeur" else 2
+        cases = len(colis) * (capacite + 1) * calculs
         if cases > CASES_AVANT_CONFIRMATION:
-            print(f"  Attention : {len(colis)} colis x {capacite + 1} capacités = {cases:,} cases "
-                  f"(environ {cases / 1e6:.0f} Mo).".replace(",", " "))
+            print(f"  Attention : {calculs} x {len(colis)} colis x {capacite + 1} capacités = "
+                  f"{cases:,} cases (environ {cases / calculs / 1e6:.0f} Mo).".replace(",", " "))
             if not lire_oui_non("  Le calcul exact peut prendre plusieurs secondes. Continuer ?"):
                 return
+
         debut = time.perf_counter()
-        optimal = sac_a_dos_dp(colis, capacite)
+        optimal = calculer_chargement(colis, capacite, regle, alpha, "dp")
         duree_dp = time.perf_counter() - debut
         debut = time.perf_counter()
-        approche = glouton(colis, capacite)
+        approche = calculer_chargement(colis, capacite, regle, alpha, "glouton")
         duree_glouton = time.perf_counter() - debut
-
         self.chargement = optimal
-        print(f"\n  Chargement optimal (programmation dynamique, {formater_duree(duree_dp)}) :")
-        print(f"    {len(optimal.colis)} colis, {optimal.poids_total} / {capacite} kg, "
-              f"valeur totale {optimal.valeur_totale}")
-        ecart = optimal.score - approche.score
-        print(f"  Pour comparaison, glouton ({formater_duree(duree_glouton)}) : "
-              f"{len(approche.colis)} colis, {approche.poids_total} kg, valeur {approche.valeur_totale}"
-              + (f"  -> {ecart} de moins que l'optimum" if ecart else "  -> identique ici"))
+
+        print(f"\n  Règle : {optimal.regle}")
+        print(f"  Chargement optimal (programmation dynamique, {formater_duree(duree_dp)}) :")
+        print(f"    {resume(optimal)}")
+        if regle != "valeur":
+            # Chargement de référence sans priorité : montre ce que la priorité « coûte »
+            reference = calculer_chargement(colis, capacite, "valeur", methode="dp")
+            print(f"  Sans tenir compte de la priorité, on aurait :\n    {resume(reference)}")
+            cout = reference.valeur_totale - optimal.valeur_totale
+            if cout == 0 and optimal.priorite_moyenne == reference.priorite_moyenne:
+                print("    -> même résultat : la priorité ne change pas le chargement ici")
+            else:
+                print(f"    -> la priorité coûte {cout} de valeur et fait passer la priorité moyenne "
+                      f"de {reference.priorite_moyenne:.2f} à {optimal.priorite_moyenne:.2f}")
+        verdict = "identique ici" if approche.score == optimal.score else "moins bon que l'optimum"
+        print(f"  Glouton, même règle ({formater_duree(duree_glouton)}) :\n    {resume(approche)}"
+              f"  -> {verdict}")
         print("  Option 6 : afficher le détail du chargement.")
 
     def afficher_chargement(self):
@@ -194,11 +228,15 @@ class Application:
         if ch is None:
             print("  Aucun camion préparé : utilisez d'abord l'option 5.")
             return
-        print(f"Méthode            : {ch.methode}")
-        print(f"Colis chargés      : {len(ch.colis)}")
-        print(f"Poids total        : {ch.poids_total} / {ch.capacite} kg "
+        print(f"{'Règle':<19}: {ch.regle}")
+        print(f"{'Méthode':<19}: {ch.methode}")
+        print(f"{'Colis chargés':<19}: {len(ch.colis)}")
+        print(f"{'Poids total':<19}: {ch.poids_total} / {ch.capacite} kg "
               f"(remplissage {100 * ch.taux_remplissage:.1f} %)")
-        print(f"Valeur totale      : {ch.valeur_totale}\n")
+        print(f"{'Valeur totale':<19}: {ch.valeur_totale}")
+        print(f"{'Priorité moyenne':<19}: {ch.priorite_moyenne:.2f}")
+        print(f"{'Colis par priorité':<19}: "
+              + ", ".join(f"p{p} : {nb}" for p, nb in ch.par_priorite.items()) + "\n")
         self.afficher_par_pages(ch.colis)
 
     def afficher_statistiques(self):

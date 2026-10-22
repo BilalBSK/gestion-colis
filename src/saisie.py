@@ -45,6 +45,23 @@ def lire_entier(message, minimum=None, maximum=None, defaut=None):
             return valeur
 
 
+def lire_reel(message, minimum=None, defaut=None):
+    """Lit un nombre décimal (le point ou la virgule sont acceptés)."""
+    while True:
+        texte = lire_texte(message, defaut="" if defaut is not None else None)
+        if texte == "":
+            return defaut
+        try:
+            valeur = float(texte.replace(",", "."))
+        except ValueError:
+            print("  Veuillez saisir un nombre (par exemple 1 ou 0,5).")
+            continue
+        if minimum is not None and valeur < minimum:
+            print(f"  La valeur doit être supérieure ou égale à {minimum:g}.")
+        else:
+            return valeur
+
+
 def lire_oui_non(message, defaut=False):
     """Pose une question fermée. Entrée seule : réponse par défaut."""
     suffixe = " [O/n] : " if defaut else " [o/N] : "
