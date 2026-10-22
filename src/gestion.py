@@ -10,7 +10,12 @@ identifiant le colis correspondant :  identifiant -> Colis.
       (un dict Python conserve l'ordre d'insertion depuis Python 3.7)
 """
 
+from colis import PRIORITE_MAX, PRIORITE_MIN
 from stockage import lire_csv
+from tris import tri_comptage, tri_fusion
+
+# Critères de tri proposés (fonctionnalités 4, 5 et 6, plus un tri combiné)
+CRITERES = ("poids", "valeur", "priorite", "priorite_valeur")
 
 
 class GestionColis:
@@ -70,6 +75,33 @@ class GestionColis:
         O(1) en moyenne, O(n) dans le pire cas théorique (collisions).
         """
         return self._par_id.get(identifiant)
+
+    # ------------------------------------------------------------------ #
+    # Fonctionnalités 4, 5 et 6 : trier par poids, valeur, priorité
+    # ------------------------------------------------------------------ #
+    def trier(self, critere, decroissant=False):
+        """Renvoie une nouvelle liste des colis triés selon ``critere``.
+
+        La collection elle-même n'est pas modifiée : elle garde l'ordre
+        d'insertion, et l'on peut demander plusieurs tris successifs.
+
+        - "poids", "valeur" : tri fusion, O(n log n) en temps, O(n) en mémoire ;
+        - "priorite"        : tri par comptage, O(n + 5) = O(n) ;
+        - "priorite_valeur" : priorité, puis valeur pour départager les colis de
+          même priorité. On trie d'abord par valeur (tri fusion), puis par
+          priorité avec un tri STABLE (comptage) : au sein d'une même priorité,
+          l'ordre des valeurs obtenu au premier tri est conservé. O(n log n).
+        """
+        if critere == "poids":
+            return tri_fusion(self, lambda c: c.poids, decroissant)
+        if critere == "valeur":
+            return tri_fusion(self, lambda c: c.valeur, decroissant)
+        if critere == "priorite":
+            return tri_comptage(self, lambda c: c.priorite, PRIORITE_MIN, PRIORITE_MAX, decroissant)
+        if critere == "priorite_valeur":
+            par_valeur = tri_fusion(self, lambda c: c.valeur, decroissant)
+            return tri_comptage(par_valeur, lambda c: c.priorite, PRIORITE_MIN, PRIORITE_MAX, decroissant)
+        raise ValueError(f"critère de tri inconnu : {critere!r} (attendu : {', '.join(CRITERES)})")
 
     def rechercher_sequentielle(self, identifiant):
         """Recherche par parcours de tous les colis : O(n).

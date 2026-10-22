@@ -28,8 +28,9 @@ projet/
 ├── src/          code source
 │   ├── colis.py      modèle Colis (validation des données)
 │   ├── stockage.py   lecture / écriture des colis au format CSV
-│   ├── gestion.py    collection de colis (table de hachage) : ajout, affichage, recherche
-│   └── affichage.py  mise en forme des colis en tableau
+│   ├── gestion.py    collection de colis (table de hachage) : ajout, affichage, recherche, tris
+│   ├── affichage.py  mise en forme des colis en tableau
+│   └── tris.py       tri fusion et tri par comptage (implémentés à la main)
 ├── tests/        tests unitaires
 ├── donnees/      colis d'exemple du sujet (CSV)
 ├── docs/         source du rapport et captures d'écran

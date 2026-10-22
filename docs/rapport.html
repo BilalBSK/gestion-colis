@@ -390,5 +390,200 @@ ce qui est son pire cas. La dernière colonne donne la mémoire occupée par la 
   <figcaption>Figure 5 - Exécution des tests unitaires de l'étape 2 : 15 tests réussis</figcaption>
 </figure>
 
+<!-- ============================================================ -->
+<!-- 5. TRI DES COLIS (étape 3)                                   -->
+<!-- ============================================================ -->
+<h1>5. Tri des colis</h1>
+<p>Cette partie couvre les fonctionnalités 4, 5 et 6 du sujet : afficher les colis triés par poids, par
+valeur et par priorité. Les algorithmes de tri font partie du cœur algorithmique du projet. Conformément
+à la partie 9 du sujet, ils sont donc <b>implémentés à la main</b> (fichier <code>src/tris.py</code>) au
+lieu d'utiliser la fonction native <code>sorted()</code>. Celle-ci sert seulement de référence, pour
+vérifier les résultats et comparer les temps.</p>
+<p>Les trois tris ont des caractéristiques communes :</p>
+<ul>
+  <li>ils fonctionnent en ordre <b>croissant ou décroissant</b> ;</li>
+  <li>ils renvoient une <b>nouvelle liste</b> : la collection garde l'ordre d'enregistrement des colis, et on
+  peut enchaîner plusieurs tris différents sans rien perdre ;</li>
+  <li>ils sont <b>stables</b> : deux colis de même clé, par exemple de même poids, restent dans leur ordre
+  d'origine. Cette propriété garantit un affichage prévisible et permet de combiner deux critères (5.3).</li>
+</ul>
+
+<h2>5.1 Tri par poids et par valeur : le tri fusion</h2>
+
+<h3>Principe</h3>
+<p>Le tri fusion applique la méthode « <b>diviser pour régner</b> » :</p>
+<ol>
+  <li><b>Diviser</b> : couper la liste en deux moitiés ;</li>
+  <li><b>Régner</b> : trier chaque moitié, en appliquant la même méthode récursivement ;</li>
+  <li><b>Combiner</b> : <b>fusionner</b> les deux moitiés triées en une seule liste triée.</li>
+</ol>
+<p>Une liste de 0 ou 1 élément est déjà triée : c'est la condition d'arrêt. Exemple avec les poids des
+cinq colis du sujet (101 : 8 kg, 102 : 3 kg, 103 : 12 kg, 104 : 5 kg, 105 : 2 kg) :</p>
+<pre>Découpage :              [8, 3, 12, 5, 2]
+                        /                \
+                   [8, 3]            [12, 5, 2]
+                   /    \            /        \
+                 [8]    [3]        [12]     [5, 2]
+                                            /    \
+                                          [5]    [2]
+Fusions :
+                 [8] + [3]          ->  [3, 8]
+                 [5] + [2]          ->  [2, 5]
+                 [12] + [2, 5]      ->  [2, 5, 12]
+                 [3, 8] + [2, 5, 12] -> [2, 3, 5, 8, 12]</pre>
+
+<h3>La fusion</h3>
+<p>Pour fusionner deux listes déjà triées, on compare leurs premiers éléments et on retire le plus petit,
+jusqu'à épuiser l'une des deux listes. Il ne reste alors qu'à recopier la fin de l'autre :</p>
+<pre>Fusion de [3, 8] et [2, 5, 12] :
+  3 ou 2  -> 2        résultat : [2]
+  3 ou 5  -> 3        résultat : [2, 3]
+  8 ou 5  -> 5        résultat : [2, 3, 5]
+  8 ou 12 -> 8        résultat : [2, 3, 5, 8]
+  il reste [12]       résultat : [2, 3, 5, 8, 12]</pre>
+<p>Chaque comparaison place définitivement un élément : fusionner deux listes de longueurs totales m
+coûte donc O(m). En cas d'égalité, on prend l'élément de la moitié <b>gauche</b>, arrivé le premier :
+c'est ce qui rend le tri <b>stable</b>.</p>
+
+<h3>Complexité</h3>
+<p>La liste est coupée en deux à chaque niveau : il y a donc log<sub>2</sub>(n) niveaux de découpage. À
+chaque niveau, les fusions traitent en tout les n éléments une fois chacun. Le coût total est donc
+<b>O(n log n)</b>. Ce coût ne dépend pas de l'ordre initial des colis : le tri fusion n'a <b>pas de
+pire cas défavorable</b>. Pour 100&nbsp;000 colis, cela représente environ 100&nbsp;000 &times; 17 &asymp; 1,7 million
+d'opérations élémentaires, contre environ 5 milliards (n²/2) pour un tri naïf.</p>
+<p>En mémoire, l'implémentation alloue <b>une seule fois</b> deux tampons de n cases (l'un pour les colis,
+l'autre pour leurs clés), partagés par toutes les fusions, au lieu de créer de nouvelles listes à chaque appel. S'y ajoute la pile des appels récursifs, de profondeur
+log<sub>2</sub>(n), soit 17 pour 100&nbsp;000 colis. La clé de tri (poids ou valeur) est lue <b>une seule fois</b>
+par colis, puis déplacée avec lui.</p>
+
+<table>
+  <tr><td class="k">Problème</td><td>Afficher les colis classés selon leur poids ou leur valeur. Ces grandeurs n'ont pas de borne fixée à l'avance : un colis peut peser 2&nbsp;kg comme 800&nbsp;kg.</td></tr>
+  <tr><td class="k">Algorithme</td><td>Tri fusion récursif, stable, avec des tampons alloués une seule fois (détaillé ci-dessus).</td></tr>
+  <tr><td class="k">Complexité en temps</td><td><b>O(n log n)</b> dans le meilleur, le moyen et le pire cas.</td></tr>
+  <tr><td class="k">Complexité en espace</td><td><b>O(n)</b> : liste des clés et deux tampons de n cases. S'y ajoutent O(log n) pour la récursion.</td></tr>
+  <tr><td class="k">Alternatives</td><td><b>Tri par insertion</b> : simple, mais O(n²). Mesuré ci-dessous, il prend 1 s pour 10&nbsp;000 colis, et il faudrait environ 100 s pour 100&nbsp;000.<br>
+  <b>Tri rapide</b> (quicksort) : O(n log n) en moyenne, en place, mais O(n²) dans le pire cas et non stable.<br>
+  <b>Tri par tas</b> (heapsort) : O(n log n) dans tous les cas et en place, mais non stable.<br>
+  <b>Tri par comptage</b> : impossible ici, car le poids et la valeur ne sont pas bornés (voir 5.2).<br>
+  <b><code>sorted()</code></b> de Python (voir 5.4).</td></tr>
+  <tr><td class="k">Justification</td><td>Le tri fusion est le seul tri par comparaison classique qui soit à la fois <b>garanti en O(n log n)</b> et <b>stable</b>. La stabilité est indispensable au tri combiné (5.3). Sa contrepartie, la mémoire supplémentaire en O(n), ne représente qu'environ 2,4 Mo pour 100&nbsp;000 colis (trois listes de 100&nbsp;000 références de 8 octets).</td></tr>
+</table>
+
+<h2>5.2 Tri par priorité : le tri par comptage</h2>
+
+<h3>Principe</h3>
+<p>La priorité ne peut prendre que <b>5 valeurs</b> (1 à 5). On peut donc trier <b>sans comparer les colis
+entre eux</b>. On prépare 5 « seaux », un par priorité, et on range chaque colis dans le seau de sa priorité,
+dans l'ordre où il arrive. Il suffit ensuite de vider les seaux dans l'ordre : de 1 à 5 pour un tri croissant,
+de 5 à 1 pour un tri décroissant. Exemple avec les colis du sujet et un colis 106 de priorité 5 :</p>
+<pre>Colis parcourus dans l'ordre :
+  101 (p2), 102 (p5), 103 (p1), 104 (p4), 105 (p3), 106 (p5)
+
+  seau priorité 1 : [103]
+  seau priorité 2 : [101]
+  seau priorité 3 : [105]
+  seau priorité 4 : [104]
+  seau priorité 5 : [102, 106]   &lt;- 102, arrivé avant 106,
+                                    reste devant (stabilité)
+
+Lecture des seaux de 5 à 1 (décroissant) : 102, 106, 104, 105, 101, 103</pre>
+
+<h3>Pourquoi est-ce plus rapide qu'un tri fusion ?</h3>
+<p>On démontre qu'un tri qui procède <b>uniquement par comparaisons</b> ne peut pas faire mieux que
+n log n comparaisons dans le pire cas. Il y a n! ordres possibles des colis, et chaque comparaison
+apporte une seule réponse oui/non : il faut donc au moins log<sub>2</sub>(n!) &asymp; n log<sub>2</sub> n
+comparaisons pour distinguer tous les cas. Le tri par comptage échappe à cette limite parce qu'il
+<b>n'effectue aucune comparaison</b> : la priorité donne directement le seau. Il parcourt une fois
+les n colis, puis les k = 5 seaux, d'où un coût <b>O(n + k) = O(n)</b>.</p>
+
+<table>
+  <tr><td class="k">Problème</td><td>Afficher les colis classés selon leur priorité, une clé entière comprise entre 1 et 5.</td></tr>
+  <tr><td class="k">Algorithme</td><td>Tri par comptage, avec un seau par valeur de priorité (détaillé ci-dessus). Stable.</td></tr>
+  <tr><td class="k">Complexité en temps</td><td><b>O(n + k)</b>, soit O(n) puisque k = 5.</td></tr>
+  <tr><td class="k">Complexité en espace</td><td><b>O(n + k)</b> : les seaux contiennent les n colis et la liste résultat.</td></tr>
+  <tr><td class="k">Alternative</td><td>Le tri fusion de 5.1, en O(n log n), qui fonctionne aussi mais ne tire pas parti du petit nombre de priorités.</td></tr>
+  <tr><td class="k">Justification</td><td>Le domaine de la clé est petit et connu à l'avance : c'est le cas idéal du tri par comptage. Mesuré à 100&nbsp;000 colis, il prend <b>2,9 ms, contre 116,5 ms</b> pour le tri fusion sur la même clé, soit <b>40 fois plus rapide</b>. Ce tri ne convient pas au poids ni à la valeur : sans borne connue, il faudrait autant de seaux que de valeurs possibles.</td></tr>
+</table>
+
+<h2>5.3 Tri combiné : priorité, puis valeur</h2>
+<p>Trier par priorité seule laisse les colis de même priorité dans leur ordre d'enregistrement. Pour les
+départager par valeur, on exploite la <b>stabilité</b> :</p>
+<ol>
+  <li>on trie d'abord par <b>valeur</b> (tri fusion) ;</li>
+  <li>puis on trie ce résultat par <b>priorité</b> (tri par comptage, stable).</li>
+</ol>
+<p>Le second tri regroupe les colis par priorité. Comme il est stable, il conserve à l'intérieur de chaque
+priorité l'ordre des valeurs obtenu au premier tri. Le coût total est O(n log n) + O(n) = <b>O(n log n)</b>.
+Sur la figure 6, le tri par priorité seul place 102 devant 106 (ordre d'enregistrement), alors que le tri
+combiné place 106 (valeur 30) devant 102 (valeur 10). Les tests vérifient ce tri sur 1&nbsp;000 colis
+aléatoires, en le comparant à un tri de référence sur le couple (priorité, valeur).</p>
+<figure>
+  <img src="captures/etape3_demo.png" style="width: 64%;" alt="Démonstration des tris">
+  <figcaption>Figure 6 - Les quatre tris appliqués aux colis du sujet (plus le colis 106)</figcaption>
+</figure>
+
+<h2>5.4 Fonction native <code>sorted()</code> : fonctionnement et raison de ne pas l'utiliser</h2>
+<p>La fonction <code>sorted()</code> de Python utilise l'algorithme <b>Timsort</b>. Il repère dans la liste
+les portions déjà triées (appelées « runs »), trie les petites portions par insertion, puis les fusionne
+deux à deux comme le tri fusion. Il est stable, s'exécute en O(n log n) dans le pire cas et en O(n) sur
+une liste déjà triée, et utilise O(n) de mémoire. Comme il est écrit en C, il est environ <b>19 fois plus
+rapide</b> que notre tri fusion écrit en Python (6,2 ms contre 119,9 ms pour 100&nbsp;000 colis), pour une
+complexité identique.</p>
+<p>Il n'est pas utilisé dans le programme, parce que le sujet demande de maîtriser l'algorithme au cœur de
+chaque fonctionnalité. Il sert en revanche de <b>référence</b> : les tests vérifient que nos tris donnent
+exactement le même résultat que <code>sorted()</code>, y compris l'ordre des égalités. Dans un logiciel
+en production, on utiliserait <code>sorted()</code> pour le poids et la valeur, et l'on conserverait le
+tri par comptage pour la priorité : même face à <code>sorted()</code>, il reste deux fois plus rapide
+(2,9 ms contre 6,2 ms).</p>
+
+<h2>5.5 Mesures</h2>
+<p>Le script <code>outils/mesure_tris.py</code> trie des collections de 100 à 100&nbsp;000 colis aléatoires et
+retient le meilleur temps sur plusieurs exécutions. Le tri par insertion n'est mesuré que jusqu'à
+10&nbsp;000 colis : au-delà, il prendrait plusieurs minutes.</p>
+<table>
+  <tr><th class="n">n</th><th class="n">Poids : insertion</th><th class="n">Poids : fusion (retenu)</th><th class="n">Poids : <code>sorted()</code></th><th class="n">Priorité : comptage (retenu)</th><th class="n">Priorité : fusion</th></tr>
+  <tr><td class="n">100</td><td class="n">112 µs</td><td class="n">60 µs</td><td class="n">4 µs</td><td class="n">4 µs</td><td class="n">60 µs</td></tr>
+  <tr><td class="n">1&nbsp;000</td><td class="n">10,6 ms</td><td class="n">861 µs</td><td class="n">51 µs</td><td class="n">34 µs</td><td class="n">839 µs</td></tr>
+  <tr><td class="n">10&nbsp;000</td><td class="n">1,04 s</td><td class="n">10,1 ms</td><td class="n">595 µs</td><td class="n">285 µs</td><td class="n">9,8 ms</td></tr>
+  <tr><td class="n">100&nbsp;000</td><td class="n">&asymp; 100 s (estimé)</td><td class="n">119,9 ms</td><td class="n">6,2 ms</td><td class="n">2,9 ms</td><td class="n">116,5 ms</td></tr>
+</table>
+<figure>
+  <img src="captures/etape3_mesures.png" style="width: 80%;" alt="Mesure des temps de tri">
+  <figcaption>Figure 7 - Temps de tri selon l'algorithme et le nombre de colis</figcaption>
+</figure>
+
+<h3>Analyse des mesures</h3>
+<ul>
+  <li><b>Tri par insertion :</b> le temps est multiplié par environ <b>100</b> chaque fois que n est multiplié
+  par 10 (112 µs, puis 10,6 ms, puis 1,04 s). C'est la signature d'un coût O(n²). À 10&nbsp;000 colis, il est déjà
+  100 fois plus lent que le tri fusion.</li>
+  <li><b>Tri fusion :</b> le temps est multiplié par environ <b>12</b> quand n est multiplié par 10 (10,1 ms, puis
+  119,9 ms). La théorie prévoit 10 &times; log(100&nbsp;000) / log(10&nbsp;000) = 12,5. La mesure est conforme à O(n log n).</li>
+  <li><b>Tri par comptage :</b> le temps est multiplié par environ <b>10</b> quand n est multiplié par 10 (285 µs,
+  puis 2,9 ms). C'est bien une croissance linéaire, O(n).</li>
+  <li><b>Natif contre maison :</b> <code>sorted()</code> a la même croissance que notre tri fusion, avec un
+  facteur constant environ 19 fois plus petit. Ce n'est pas un meilleur algorithme : c'est le même type
+  d'algorithme, exécuté en C plutôt qu'interprété.</li>
+</ul>
+<p>Conclusion : avec 100&nbsp;000 colis, les tris retenus restent largement assez rapides pour une utilisation
+interactive : 120 ms au plus, 3 ms pour la priorité. Un tri naïf en O(n²) serait inutilisable.</p>
+
+<h2>5.6 Validation de l'étape</h2>
+<p>Seize tests unitaires (<code>tests/test_tris.py</code>) vérifient :</p>
+<ul>
+  <li>les cas limites : liste vide, un seul élément, liste déjà triée, en ordre inverse, éléments tous égaux ;</li>
+  <li>que le tri fusion donne <b>exactement</b> le même résultat que <code>sorted()</code> sur plus de 50 listes
+  aléatoires, de 0 à 5&nbsp;000 éléments, dans les deux sens ;</li>
+  <li>la <b>stabilité</b> des trois tris, sur 2&nbsp;000 éléments comportant de nombreuses égalités ;</li>
+  <li>que la liste d'origine n'est pas modifiée et que la clé n'est calculée qu'une fois par élément ;</li>
+  <li>les ordres exacts attendus pour les colis du sujet, pour chaque critère et dans les deux sens ;</li>
+  <li>le tri combiné « priorité puis valeur », et la conformité à <code>sorted()</code> sur 20&nbsp;000 colis
+  pour les trois critères.</li>
+</ul>
+<figure>
+  <img src="captures/etape3_tests.png" alt="Tests de l'étape 3">
+  <figcaption>Figure 8 - Exécution des tests unitaires de l'étape 3 : 16 tests réussis</figcaption>
+</figure>
+
 </body>
 </html>
