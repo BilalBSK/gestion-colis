@@ -136,9 +136,14 @@ class TestMenuCamion(unittest.TestCase):
         self.assertIn("2 colis, 14 / 14 kg, valeur totale 45", sortie)
         self.assertIn("2 colis, 11 / 14 kg, valeur totale 43", sortie)          # glouton
 
+    def test_pas_de_confirmation_grace_a_l_elagage(self):
+        sortie = self.session("8\n4\n\n5\n1000\n1\n0\n")      # 100 000 colis, 1 000 kg
+        self.assertNotIn("Attention", sortie)
+        self.assertIn("3983 colis candidats sur 100000 après élagage", sortie)
+
     def test_confirmation_pour_un_tres_gros_calcul(self):
-        sortie = self.session("8\n4\n\n5\n1000\n1\nn\n6\n0\n")
-        self.assertIn("Attention : 1 x 100000 colis x 1001 capacités", sortie)
+        sortie = self.session("8\n4\n\n5\n100000\n1\nn\n6\n0\n")   # camion de 100 t au kg près
+        self.assertRegex(sortie, r"Attention : 1 x \d+ colis candidats x 100001 capacités")
         self.assertNotIn("Chargement optimal", sortie)
         self.assertIn("utilisez d'abord l'option 5", sortie)
 

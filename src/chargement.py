@@ -80,6 +80,7 @@ class Chargement:
     methode: str = ""
     score: float = 0          # somme des utilités (= valeur totale pour la règle « valeur »)
     regle: str = REGLES["valeur"]
+    candidats: int = 0        # nombre de colis réellement traités par l'algorithme (n')
 
     @property
     def poids_total(self):
@@ -112,9 +113,56 @@ def _verifier_capacite(capacite):
 
 
 # ---------------------------------------------------------------------- #
+# Élagage par dominance (pré-traitement exact, partie 10 du rapport)
+# ---------------------------------------------------------------------- #
+def elaguer(colis, capacite, utilite=utilite_valeur):
+    """Écarte les colis qui ne peuvent appartenir à AUCUN chargement optimal.
+
+    Un chargement valide contient au plus k = W // p colis de poids p. Pour
+    chaque poids p, il suffit donc de garder les k colis de plus grande utilité.
+    Preuve (argument d'échange) : si un chargement optimal contenait un colis X
+    de poids p hors de ces k meilleurs, l'un des k meilleurs, Y, serait
+    forcément absent du chargement (il contient au plus k colis de poids p).
+    Remplacer X par Y ne change pas le poids et n'abaisse pas l'utilité : on
+    obtient un chargement optimal qui n'utilise que les colis gardés.
+
+    Colis gardés : au plus somme sur p de W // p, soit environ W x ln(poids max),
+    quel que soit le nombre total de colis. Les colis trop lourds ou d'utilité
+    nulle sont aussi écartés.
+    Coût : O(n) pour regrouper par poids + O(n log n) au pire pour trier les
+    groupes (tri fusion). Mémoire : O(n).
+    """
+    par_poids = {}
+    for c in colis:
+        if c.poids <= capacite and utilite(c) > 0:
+            par_poids.setdefault(c.poids, []).append(c)
+    gardes = []
+    for poids, groupe in par_poids.items():
+        k = capacite // poids
+        if len(groupe) > k:
+            groupe = tri_fusion(groupe, utilite, decroissant=True)[:k]
+        gardes.extend(groupe)
+    return gardes
+
+
+def nombre_candidats(colis, capacite):
+    """Nombre de colis gardés par l'élagage (hors colis d'utilité nulle), sans les trier.
+
+    Le nombre gardé pour un poids p vaut min(nombre de colis de poids p, W // p) :
+    il ne dépend pas de la règle de sélection. O(n). Sert à estimer le coût
+    n' x (W + 1) du calcul avant de le lancer.
+    """
+    par_poids = {}
+    for c in colis:
+        if c.poids <= capacite:
+            par_poids[c.poids] = par_poids.get(c.poids, 0) + 1
+    return sum(min(nombre, capacite // poids) for poids, nombre in par_poids.items())
+
+
+# ---------------------------------------------------------------------- #
 # Programmation dynamique (méthode retenue)
 # ---------------------------------------------------------------------- #
-def sac_a_dos_dp(colis, capacite, utilite=utilite_valeur):
+def sac_a_dos_dp(colis, capacite, utilite=utilite_valeur, avec_elagage=True):
     """Chargement OPTIMAL par programmation dynamique.
 
     meilleur[w] = meilleure utilité totale possible avec une capacité de w kg,
@@ -131,12 +179,17 @@ def sac_a_dos_dp(colis, capacite, utilite=utilite_valeur):
     d'octets pris[w] (1 si le colis améliore meilleur[w]), puis on remonte les
     décisions du dernier colis au premier en partant de w = W.
 
-    Temps   : O(n x W).
-    Mémoire : O(W) pour ``meilleur`` + n x (W + 1) octets pour les décisions.
+    Temps   : O(n' x W), avec n' le nombre de colis candidats.
+    Mémoire : O(W) pour ``meilleur`` + n' x (W + 1) octets pour les décisions.
+    Sans élagage, n' = n (moins les colis trop lourds). Avec élagage (par défaut),
+    n' <= somme des W // p : il ne dépend plus du nombre total de colis.
     """
     _verifier_capacite(capacite)
-    # Un colis plus lourd que le camion ne peut jamais être chargé : O(n)
-    candidats = [c for c in colis if c.poids <= capacite]
+    if avec_elagage:
+        candidats = elaguer(colis, capacite, utilite)
+    else:
+        # Un colis plus lourd que le camion ne peut jamais être chargé : O(n)
+        candidats = [c for c in colis if c.poids <= capacite]
 
     meilleur = [0] * (capacite + 1)
     decisions = []                       # liste de (colis, pris)
@@ -160,7 +213,8 @@ def sac_a_dos_dp(colis, capacite, utilite=utilite_valeur):
             selection.append(c)
             w -= c.poids
     selection.reverse()
-    return Chargement(capacite, selection, "programmation dynamique", meilleur[capacite])
+    methode = "programmation dynamique" + (" avec élagage" if avec_elagage else "")
+    return Chargement(capacite, selection, methode, meilleur[capacite], candidats=len(candidats))
 
 
 # ---------------------------------------------------------------------- #

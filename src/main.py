@@ -10,7 +10,7 @@ import os
 import time
 
 from affichage import ENTETE, SEPARATEUR, ligne, page
-from chargement import ALPHA_PAR_DEFAUT, REGLES
+from chargement import ALPHA_PAR_DEFAUT, REGLES, nombre_candidats
 from chargement import preparer_camion as calculer_chargement
 from colis import PRIORITE_MAX, PRIORITE_MIN, Colis
 from generateur import NIVEAUX, generer_colis
@@ -186,12 +186,13 @@ class Application:
             alpha = lire_reel("Importance de la priorité alpha (0 = ignorée, 1 = une priorité 5 "
                               "compte double) [1] : ", minimum=0, defaut=ALPHA_PAR_DEFAUT)
         colis = self.gestion.lister()
-        # Coût de la programmation dynamique : (nombre de colis) x (capacité + 1) cases,
-        # deux fois si l'on calcule aussi le chargement de référence « valeur seule »
+        # Coût de la programmation dynamique : (colis candidats après élagage) x (capacité + 1)
+        # cases, deux fois si l'on calcule aussi le chargement de référence « valeur seule »
         calculs = 1 if regle == "valeur" else 2
-        cases = len(colis) * (capacite + 1) * calculs
+        candidats = nombre_candidats(colis, capacite)
+        cases = candidats * (capacite + 1) * calculs
         if cases > CASES_AVANT_CONFIRMATION:
-            print(f"  Attention : {calculs} x {len(colis)} colis x {capacite + 1} capacités = "
+            print(f"  Attention : {calculs} x {candidats} colis candidats x {capacite + 1} capacités = "
                   f"{cases:,} cases (environ {cases / calculs / 1e6:.0f} Mo).".replace(",", " "))
             if not lire_oui_non("  Le calcul exact peut prendre plusieurs secondes. Continuer ?"):
                 return
@@ -205,7 +206,8 @@ class Application:
         self.chargement = optimal
 
         print(f"\n  Règle : {optimal.regle}")
-        print(f"  Chargement optimal (programmation dynamique, {formater_duree(duree_dp)}) :")
+        print(f"  Chargement optimal ({optimal.methode}, {formater_duree(duree_dp)}) :")
+        print(f"    {optimal.candidats} colis candidats sur {len(colis)} après élagage")
         print(f"    {resume(optimal)}")
         if regle != "valeur":
             # Chargement de référence sans priorité : montre ce que la priorité « coûte »

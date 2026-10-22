@@ -1,5 +1,8 @@
 """Mesure le coût du chargement optimal (programmation dynamique) selon n et W.
 
+Version de base SANS élagage (partie 8 du rapport) ; l'élagage et son gain sont
+étudiés dans la partie 10 (outils/benchmark.py).
+
   1. n varie (100 à 100 000 colis), capacité fixe W = 1 000 kg ;
   2. W varie (100 à 10 000 kg), nombre de colis fixe n = 10 000.
 Le glouton est mesuré à titre de comparaison (temps et valeur obtenue).
@@ -24,13 +27,13 @@ def fmt_temps(s):
 
 def mesurer(colis, capacite):
     debut = time.perf_counter()
-    dp = sac_a_dos_dp(colis, capacite)
+    dp = sac_a_dos_dp(colis, capacite, avec_elagage=False)
     t_dp = time.perf_counter() - debut
     debut = time.perf_counter()
     gl = glouton(colis, capacite)
     t_gl = time.perf_counter() - debut
     tracemalloc.start()
-    sac_a_dos_dp(colis, capacite)
+    sac_a_dos_dp(colis, capacite, avec_elagage=False)
     pic = tracemalloc.get_traced_memory()[1]
     tracemalloc.stop()
     cases = len(colis) * (capacite + 1)

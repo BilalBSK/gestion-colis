@@ -45,6 +45,13 @@ ou 100 000 colis pour tester le passage à l'échelle. Menu :
 python3 -m unittest discover -s tests -v
 ```
 
+## Mesures de performance
+
+```bash
+python3 outils/benchmark.py      # principales opérations, 100 à 100 000 colis
+python3 outils/graphiques.py     # courbes (docs/graphiques/*.svg) à partir des mesures
+```
+
 ## Organisation du dépôt
 
 ```
@@ -57,7 +64,8 @@ projet/
 │   ├── tris.py       tri fusion et tri par comptage (implémentés à la main)
 │   ├── generateur.py jeux de données aléatoires reproductibles (100 à 100 000 colis)
 │   ├── chargement.py chargement optimal du camion (sac à dos 0/1 : programmation dynamique),
-│   │                 règles de priorité (valeur seule, valeur pondérée, priorité stricte)
+│   │                 règles de priorité (valeur seule, valeur pondérée, priorité stricte),
+│   │                 élagage par dominance (optimisation exacte)
 │   ├── saisie.py     saisies clavier robustes
 │   └── main.py       interface en menu (point d'entrée)
 ├── tests/        tests unitaires

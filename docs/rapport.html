@@ -951,7 +951,7 @@ moins.</p>
   <img src="captures/etape6_comparaison.png" style="width: 76%;" alt="Comparaison des trois méthodes">
   <figcaption>Figure 23 - Programmation dynamique, glouton et force brute pour toutes les capacités de 0 à 23 kg</figcaption>
 </figure>
-<p>Dix-sept tests (<code>tests/test_chargement.py</code>) complètent cette vérification :</p>
+<p>Dix-huit tests (<code>tests/test_chargement.py</code>) complètent cette vérification :</p>
 <ul>
   <li>les résultats exacts de l'exemple du sujet : 50 kg (tout est chargé, 77), 14 kg (A + B = 45, et le glouton
   B + C = 43), 15 kg (B + C + D = 57), capacités trop petites, capacité invalide, colis trop lourd ignoré ;</li>
@@ -959,11 +959,12 @@ moins.</p>
   égale la force brute, respecte la capacité et ne charge aucun colis en double ;</li>
   <li>sur 500 autres instances, le glouton respecte toujours la capacité et ne dépasse jamais l'optimum, mais
   il lui est strictement inférieur dans certains cas ;</li>
-  <li>les options 5 et 6 du menu, y compris la demande de confirmation avant un calcul très lourd.</li>
+  <li>les options 5 et 6 du menu, y compris la demande de confirmation avant un calcul très lourd (et son absence
+  lorsque l'élagage de la partie 10 rend le calcul léger).</li>
 </ul>
 <figure>
   <img src="captures/etape6_tests.png" alt="Tests de l'étape 6">
-  <figcaption>Figure 24 - Exécution des tests de l'étape 6 : 17 tests réussis</figcaption>
+  <figcaption>Figure 24 - Exécution des tests de l'étape 6 : 18 tests réussis</figcaption>
 </figure>
 
 <h2>8.6 Utilisation depuis le menu</h2>
@@ -985,7 +986,7 @@ collection n'est pas modifiée : on peut préparer plusieurs camions de capacit�
 cases et la mémoire nécessaire, puis demande une confirmation :</p>
 <figure>
   <img src="captures/etape6_grand.png" style="width: 72%;" alt="Camion de 1&nbsp;000 kg parmi 100&nbsp;000 colis">
-  <figcaption>Figure 27 - Camion de 1&nbsp;000 kg parmi 100&nbsp;000 colis : confirmation, calcul en 2,06 s</figcaption>
+  <figcaption>Figure 27 - Camion de 1&nbsp;000 kg parmi 100&nbsp;000 colis : confirmation, calcul en 2,06 s (version de base, sans l'élagage de la partie 10)</figcaption>
 </figure>
 
 <h2>8.7 Coût mesuré</h2>
@@ -1212,6 +1213,140 @@ nombre de colis chargés pour chaque priorité.</p>
 <figure>
   <img src="captures/etape7_tests.png" alt="Tests de l'étape 7">
   <figcaption>Figure 33 - Exécution des tests de l'étape 7 : 15 tests réussis</figcaption>
+</figure>
+
+<!-- ============================================================ -->
+<!-- 10. ÉTUDE DES PERFORMANCES (étape 8)                         -->
+<!-- ============================================================ -->
+<h1>10. Étude des performances</h1>
+<p>L'entreprise utilise régulièrement le système pour rechercher et organiser ses colis, et pour préparer
+ses camions. Cette partie mesure le comportement des principales opérations pour les quatre tailles de
+données du sujet, analyse trois d'entre elles en détail, puis présente l'optimisation apportée à la plus
+coûteuse : la préparation du camion.</p>
+
+<h2>10.1 Protocole de mesure</h2>
+<table>
+  <tr><th>Élément</th><th>Choix</th></tr>
+  <tr><td>Machine</td><td>Apple M5, 16 Go de mémoire, Python 3.14.7</td></tr>
+  <tr><td>Données</td><td>Colis générés par <code>generateur.py</code> (graine fixe : mesures reproductibles), 100, 1&nbsp;000, 10&nbsp;000 et 100&nbsp;000 colis</td></tr>
+  <tr><td>Camion</td><td>Capacité de 1&nbsp;000 kg, règle « valeur seule »</td></tr>
+  <tr><td>Temps</td><td>Meilleur temps sur 3 à 5 exécutions (<code>time.perf_counter</code>), ce qui écarte les perturbations du système. La recherche est une moyenne sur 10&nbsp;000 recherches.</td></tr>
+  <tr><td>Mémoire</td><td>Pic de mémoire allouée pendant le calcul (<code>tracemalloc</code>)</td></tr>
+  <tr><td>Scripts</td><td><code>outils/benchmark.py</code> (mesures, enregistrées dans <code>docs/mesures/benchmark.json</code>) et <code>outils/graphiques.py</code> (courbes)</td></tr>
+</table>
+
+<h2>10.2 Résultats</h2>
+<table>
+  <tr><th>Opération</th><th>Complexité</th><th class="n">n = 100</th><th class="n">n = 1&nbsp;000</th><th class="n">n = 10&nbsp;000</th><th class="n">n = 100&nbsp;000</th></tr>
+  <tr><td>Construction (n ajouts)</td><td>O(n)</td><td class="n">4,6 µs</td><td class="n">42,3 µs</td><td class="n">409 µs</td><td class="n">4,6 ms</td></tr>
+  <tr><td>Recherche, table de hachage</td><td>O(1)</td><td class="n">21 ns</td><td class="n">22 ns</td><td class="n">30 ns</td><td class="n">41 ns</td></tr>
+  <tr><td>Recherche séquentielle</td><td>O(n)</td><td class="n">371 ns</td><td class="n">4,6 µs</td><td class="n">40,6 µs</td><td class="n">535 µs</td></tr>
+  <tr><td>Tri par poids, tri fusion</td><td>O(n log n)</td><td class="n">56,5 µs</td><td class="n">777 µs</td><td class="n">9,8 ms</td><td class="n">118,7 ms</td></tr>
+  <tr><td>Tri par poids, <code>sorted()</code></td><td>O(n log n)</td><td class="n">3,4 µs</td><td class="n">44,2 µs</td><td class="n">517 µs</td><td class="n">6,2 ms</td></tr>
+  <tr><td>Tri par priorité, comptage</td><td>O(n)</td><td class="n">4,0 µs</td><td class="n">33,9 µs</td><td class="n">300 µs</td><td class="n">3,2 ms</td></tr>
+  <tr><td>Statistiques</td><td>O(n)</td><td class="n">12,6 µs</td><td class="n">115 µs</td><td class="n">1,2 ms</td><td class="n">12,4 ms</td></tr>
+  <tr><td>Chargement, DP sans élagage</td><td>O(n &times; W)</td><td class="n">2,5 ms</td><td class="n">21,0 ms</td><td class="n">201 ms</td><td class="n">2,03 s</td></tr>
+  <tr><td>Chargement, DP avec élagage</td><td>O(n log n + n' &times; W)</td><td class="n">2,5 ms</td><td class="n">21,3 ms</td><td class="n">70,8 ms</td><td class="n">178,2 ms</td></tr>
+  <tr><td>Chargement, glouton</td><td>O(n log n)</td><td class="n">65 µs</td><td class="n">823 µs</td><td class="n">10,3 ms</td><td class="n">125,2 ms</td></tr>
+  <tr><td>Mémoire, DP sans élagage</td><td>O(n &times; W)</td><td class="n">0,1 Mo</td><td class="n">1,1 Mo</td><td class="n">11,3 Mo</td><td class="n">113,7 Mo</td></tr>
+  <tr><td>Mémoire, DP avec élagage</td><td>O(n + n' &times; W)</td><td class="n">0,1 Mo</td><td class="n">1,1 Mo</td><td class="n">3,8 Mo</td><td class="n">7,3 Mo</td></tr>
+  <tr><td>Colis candidats après élagage (n')</td><td></td><td class="n">100</td><td class="n">1&nbsp;000</td><td class="n">3&nbsp;130</td><td class="n">3&nbsp;983</td></tr>
+</table>
+<figure>
+  <img src="captures/etape8_benchmark.png" style="width: 96%;" alt="Benchmark complet">
+  <figcaption>Figure 34 - Mesures des principales opérations aux quatre niveaux, et effet de la capacité du camion</figcaption>
+</figure>
+
+<p>Les deux graphiques suivants reprennent ces mesures en <b>échelle logarithmique sur les deux axes</b>. Avec
+cette échelle, une opération en O(1) donne une droite horizontale, et une opération en O(n) une droite qui
+monte d'une graduation chaque fois que n est multiplié par 10. On lit donc directement la complexité dans la
+pente des courbes.</p>
+<figure>
+  <img src="graphiques/gestion.svg" style="width: 88%;" alt="Évolution des opérations de gestion">
+  <figcaption>Figure 35 - Opérations de gestion : la recherche par hachage reste horizontale (O(1)), les autres montent d'une décade par décade (O(n), O(n log n))</figcaption>
+</figure>
+<figure>
+  <img src="graphiques/chargement.svg" style="width: 88%;" alt="Évolution du chargement">
+  <figcaption>Figure 36 - Préparation du camion : sans élagage, le coût suit n ; avec élagage, il s'aplatit au-delà de 1&nbsp;000 colis</figcaption>
+</figure>
+
+<h2>10.3 Analyse des opérations</h2>
+<p>Le sujet demande d'analyser au moins deux opérations dont le coût augmente avec la quantité de données.
+Les trois plus importantes sont présentées ci-dessous.</p>
+
+<h3>Opération 1 : rechercher un colis</h3>
+<table>
+  <tr><td class="k">Opération</td><td>Retrouver un colis à partir de son identifiant (option 3 du menu).</td></tr>
+  <tr><td class="k">Complexité</td><td>Table de hachage : O(1) en moyenne en temps, O(n) en espace pour la table (environ 52 octets par colis). Pour comparaison, la recherche séquentielle est en O(n) en temps.</td></tr>
+  <tr><td class="k">Évolution</td><td>Quand n est multiplié par 1&nbsp;000, la recherche par hachage passe seulement de 21 à 41 ns : le nombre d'opérations ne change pas, seul l'accès à la mémoire ralentit un peu quand la table ne tient plus dans le cache du processeur. La recherche séquentielle est multipliée par 10 à chaque décade et atteint 535 µs, soit 13&nbsp;000 fois plus.</td></tr>
+  <tr><td class="k">Adaptation aux grands volumes</td><td><b>Oui</b>, parfaitement : le coût d'une recherche ne dépend pas du nombre de colis.</td></tr>
+  <tr><td class="k">Amélioration possible</td><td>Le nombre d'opérations est déjà minimal. Pour d'autres besoins, on pourrait ajouter des <b>index secondaires</b> (par exemple destination &rarr; liste de colis, pour une recherche par ville en O(1) au lieu de O(n)) ou un <b>arbre B</b> (index de base de données) pour les recherches par intervalle et les données trop volumineuses pour la mémoire.</td></tr>
+</table>
+
+<h3>Opération 2 : trier les colis</h3>
+<table>
+  <tr><td class="k">Opération</td><td>Organiser les colis par poids, valeur ou priorité (option 4 du menu).</td></tr>
+  <tr><td class="k">Complexité</td><td>Tri fusion (poids, valeur) : O(n log n) en temps, O(n) en espace. Tri par comptage (priorité) : O(n + k) en temps et en espace, avec k = 5.</td></tr>
+  <tr><td class="k">Évolution</td><td>Le tri fusion est multiplié par environ 12 à chaque décade (9,8 ms puis 118,7 ms) : un peu plus que 10, à cause du facteur log n. Le tri par comptage est multiplié par environ 10 (300 µs puis 3,2 ms). Sur la figure 35, la courbe du tri fusion est légèrement plus pentue que celle du comptage.</td></tr>
+  <tr><td class="k">Adaptation aux grands volumes</td><td><b>Oui</b> pour les quatre niveaux : 119 ms au plus pour 100&nbsp;000 colis. En extrapolant, il faudrait environ 1,4 s pour un million de colis, ce qui reste acceptable mais devient perceptible.</td></tr>
+  <tr><td class="k">Amélioration possible</td><td>(1) Utiliser <code>sorted()</code> (Timsort écrit en C), 19 fois plus rapide avec la même complexité. (2) Le poids étant borné entre 1 et 30 kg dans nos données, le trier lui aussi par comptage, en O(n). (3) Comme l'interface n'affiche qu'une page de 20 colis, n'extraire que les 20 premiers à l'aide d'un tas : O(n log 20) au lieu de O(n log n). (4) Si l'on trie souvent, tenir à jour des index déjà triés à chaque ajout (arbre équilibré, O(log n) par ajout).</td></tr>
+</table>
+
+<h3>Opération 3 : préparer un camion</h3>
+<table>
+  <tr><td class="k">Opération</td><td>Choisir les colis à charger pour maximiser la valeur (ou l'utilité) sans dépasser la capacité W (option 5 du menu).</td></tr>
+  <tr><td class="k">Complexité</td><td>Programmation dynamique sans élagage : O(n &times; W) en temps et en espace. Avec élagage : O(n log n + n' &times; W) en temps et O(n + n' &times; W) en espace, où le nombre n' de colis candidats ne dépend plus de n (10.4).</td></tr>
+  <tr><td class="k">Évolution</td><td>Sans élagage, le temps et la mémoire sont multipliés par 10 à chaque décade : 2,03 s et 113,7 Mo pour 100&nbsp;000 colis. C'était l'opération la plus coûteuse du programme, de loin. Avec élagage, n' plafonne vers 4&nbsp;000 : il ne faut plus que <b>178 ms et 7,3 Mo</b>, soit 11 fois moins de temps et 15 fois moins de mémoire, pour exactement la même valeur.</td></tr>
+  <tr><td class="k">Adaptation aux grands volumes</td><td><b>Oui pour le nombre de colis</b> : avec l'élagage, passer de 10&nbsp;000 à 100&nbsp;000 colis ne fait passer le temps que de 71 à 178 ms. <b>La limite devient la capacité</b> : n' étant proportionnel à W, le nombre de cases n' &times; W croît comme W². Il faut 2,01 s pour W = 5&nbsp;000 kg (figure 34). Un semi-remorque de 20 tonnes pesé au kilogramme près demanderait environ 10<sup>9</sup> cases, soit une vingtaine de secondes et environ 1 Go en Python.</td></tr>
+  <tr><td class="k">Amélioration possible</td><td><b>Réalisée</b> : l'élagage par dominance (10.4). <b>Possibles</b> : stocker les décisions sur 1 bit au lieu de 1 octet (8 fois moins de mémoire) ; méthode de Hirschberg (« diviser pour régner ») pour reconstruire la solution avec seulement O(W) de mémoire, au prix d'un temps environ doublé ; exprimer les poids par tranches de 5 ou 10 kg (W divisé d'autant, mais résultat approché) ; écrire la boucle interne en C. Pour une réponse immédiate, le glouton (125 ms) peut servir de solution provisoire, sans garantie.</td></tr>
+</table>
+
+<h2>10.4 Amélioration réalisée : l'élagage par dominance</h2>
+<h3>Idée</h3>
+<p>Un camion de W kg ne peut contenir au plus que ⌊W/p⌋ colis de poids p : 1&nbsp;000 colis de 1 kg, 500 colis de
+2 kg, 33 colis de 30 kg pour un camion de 1&nbsp;000 kg. Parmi tous les colis de poids p, <b>seuls les ⌊W/p⌋
+meilleurs</b> (de plus grande utilité) peuvent donc servir. Avant la programmation dynamique, on regroupe
+les colis par poids et l'on ne garde que ces meilleurs-là. Les colis trop lourds et ceux d'utilité nulle sont
+aussi écartés.</p>
+<h3>Pourquoi l'optimum est conservé</h3>
+<p>Supposons qu'un chargement optimal contienne un colis X de poids p qui ne fait pas partie des ⌊W/p⌋ meilleurs.
+Ce chargement contient au plus ⌊W/p⌋ colis de poids p ; au moins l'un des meilleurs, Y, n'y est donc pas.
+Remplacer X par Y ne change pas le poids total (même poids p) et ne diminue pas l'utilité (Y est au moins aussi
+bon que X). On obtient ainsi un chargement optimal qui n'utilise que des colis gardés : l'élagage ne fait
+<b>jamais perdre l'optimum</b>. Les tests le vérifient contre la force brute sur 300 instances et pour les trois
+règles, et le benchmark le contrôle à chaque mesure : les valeurs avec et sans élagage doivent être égales.</p>
+<h3>Taille du problème après élagage</h3>
+<p>Le nombre de candidats est au plus n' &le; &Sigma;<sub>p</sub> ⌊W/p⌋. Pour des poids de 1 à 30 kg, cette somme
+vaut environ W &times; (ln 30 + 0,58), soit environ 4 W : <b>elle ne dépend pas du nombre de colis</b>. Pour
+W = 1&nbsp;000 kg, la borne vaut 3&nbsp;983, exactement le nombre mesuré pour 100&nbsp;000 colis. Avec 10&nbsp;000
+colis, on mesure 3&nbsp;130 candidats : certains poids n'ont pas assez de colis pour atteindre leur quota.</p>
+<table>
+  <tr><td class="k">Problème</td><td>Réduire le coût O(n &times; W) du chargement optimal, qui atteignait 2 s et 114 Mo pour 100&nbsp;000 colis.</td></tr>
+  <tr><td class="k">Solution</td><td>Élagage par dominance : pour chaque poids p, ne garder que les ⌊W/p⌋ colis de plus grande utilité, puis appliquer la programmation dynamique aux seuls candidats.</td></tr>
+  <tr><td class="k">Temps</td><td>Élagage : O(n) pour regrouper par poids, plus O(n log n) au pire pour trier les groupes (tri fusion). Programmation dynamique : O(n' &times; W) avec n' &le; &Sigma; ⌊W/p⌋ &asymp; 4 W.</td></tr>
+  <tr><td class="k">Espace</td><td>O(n) pour les groupes, plus O(n' &times; W) octets pour les décisions.</td></tr>
+  <tr><td class="k">Alternative</td><td>Garder la programmation dynamique sur tous les colis (O(n &times; W)), ou passer au glouton (rapide mais non optimal).</td></tr>
+  <tr><td class="k">Justification</td><td>Le résultat reste <b>exactement optimal</b> (preuve par échange), et le coût du calcul devient indépendant du nombre de colis : il est divisé par 11 en temps et par 15 en mémoire à 100&nbsp;000 colis.</td></tr>
+</table>
+<p>Dans le menu, l'option 5 indique le nombre de candidats retenus. L'estimation du coût affichée avant un
+très gros calcul tient compte de l'élagage : ce nombre est calculé en O(n), sans trier les colis.</p>
+<figure>
+  <img src="captures/etape8_menu.png" style="width: 72%;" alt="Chargement avec élagage dans le menu">
+  <figcaption>Figure 37 - 100&nbsp;000 colis, camion de 1&nbsp;000 kg : 3&nbsp;983 candidats après élagage, calcul exact en 178 ms (contre 2,06 s en partie 8)</figcaption>
+</figure>
+
+<h2>10.5 Validation de l'étape</h2>
+<p>Sept tests (<code>tests/test_performances.py</code>) vérifient que l'élagage :</p>
+<ul>
+  <li>garde exactement les meilleurs colis de chaque poids, et écarte les colis trop lourds ou sans valeur ;</li>
+  <li>respecte la borne &Sigma; ⌊W/p⌋, quel que soit le nombre de colis ;</li>
+  <li>est correctement compté par la fonction d'estimation utilisée par le menu ;</li>
+  <li><b>ne change jamais la valeur optimale</b> : contre la force brute sur 300 instances et pour les trois règles,
+  contre la version sans élagage sur des instances de 3&nbsp;000 colis, et au niveau 4 du sujet.</li>
+</ul>
+<figure>
+  <img src="captures/etape8_tests.png" alt="Tests de l'étape 8">
+  <figcaption>Figure 38 - Exécution des tests de l'étape 8 : 7 tests réussis</figcaption>
 </figure>
 
 </body>
