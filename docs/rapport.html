@@ -585,5 +585,109 @@ interactive : 120 ms au plus, 3 ms pour la priorité. Un tri naïf en O(n²) ser
   <figcaption>Figure 8 - Exécution des tests unitaires de l'étape 3 : 16 tests réussis</figcaption>
 </figure>
 
+<!-- ============================================================ -->
+<!-- 6. INTERFACE UTILISATEUR (étape 4)                           -->
+<!-- ============================================================ -->
+<h1>6. Interface utilisateur</h1>
+<p>L'objectif fixé par le sujet n'est pas une interface complexe, mais une utilisation <b>cohérente</b> qui
+permette de <b>tester facilement</b> toutes les fonctionnalités. Le programme se lance depuis la racine du
+projet avec la commande <code>python3 src/main.py</code>. Au démarrage, il charge les cinq colis d'exemple
+du sujet : toutes les fonctionnalités sont donc testables immédiatement, sans rien saisir au préalable.</p>
+
+<h2>6.1 Menu principal</h2>
+<p>Le menu reprend exactement l'organisation proposée par le sujet. Chaque option appelle une méthode de la
+collection, ce qui permet d'en rappeler l'algorithme et le coût :</p>
+<table>
+  <tr><th>Option</th><th>Fonctionnalité</th><th>Méthode et algorithme</th><th>Coût</th></tr>
+  <tr><td>1</td><td>Afficher les colis</td><td><code>lister()</code>, puis affichage par pages de 20 colis</td><td>O(20) par page</td></tr>
+  <tr><td>2</td><td>Ajouter un colis</td><td><code>ajouter()</code> : table de hachage, contrôle des doublons</td><td>O(1) amorti</td></tr>
+  <tr><td>3</td><td>Rechercher un colis</td><td><code>rechercher()</code> : table de hachage</td><td>O(1) en moyenne</td></tr>
+  <tr><td>4</td><td>Organiser les colis</td><td><code>trier()</code> : tri fusion (poids, valeur), tri par comptage (priorité), ou les deux (priorité puis valeur)</td><td>O(n log n) ou O(n)</td></tr>
+  <tr><td>5</td><td>Préparer un camion</td><td>Optimisation du chargement (parties 8 et 9)</td><td>voir partie 8</td></tr>
+  <tr><td>6</td><td>Afficher le chargement</td><td>Affichage du dernier chargement calculé (parties 8 et 9)</td><td>O(m), m colis chargés</td></tr>
+  <tr><td>7</td><td>Afficher les statistiques</td><td><code>statistiques()</code> : un seul parcours de la collection</td><td>O(n)</td></tr>
+  <tr><td>0</td><td>Quitter</td><td>Fin de la boucle principale</td><td>O(1)</td></tr>
+</table>
+<figure>
+  <img src="captures/etape4_menu.png" style="width: 58%;" alt="Menu principal">
+  <figcaption>Figure 9 - Démarrage du programme, menu principal et affichage des colis (option 1)</figcaption>
+</figure>
+
+<h2>6.2 Organisation du code de l'interface</h2>
+<p>L'interface est <b>séparée de la logique</b> : les modules de calcul (<code>gestion.py</code>,
+<code>tris.py</code>) ne lisent jamais le clavier et n'affichent rien. Ils reçoivent des données et renvoient
+des résultats. Cette séparation permet de tester les algorithmes indépendamment de l'interface et de les
+réutiliser ailleurs, par exemple dans les scripts de mesure.</p>
+<table>
+  <tr><th>Module</th><th>Rôle</th></tr>
+  <tr><td><code>main.py</code></td><td>Classe <code>Application</code> : affiche le menu, lit le choix et appelle l'action correspondante. Le choix est associé à son action par un dictionnaire (<code>numéro &rarr; méthode</code>), soit un accès en O(1) au lieu d'une longue suite de <code>if</code>.</td></tr>
+  <tr><td><code>saisie.py</code></td><td>Saisies robustes : entier borné, texte obligatoire, question oui/non.</td></tr>
+  <tr><td><code>affichage.py</code></td><td>Mise en forme des colis en tableau et découpage en pages.</td></tr>
+</table>
+
+<h2>6.3 Robustesse des saisies</h2>
+<p>Une erreur de frappe ne doit jamais arrêter le programme ni corrompre la collection. Chaque saisie est donc
+<b>vérifiée puis redemandée</b> tant qu'elle est invalide :</p>
+<ul>
+  <li>un texte à la place d'un nombre : « Veuillez saisir un nombre entier » ;</li>
+  <li>une valeur hors bornes (poids &le; 0, priorité hors de 1 à 5, choix de menu inexistant) : le message
+  indique la borne à respecter ;</li>
+  <li>une destination vide : « Saisie obligatoire » ;</li>
+  <li>un identifiant déjà utilisé : l'ajout est refusé <b>dès la saisie de l'identifiant</b>, avant de demander
+  les autres informations (test en O(1) dans la table de hachage) ;</li>
+  <li><b>Ctrl-D</b> (fin de l'entrée) : le programme se termine proprement ; <b>Ctrl-C</b> : l'action en cours
+  est annulée et le menu réapparaît.</li>
+</ul>
+<p>Deux aides à la saisie complètent ce dispositif. L'identifiant libre suivant est proposé par défaut :
+il suffit d'appuyer sur Entrée, et son calcul est en O(1) grâce au plus grand identifiant tenu à jour
+(partie 4.2). Les temps de recherche et de tri sont affichés après chaque opération, ce qui permet
+d'observer directement le coût des algorithmes.</p>
+<figure>
+  <img src="captures/etape4_ajout.png" style="width: 62%;" alt="Ajout d'un colis avec erreurs de saisie">
+  <figcaption>Figure 10 - Ajout d'un colis avec saisies invalides corrigées, puis refus d'un identifiant existant</figcaption>
+</figure>
+<figure>
+  <img src="captures/etape4_robustesse.png" style="width: 58%;" alt="Choix de menu invalides">
+  <figcaption>Figure 11 - Choix de menu invalides, puis fermeture de l'entrée (Ctrl-D) : arrêt propre</figcaption>
+</figure>
+
+<h2>6.4 Recherche et organisation des colis depuis le menu</h2>
+<figure>
+  <img src="captures/etape4_recherche.png" style="width: 70%;" alt="Recherche d'un colis">
+  <figcaption>Figure 12 - Recherche d'un colis existant (103) puis d'un colis absent (999)</figcaption>
+</figure>
+<figure>
+  <img src="captures/etape4_organiser.png" style="width: 80%;" alt="Organisation des colis">
+  <figcaption>Figure 13 - Option 4 : tri par priorité décroissante, avec l'algorithme utilisé et sa durée</figcaption>
+</figure>
+
+<h2>6.5 Statistiques (option 7)</h2>
+<table>
+  <tr><td class="k">Problème</td><td>Donner une vue d'ensemble de la collection : nombre de colis, poids et valeur totaux et moyens, colis extrêmes, répartition par priorité et par destination.</td></tr>
+  <tr><td class="k">Algorithme</td><td><b>Un seul parcours</b> de la collection, qui met à jour tous les indicateurs à la fois : sommes, extrêmes et compteurs rangés dans des dictionnaires (priorité &rarr; nombre, destination &rarr; nombre, poids et valeur). Les destinations sont ensuite classées par ordre alphabétique pour l'affichage.</td></tr>
+  <tr><td class="k">Complexité en temps</td><td>O(n) pour le parcours, plus O(d log d) pour classer les d destinations. Comme d est très petit devant n, le coût total est O(n).</td></tr>
+  <tr><td class="k">Complexité en espace</td><td>O(k + d) : 5 compteurs de priorité et 3 totaux par destination. Aucune copie de la collection.</td></tr>
+  <tr><td class="k">Alternatives</td><td>(1) Un parcours par indicateur (somme, maximum, minimum...) : même complexité, mais 6 à 8 parcours au lieu d'un.<br>(2) Tenir les statistiques à jour à chaque ajout : consultation en O(1), mais un coût supplémentaire à chaque ajout, et un calcul plus délicat du minimum ou du maximum si l'on supprimait des colis.</td></tr>
+  <tr><td class="k">Justification</td><td>Les statistiques sont consultées ponctuellement, alors que les ajouts sont fréquents. Un parcours unique en O(n) est simple, toujours exact, et prend quelques millisecondes pour 100&nbsp;000 colis (partie 7).</td></tr>
+</table>
+<figure>
+  <img src="captures/etape4_statistiques.png" style="width: 70%;" alt="Statistiques">
+  <figcaption>Figure 14 - Statistiques des colis du sujet</figcaption>
+</figure>
+
+<h2>6.6 Validation de l'étape</h2>
+<p>Dix-sept tests (<code>tests/test_interface.py</code>) vérifient les saisies, les statistiques et la
+pagination. Neuf d'entre eux lancent <b>le vrai programme</b> en lui envoyant des saisies, exactement comme
+un utilisateur : présence de toutes les options du menu, ajout puis recherche, saisies invalides corrigées,
+identifiant existant refusé, recherche d'un colis absent, ordre exact d'un tri, statistiques, choix invalides,
+et arrêt propre par Ctrl-D sans aucune erreur Python.</p>
+<p>Les captures de cette partie ont été produites de la même manière, en exécutant réellement le programme
+(scripts <code>outils/capture.py</code> et <code>outils/session.py</code>). Les saisies de l'utilisateur
+apparaissent en <b>gras</b>. Pour alléger les captures, le menu n'est montré en entier que sur la figure 9.</p>
+<figure>
+  <img src="captures/etape4_tests.png" alt="Tests de l'étape 4">
+  <figcaption>Figure 15 - Exécution des tests de l'étape 4 : 17 tests réussis</figcaption>
+</figure>
+
 </body>
 </html>

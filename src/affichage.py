@@ -35,3 +35,18 @@ def tableau(colis, limite=None):
     if nombre < total:
         lignes.append(f"... {total - nombre} autre(s) colis non affiché(s) sur {total}")
     return lignes
+
+
+def page(colis, numero, taille):
+    """Lignes de la page ``numero`` (à partir de 0) d'une séquence de colis.
+
+    Seuls les ``taille`` colis de la page sont mis en forme : O(taille),
+    quel que soit le nombre total de colis.
+    """
+    total = len(colis)
+    debut = numero * taille
+    fin = min(debut + taille, total)
+    lignes = [ENTETE, SEPARATEUR]
+    lignes.extend(ligne(colis[i]) for i in range(debut, fin))
+    lignes.append(f"Colis {debut + 1} à {fin} sur {total}")
+    return lignes

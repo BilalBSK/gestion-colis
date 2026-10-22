@@ -8,6 +8,8 @@ identifiant le colis correspondant :  identifiant -> Colis.
     - rechercher par identifiant    : O(1) en moyenne
     - parcourir tous les colis      : O(n), dans l'ordre d'insertion
       (un dict Python conserve l'ordre d'insertion depuis Python 3.7)
+    - trier                         : voir trier(), O(n log n) ou O(n)
+    - statistiques                  : un seul parcours, O(n)
 """
 
 from colis import PRIORITE_MAX, PRIORITE_MIN
@@ -102,6 +104,48 @@ class GestionColis:
             par_valeur = tri_fusion(self, lambda c: c.valeur, decroissant)
             return tri_comptage(par_valeur, lambda c: c.priorite, PRIORITE_MIN, PRIORITE_MAX, decroissant)
         raise ValueError(f"critère de tri inconnu : {critere!r} (attendu : {', '.join(CRITERES)})")
+
+    # ------------------------------------------------------------------ #
+    # Statistiques (option 7 du menu)
+    # ------------------------------------------------------------------ #
+    def statistiques(self):
+        """Indicateurs sur la collection, calculés en UN SEUL parcours : O(n).
+
+        Mémoire : O(k + d), avec k = 5 priorités et d = nombre de destinations
+        distinctes (compteurs). Les destinations sont ensuite classées par nom :
+        O(d log d), négligeable car d est petit devant n.
+        """
+        n = len(self._par_id)
+        poids_total = valeur_totale = 0
+        plus_lourd = plus_leger = plus_precieux = None
+        par_priorite = {p: 0 for p in range(PRIORITE_MIN, PRIORITE_MAX + 1)}
+        par_destination = {}  # destination -> [nombre, poids, valeur]
+        for c in self._par_id.values():
+            poids_total += c.poids
+            valeur_totale += c.valeur
+            if plus_lourd is None or c.poids > plus_lourd.poids:
+                plus_lourd = c
+            if plus_leger is None or c.poids < plus_leger.poids:
+                plus_leger = c
+            if plus_precieux is None or c.valeur > plus_precieux.valeur:
+                plus_precieux = c
+            par_priorite[c.priorite] += 1
+            totaux = par_destination.setdefault(c.destination, [0, 0, 0])
+            totaux[0] += 1
+            totaux[1] += c.poids
+            totaux[2] += c.valeur
+        return {
+            "nombre": n,
+            "poids_total": poids_total,
+            "valeur_totale": valeur_totale,
+            "poids_moyen": poids_total / n if n else 0.0,
+            "valeur_moyenne": valeur_totale / n if n else 0.0,
+            "plus_lourd": plus_lourd,
+            "plus_leger": plus_leger,
+            "plus_precieux": plus_precieux,
+            "par_priorite": par_priorite,
+            "par_destination": {d: tuple(par_destination[d]) for d in sorted(par_destination)},
+        }
 
     def rechercher_sequentielle(self, identifiant):
         """Recherche par parcours de tous les colis : O(n).
