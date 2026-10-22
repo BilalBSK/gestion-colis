@@ -15,14 +15,23 @@ permet de se concentrer sur les choix algorithmiques et leur justification. Les 
 au cœur du sujet (tris, optimisation du chargement) sont implémentés à la main, et non
 délégués à des fonctions natives.
 
+## Tests
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
 ## Organisation du dépôt
 
 ```
 projet/
 ├── src/          code source
+│   ├── colis.py      modèle Colis (validation des données)
+│   └── stockage.py   lecture / écriture des colis au format CSV
 ├── tests/        tests unitaires
+├── donnees/      colis d'exemple du sujet (CSV)
 ├── docs/         source du rapport et captures d'écran
-├── outils/       script de génération du rapport PDF
+├── outils/       génération du rapport PDF, captures, mesures
 ├── README.md
 └── rapport.pdf
 ```

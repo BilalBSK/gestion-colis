@@ -23,6 +23,8 @@
   table { border-collapse: collapse; width: 100%; margin: 6pt 0 14pt 0; font-size: 10pt; page-break-inside: avoid; }
   th, td { border: 1px solid #000; padding: 4pt 6pt; text-align: left; vertical-align: top; }
   th { font-weight: bold; background: #fff; }
+  td.k { font-weight: bold; width: 22%; }   /* tableaux « Problème / Solution / ... » */
+  td.n, th.n { text-align: right; }         /* colonnes de nombres */
 
   code, pre { font-family: "Courier New", Courier, monospace; font-size: 9.5pt; }
   pre { border: 1px solid #000; padding: 6pt 8pt; margin: 6pt 0 12pt 0; white-space: pre-wrap; page-break-inside: avoid; }
@@ -130,12 +132,13 @@ et sa complexité sont précisés. Aucune bibliothèque externe n'est utilisée.
 
 <h2>2.1 Arborescence</h2>
 <p>Le dépôt respecte l'organisation demandée (dossier <code>src/</code>, <code>README.md</code>,
-<code>rapport.pdf</code>), complétée par trois dossiers utiles :</p>
+<code>rapport.pdf</code>), complétée par quatre dossiers utiles :</p>
 <pre>projet/
 ├── src/          code source du programme
 ├── tests/        tests unitaires
+├── donnees/      fichiers de colis (exemple du sujet)
 ├── docs/         source de ce rapport et captures d'écran
-├── outils/       script de génération du rapport PDF
+├── outils/       génération du rapport, captures, mesures
 ├── README.md     présentation et mode d'emploi
 └── rapport.pdf   ce rapport</pre>
 
@@ -143,6 +146,109 @@ et sa complexité sont précisés. Aucune bibliothèque externe n'est utilisée.
 <p>Le projet a été réalisé par étapes successives. Chaque étape a été <b>validée</b> (tests unitaires et
 exécution du programme) avant de passer à la suivante, puis enregistrée par un commit sur le dépôt
 GitHub. L'historique des commits reflète donc la progression du travail.</p>
+
+<!-- ============================================================ -->
+<!-- 3. MODÉLISATION DES DONNÉES (étape 1)                        -->
+<!-- ============================================================ -->
+<h1>3. Modélisation des données</h1>
+
+<h2>3.1 Informations portées par un colis</h2>
+<p>Le sujet impose au minimum cinq informations par colis. Le tableau suivant précise, pour chacune,
+le type retenu et les contraintes vérifiées à la création du colis.</p>
+<table>
+  <tr><th>Attribut</th><th>Type</th><th>Contrainte</th><th>Justification</th></tr>
+  <tr><td>identifiant</td><td>entier</td><td>&ge; 0, unique</td><td>Sert de clé pour retrouver un colis. L'unicité est vérifiée par la collection (partie 4).</td></tr>
+  <tr><td>poids</td><td>entier (kg)</td><td>&gt; 0</td><td>Un poids nul ou négatif n'a pas de sens physique. Le choix d'un <b>entier</b> est expliqué ci-dessous.</td></tr>
+  <tr><td>valeur</td><td>entier</td><td>&ge; 0</td><td>Une valeur nulle reste possible (colis sans valeur marchande).</td></tr>
+  <tr><td>priorité</td><td>entier</td><td>de 1 à 5</td><td>Échelle fermée, cohérente avec les exemples du sujet (valeurs de 1 à 5).</td></tr>
+  <tr><td>destination</td><td>texte</td><td>non vide</td><td>Les espaces en début et en fin sont supprimés (« Paris » saisi avec un espace en trop désigne toujours Paris).</td></tr>
+</table>
+
+<h3>Deux conventions à préciser</h3>
+<ul>
+  <li><b>Sens de la priorité.</b> Le sujet ne précise pas si 1 ou 5 est la priorité la plus forte.
+  Nous retenons <b>5 = priorité la plus forte</b> et 1 = la plus faible, conformément à l'expression
+  « priorité importante » utilisée dans la partie 6 : une valeur élevée correspond à un colis important.</li>
+  <li><b>Poids entier.</b> Tous les poids du sujet sont des nombres entiers de kilogrammes. Les conserver
+  sous forme d'entiers est indispensable pour l'algorithme de chargement (partie 8), qui utilise un
+  tableau indexé par la capacité du camion (0, 1, 2, ... kg). Si une précision plus fine était nécessaire,
+  il suffirait d'exprimer les poids en hectogrammes ou en grammes, sans changer l'algorithme.</li>
+</ul>
+
+<h2>3.2 Représentation d'un colis en mémoire</h2>
+<table>
+  <tr><td class="k">Problème</td><td>Représenter un colis de façon fiable et compacte, sachant que le programme doit en manipuler jusqu'à 100 000, voire davantage.</td></tr>
+  <tr><td class="k">Solution retenue</td><td>Une <b>classe de données</b> Python (<code>@dataclass</code>) nommée <code>Colis</code>, déclarée avec deux options :
+    <ul>
+      <li><code>slots=True</code> : les cinq attributs sont rangés dans des emplacements fixes de l'objet, au lieu d'un dictionnaire propre à chaque colis ;</li>
+      <li><code>frozen=True</code> : le colis est <b>immuable</b> après sa création.</li>
+    </ul></td></tr>
+  <tr><td class="k">Complexité en temps</td><td>Création et accès à un attribut : O(1).</td></tr>
+  <tr><td class="k">Complexité en espace</td><td>O(1) par colis, soit O(n) pour n colis. Mesure : environ <b>112 octets par colis</b>.</td></tr>
+  <tr><td class="k">Alternatives</td><td>Un dictionnaire par colis, une <code>dataclass</code> classique (sans <code>slots</code>), un tuple nommé (<code>namedtuple</code>), ou des tableaux séparés par attribut (un tableau des poids, un tableau des valeurs, etc.).</td></tr>
+  <tr><td class="k">Justification</td><td>
+    <b>Mémoire :</b> c'est la représentation la plus compacte parmi celles qui restent lisibles (mesure ci-dessous) : deux fois moins qu'un dictionnaire par colis.<br>
+    <b>Fiabilité :</b> l'immuabilité empêche de modifier par erreur l'identifiant d'un colis déjà rangé dans la collection, ce qui rendrait l'index incohérent.<br>
+    <b>Lisibilité :</b> on écrit <code>colis.poids</code> plutôt que <code>colis["poids"]</code> ou <code>colis[1]</code>.<br>
+    Les tableaux séparés par attribut seraient encore plus compacts, mais beaucoup moins lisibles. Cette piste n'est intéressante qu'à partir de plusieurs millions de colis (partie 12).</td></tr>
+</table>
+
+<p>La mesure suivante compare la mémoire nécessaire pour créer 100 000 colis avec chacune des
+représentations envisagées (script <code>outils/mesure_memoire_colis.py</code>, mesure réalisée avec le
+module <code>tracemalloc</code>, liste contenant les colis comprise) :</p>
+<table>
+  <tr><th>Représentation</th><th class="n">Mémoire pour 100 000 colis</th><th class="n">Par colis</th></tr>
+  <tr><td>Dictionnaire par colis</td><td class="n">22,4 Mo</td><td class="n">224 octets</td></tr>
+  <tr><td><code>dataclass</code> sans <code>slots</code></td><td class="n">15,2 Mo</td><td class="n">152 octets</td></tr>
+  <tr><td>Tuple nommé (<code>namedtuple</code>)</td><td class="n">13,6 Mo</td><td class="n">136 octets</td></tr>
+  <tr><td><b><code>dataclass</code> avec <code>slots</code> (retenu)</b></td><td class="n"><b>11,2 Mo</b></td><td class="n"><b>112 octets</b></td></tr>
+</table>
+<figure>
+  <img src="captures/etape1_memoire.png" style="width: 72%;" alt="Mesure de la mémoire">
+  <figcaption>Figure 1 - Mesure de la mémoire occupée selon la représentation choisie</figcaption>
+</figure>
+
+<h2>3.3 Validation des données à la création</h2>
+<p>Chaque colis est vérifié au moment de sa création (méthode <code>__post_init__</code>, coût O(1)).
+Un colis incohérent ne peut donc jamais entrer dans le programme : les algorithmes suivants n'ont pas
+à se méfier des données. Les règles vérifiées sont :</p>
+<ul>
+  <li>identifiant, poids, valeur et priorité sont des <b>entiers</b> (un nombre décimal ou un texte est refusé) ;</li>
+  <li>poids &gt; 0, valeur &ge; 0, identifiant &ge; 0, priorité comprise entre 1 et 5 ;</li>
+  <li>destination non vide.</li>
+</ul>
+<p>En cas d'erreur, une exception explicite est levée (par exemple « la priorité doit être comprise
+entre 1 et 5 »). L'interface pourra ainsi afficher un message clair à l'utilisateur au lieu de s'arrêter.</p>
+
+<h2>3.4 Données d'exemple et fichier CSV</h2>
+<p>Les cinq colis du sujet sont enregistrés dans le fichier <code>donnees/colis_exemple.csv</code> :</p>
+<pre>identifiant;poids;valeur;priorite;destination
+101;8;20;2;Paris
+102;3;10;5;Lille
+103;12;40;1;Lyon
+104;5;25;4;Paris
+105;2;15;3;Lille</pre>
+<p>Le format CSV a été choisi parce qu'il est simple, lisible par un humain et ouvrable dans un tableur.
+Le séparateur « ; » est celui des tableurs en français, où la virgule sert de séparateur décimal.
+Le module <code>stockage.py</code> lit et écrit ce format, en O(n) en temps et en mémoire pour n colis.
+Si une ligne est invalide, le message d'erreur indique son <b>numéro</b> (par exemple
+« ligne 3 : le poids doit être strictement positif »), ce qui permet de corriger le fichier facilement.</p>
+
+<h2>3.5 Validation de l'étape</h2>
+<p>Dix-sept tests unitaires (<code>tests/test_colis.py</code>) vérifient :</p>
+<ul>
+  <li>la création d'un colis valide, y compris aux bornes (priorité 1 et 5, valeur 0) ;</li>
+  <li>le refus de chaque donnée invalide : poids nul ou négatif, valeur négative, priorité hors de
+  l'intervalle, identifiant négatif, destination vide, types incorrects ;</li>
+  <li>l'immuabilité d'un colis ;</li>
+  <li>la lecture exacte des cinq colis du sujet, puis l'écriture et la relecture d'un fichier sans perte ;</li>
+  <li>la détection des fichiers mal formés (en-tête incorrect, colonne manquante, valeur non numérique),
+  avec le bon numéro de ligne.</li>
+</ul>
+<figure>
+  <img src="captures/etape1_tests.png" alt="Exécution des tests de l'étape 1">
+  <figcaption>Figure 2 - Exécution des tests unitaires de l'étape 1 : 17 tests réussis</figcaption>
+</figure>
 
 </body>
 </html>
