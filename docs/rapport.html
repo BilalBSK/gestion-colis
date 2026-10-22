@@ -99,7 +99,7 @@ de colis. Chaque colis est décrit par un identifiant, un poids, une valeur, une
 <p>Le programme réalisé doit répondre à deux besoins :</p>
 <ul>
   <li><b>gérer les colis</b> : ajouter, afficher, rechercher et trier une collection pouvant contenir
-  jusqu'à 100 000 colis, voire davantage ;</li>
+  jusqu'à 100&nbsp;000 colis, voire davantage ;</li>
   <li><b>préparer un camion</b> : choisir les colis à charger sans dépasser la capacité du camion, en
   transportant la plus grande valeur possible et en favorisant les colis prioritaires.</li>
 </ul>
@@ -177,7 +177,7 @@ le type retenu et les contraintes vérifiées à la création du colis.</p>
 
 <h2>3.2 Représentation d'un colis en mémoire</h2>
 <table>
-  <tr><td class="k">Problème</td><td>Représenter un colis de façon fiable et compacte, sachant que le programme doit en manipuler jusqu'à 100 000, voire davantage.</td></tr>
+  <tr><td class="k">Problème</td><td>Représenter un colis de façon fiable et compacte, sachant que le programme doit en manipuler jusqu'à 100&nbsp;000, voire davantage.</td></tr>
   <tr><td class="k">Solution retenue</td><td>Une <b>classe de données</b> Python (<code>@dataclass</code>) nommée <code>Colis</code>, déclarée avec deux options :
     <ul>
       <li><code>slots=True</code> : les cinq attributs sont rangés dans des emplacements fixes de l'objet, au lieu d'un dictionnaire propre à chaque colis ;</li>
@@ -193,11 +193,11 @@ le type retenu et les contraintes vérifiées à la création du colis.</p>
     Les tableaux séparés par attribut seraient encore plus compacts, mais beaucoup moins lisibles. Cette piste n'est intéressante qu'à partir de plusieurs millions de colis (partie 12).</td></tr>
 </table>
 
-<p>La mesure suivante compare la mémoire nécessaire pour créer 100 000 colis avec chacune des
+<p>La mesure suivante compare la mémoire nécessaire pour créer 100&nbsp;000 colis avec chacune des
 représentations envisagées (script <code>outils/mesure_memoire_colis.py</code>, mesure réalisée avec le
 module <code>tracemalloc</code>, liste contenant les colis comprise) :</p>
 <table>
-  <tr><th>Représentation</th><th class="n">Mémoire pour 100 000 colis</th><th class="n">Par colis</th></tr>
+  <tr><th>Représentation</th><th class="n">Mémoire pour 100&nbsp;000 colis</th><th class="n">Par colis</th></tr>
   <tr><td>Dictionnaire par colis</td><td class="n">22,4 Mo</td><td class="n">224 octets</td></tr>
   <tr><td><code>dataclass</code> sans <code>slots</code></td><td class="n">15,2 Mo</td><td class="n">152 octets</td></tr>
   <tr><td>Tuple nommé (<code>namedtuple</code>)</td><td class="n">13,6 Mo</td><td class="n">136 octets</td></tr>
@@ -248,6 +248,146 @@ Si une ligne est invalide, le message d'erreur indique son <b>numéro</b> (par e
 <figure>
   <img src="captures/etape1_tests.png" alt="Exécution des tests de l'étape 1">
   <figcaption>Figure 2 - Exécution des tests unitaires de l'étape 1 : 17 tests réussis</figcaption>
+</figure>
+
+<!-- ============================================================ -->
+<!-- 4. GESTION DES COLIS (étape 2)                               -->
+<!-- ============================================================ -->
+<h1>4. Gestion des colis : ajout, affichage, recherche</h1>
+<p>Cette partie couvre les fonctionnalités 1 à 3 du sujet. Les trois opérations dépendent d'un même
+choix : la <b>structure de données</b> qui contient la collection. Ce choix est donc présenté en premier.
+Dans toute la suite, <b>n</b> désigne le nombre de colis de la collection.</p>
+
+<h2>4.1 Structure de la collection : une table de hachage</h2>
+
+<h3>Structures envisagées</h3>
+<table>
+  <tr><th>Structure</th><th>Ajout (avec contrôle des doublons)</th><th>Recherche par identifiant</th><th>Parcours</th><th>Mémoire</th></tr>
+  <tr><td>Liste non triée</td><td>O(n) : il faut parcourir la liste pour vérifier que l'identifiant est libre</td><td>O(n)</td><td>O(n), ordre d'insertion</td><td>O(n), la plus faible</td></tr>
+  <tr><td>Liste triée par identifiant</td><td>O(n) : il faut décaler les éléments pour insérer au bon endroit</td><td>O(log n) par dichotomie</td><td>O(n), ordre des identifiants</td><td>O(n)</td></tr>
+  <tr><td>Arbre binaire de recherche équilibré (AVL)</td><td>O(log n)</td><td>O(log n)</td><td>O(n), ordre des identifiants</td><td>O(n), mais deux pointeurs par nœud</td></tr>
+  <tr><td><b>Table de hachage (retenue)</b></td><td><b>O(1) en moyenne</b></td><td><b>O(1) en moyenne</b></td><td>O(n), ordre d'insertion</td><td>O(n)</td></tr>
+</table>
+
+<h3>Fonctionnement d'une table de hachage</h3>
+<p>Une table de hachage est un tableau de cases. Pour ranger un colis, on calcule à partir de son
+identifiant un nombre appelé <b>haché</b>, qui désigne directement la case où le colis doit être placé.
+Pour retrouver le colis, on refait le même calcul et on accède directement à la bonne case :
+<b>il n'est pas nécessaire de parcourir la collection</b>.</p>
+<ul>
+  <li><b>Collisions.</b> Deux identifiants peuvent désigner la même case. Le dictionnaire Python essaie alors
+  d'autres cases selon une suite déterminée (adressage ouvert). Tant que la table est peu remplie, ces essais
+  supplémentaires restent rares : le coût moyen reste O(1).</li>
+  <li><b>Agrandissement.</b> Lorsque la table est remplie aux deux tiers, Python alloue une table plus grande
+  et y recopie tous les éléments. Cette recopie coûte O(n), mais elle est rare, car la taille augmente à
+  chaque fois d'un facteur constant. Réparti sur l'ensemble des ajouts, son coût reste constant : on parle
+  de coût <b>O(1) amorti</b>.</li>
+  <li><b>Pire cas.</b> Si tous les identifiants tombaient dans la même case, la recherche coûterait O(n).
+  Avec des identifiants entiers, ce cas ne se produit pas en pratique.</li>
+  <li><b>Ordre.</b> Depuis Python 3.7, le dictionnaire conserve l'ordre d'insertion : il range les entrées
+  dans un tableau compact, dans l'ordre d'arrivée, et la table de hachage ne contient que leurs positions.
+  On peut donc afficher les colis dans leur ordre d'enregistrement sans liste supplémentaire.</li>
+</ul>
+
+<table>
+  <tr><td class="k">Problème</td><td>Stocker un nombre potentiellement important de colis, empêcher deux colis d'avoir le même identifiant et retrouver rapidement un colis à partir de son identifiant.</td></tr>
+  <tr><td class="k">Solution retenue</td><td>Une table de hachage (<code>dict</code> Python) qui associe à chaque identifiant le colis correspondant : <code>identifiant &rarr; Colis</code>.</td></tr>
+  <tr><td class="k">Complexité en temps</td><td>Ajout, test de doublon, recherche : O(1) en moyenne (O(1) amorti pour l'ajout). Parcours complet : O(n).</td></tr>
+  <tr><td class="k">Complexité en espace</td><td>O(n). Mesure : de 30 à 52 octets par colis selon le taux de remplissage de la table, en plus des colis eux-mêmes (partie 3).</td></tr>
+  <tr><td class="k">Alternatives</td><td>Liste non triée, liste triée et recherche dichotomique, arbre binaire de recherche équilibré (tableau ci-dessus).</td></tr>
+  <tr><td class="k">Justification</td><td>La recherche par identifiant et l'ajout sont les opérations les plus fréquentes : la table de hachage les rend <b>indépendantes du nombre de colis</b>. Les deux avantages d'un arbre (parcours dans l'ordre des identifiants, recherche par intervalle) ne sont pas demandés par le sujet. Les tris par poids, valeur ou priorité sont traités à part (partie 5). Le surcoût mémoire, environ 5 Mo pour 100&nbsp;000 colis, est faible.</td></tr>
+</table>
+
+<h2>4.2 Fonctionnalité 1 : ajouter un colis</h2>
+<table>
+  <tr><td class="k">Problème</td><td>Ajouter un nouveau colis à la collection sans jamais créer deux colis de même identifiant.</td></tr>
+  <tr><td class="k">Algorithme</td><td>1. Vérifier que l'identifiant n'est pas déjà une clé de la table (<code>identifiant in table</code>).<br>
+  2. Si c'est le cas, refuser l'ajout avec un message explicite : la collection reste inchangée.<br>
+  3. Sinon, insérer le colis et mettre à jour le plus grand identifiant connu.</td></tr>
+  <tr><td class="k">Complexité en temps</td><td>O(1) amorti. Charger un fichier de n colis coûte donc O(n).</td></tr>
+  <tr><td class="k">Complexité en espace</td><td>O(1) supplémentaire par ajout.</td></tr>
+  <tr><td class="k">Alternative</td><td>Ranger les colis dans une liste et vérifier les doublons par un parcours : O(n) par ajout, donc O(n²) pour charger n colis.</td></tr>
+  <tr><td class="k">Justification</td><td>Avec une liste, charger 100&nbsp;000 colis demanderait environ n²/2 = 5 milliards de comparaisons. Avec la table de hachage, il suffit de 100&nbsp;000 opérations en temps constant. Le plus grand identifiant est tenu à jour à chaque ajout : l'interface peut ainsi proposer un identifiant libre en O(1), au lieu de rechercher le maximum en O(n) à chaque fois.</td></tr>
+</table>
+
+<h2>4.3 Fonctionnalité 2 : afficher les colis</h2>
+<table>
+  <tr><td class="k">Problème</td><td>Afficher les colis enregistrés de façon lisible, y compris lorsque la collection en contient 100&nbsp;000.</td></tr>
+  <tr><td class="k">Algorithme</td><td>Parcourir les colis dans l'ordre d'insertion et mettre chacun en forme sur une ligne de tableau (identifiant, poids, valeur, priorité, destination). Un paramètre <code>limite</code> permet de n'afficher qu'une page, suivie du nombre de colis restants.</td></tr>
+  <tr><td class="k">Complexité en temps</td><td>O(n) pour tout afficher, O(min(n, limite)) pour une page.</td></tr>
+  <tr><td class="k">Complexité en espace</td><td>O(n) pour la copie de la liste des colis transmise à l'affichage.</td></tr>
+  <tr><td class="k">Alternative</td><td>Toujours tout afficher.</td></tr>
+  <tr><td class="k">Justification</td><td>Afficher tous les colis coûte forcément O(n), puisque chacun doit être écrit. En revanche, 100&nbsp;000 lignes défilant dans un terminal sont illisibles et prennent plusieurs secondes. Afficher une page à la fois garde l'interface réactive. L'utilisateur pourra tout de même demander l'affichage complet (partie 6).</td></tr>
+</table>
+
+<h2>4.4 Fonctionnalité 3 : rechercher un colis</h2>
+<table>
+  <tr><td class="k">Problème</td><td>Retrouver un colis à partir de son identifiant, ou signaler qu'il n'existe pas.</td></tr>
+  <tr><td class="k">Algorithme</td><td>Accès direct dans la table de hachage : l'identifiant est haché, on lit la case correspondante.</td></tr>
+  <tr><td class="k">Complexité en temps</td><td>O(1) en moyenne (O(n) dans le pire cas théorique).</td></tr>
+  <tr><td class="k">Complexité en espace</td><td>O(1) : aucune mémoire supplémentaire.</td></tr>
+  <tr><td class="k">Alternatives</td><td><b>Recherche séquentielle</b> : comparer l'identifiant à celui de chaque colis, en O(n).<br>
+  <b>Recherche dichotomique</b> dans une liste triée par identifiant : on compare l'identifiant cherché à celui du milieu, puis on ne garde que la moitié qui peut le contenir. Coût O(log n), mais la liste doit rester triée : chaque ajout coûte O(n).</td></tr>
+  <tr><td class="k">Justification</td><td>Seule la table de hachage offre à la fois une recherche et un ajout rapides. Les mesures ci-dessous le confirment.</td></tr>
+</table>
+
+<h3>Mesures</h3>
+<p>Le script <code>outils/mesure_recherche.py</code> compare les trois méthodes. Pour chaque taille, il effectue
+20&nbsp;000 recherches d'identifiants existants tirés au hasard (moins pour la séquentielle, trop lente) et donne
+le temps moyen d'une recherche. La colonne « absent » mesure la séquentielle quand l'identifiant n'existe pas,
+ce qui est son pire cas. La dernière colonne donne la mémoire occupée par la table de hachage.</p>
+<table>
+  <tr><th class="n">n</th><th class="n">Hachage (retenu)</th><th class="n">Dichotomie</th><th class="n">Séquentielle</th><th class="n">Séquentielle, id absent</th><th class="n">Mémoire de la table</th></tr>
+  <tr><td class="n">100</td><td class="n">23 ns</td><td class="n">233 ns</td><td class="n">450 ns</td><td class="n">824 ns</td><td class="n">5 Ko</td></tr>
+  <tr><td class="n">1&nbsp;000</td><td class="n">25 ns</td><td class="n">358 ns</td><td class="n">3,5 µs</td><td class="n">7,1 µs</td><td class="n">37 Ko</td></tr>
+  <tr><td class="n">10&nbsp;000</td><td class="n">33 ns</td><td class="n">476 ns</td><td class="n">33,2 µs</td><td class="n">68,5 µs</td><td class="n">295 Ko</td></tr>
+  <tr><td class="n">100&nbsp;000</td><td class="n">124 ns</td><td class="n">665 ns</td><td class="n">518,6 µs</td><td class="n">944,3 µs</td><td class="n">5&nbsp;243 Ko</td></tr>
+</table>
+<figure>
+  <img src="captures/etape2_recherche.png" style="width: 92%;" alt="Mesure des temps de recherche">
+  <figcaption>Figure 3 - Temps moyen d'une recherche selon la méthode et le nombre de colis</figcaption>
+</figure>
+
+<h3>Analyse des mesures</h3>
+<ul>
+  <li><b>Recherche séquentielle :</b> le temps est multiplié par environ 10 chaque fois que n est multiplié
+  par 10 (450 ns, puis 3,5 µs, puis 33 µs). C'est le comportement attendu d'un coût O(n). Un identifiant
+  absent coûte environ <b>deux fois plus</b> qu'un identifiant présent : en moyenne, on trouve le colis
+  au milieu de la liste (n/2 comparaisons), alors qu'un absent oblige à tout parcourir (n comparaisons).
+  La mesure confirme ce raisonnement.</li>
+  <li><b>Recherche dichotomique :</b> le temps n'augmente que d'environ 120 à 190 ns chaque fois que n est
+  multiplié par 10, c'est-à-dire d'environ 3,3 tours de boucle (log<sub>2</sub> 10 &asymp; 3,3). C'est la
+  signature d'un coût O(log n).</li>
+  <li><b>Table de hachage :</b> le temps reste quasi constant (23 à 33 ns jusqu'à 10&nbsp;000 colis). À 100&nbsp;000 colis,
+  il passe à 124 ns : la table occupe alors environ 5 Mo et ne tient plus dans la mémoire cache du processeur,
+  si bien que chaque accès mémoire est plus lent. Le <b>nombre d'opérations</b>, lui, ne dépend pas de n.
+  À 100&nbsp;000 colis, la recherche par hachage est environ <b>4&nbsp;000 fois plus rapide</b> que la recherche
+  séquentielle.</li>
+  <li><b>Mémoire :</b> la table occupe entre 30 et 52 octets par colis. Elle augmente par paliers, car la
+  table est agrandie d'un coup lorsqu'elle est remplie aux deux tiers. C'est le prix à payer pour un accès
+  en temps constant.</li>
+</ul>
+
+<h2>4.5 Validation de l'étape</h2>
+<p>Quinze tests unitaires (<code>tests/test_gestion.py</code>) vérifient :</p>
+<ul>
+  <li>l'ajout d'un colis et le <b>refus d'un doublon</b>, la collection restant inchangée, y compris lorsque
+  le doublon provient d'un fichier ;</li>
+  <li>le calcul du prochain identifiant libre ;</li>
+  <li>la conservation de l'ordre d'insertion, la mise en forme du tableau, l'affichage limité à une page
+  et le cas de la collection vide ;</li>
+  <li>la recherche d'un colis existant et d'un colis absent ;</li>
+  <li>la <b>concordance</b> entre la recherche par hachage et la recherche séquentielle sur 2&nbsp;000 colis
+  et 202 recherches : les deux méthodes renvoient toujours le même résultat.</li>
+</ul>
+<p>Le script <code>outils/demo_etape2.py</code> enchaîne les trois fonctionnalités sur les données du sujet :</p>
+<figure>
+  <img src="captures/etape2_demo.png" style="width: 72%;" alt="Démonstration ajout, affichage, recherche">
+  <figcaption>Figure 4 - Ajout d'un colis, refus d'un doublon, affichage et recherche</figcaption>
+</figure>
+<figure>
+  <img src="captures/etape2_tests.png" alt="Tests de l'étape 2">
+  <figcaption>Figure 5 - Exécution des tests unitaires de l'étape 2 : 15 tests réussis</figcaption>
 </figure>
 
 </body>
