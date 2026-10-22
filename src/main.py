@@ -10,6 +10,7 @@ import os
 import time
 
 from affichage import ENTETE, SEPARATEUR, ligne, page
+from chargement import glouton, sac_a_dos_dp
 from colis import PRIORITE_MAX, PRIORITE_MIN, Colis
 from generateur import NIVEAUX, generer_colis
 from gestion import GestionColis
@@ -20,6 +21,8 @@ RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FICHIER_EXEMPLE = os.path.join(RACINE, "donnees", "colis_exemple.csv")
 FICHIER_SAUVEGARDE = os.path.join(RACINE, "donnees", "sauvegarde.csv")
 TAILLE_PAGE = 20
+CAPACITE_PAR_DEFAUT = 50          # exemple du sujet : camion de 50 kg
+CASES_AVANT_CONFIRMATION = 50_000_000   # au-delà, le calcul exact prend plusieurs secondes
 
 MENU = """
 ===== GESTION DES LIVRAISONS =====
@@ -57,6 +60,7 @@ def formater_duree(secondes):
 class Application:
     def __init__(self, gestion):
         self.gestion = gestion
+        self.chargement = None       # dernier chargement calculé (option 6)
 
     # ------------------------------------------------------------------ #
     # Boucle principale
@@ -153,10 +157,49 @@ class Application:
         self.afficher_par_pages(tries)
 
     def preparer_camion(self):
-        print("  Cette fonctionnalité n'est pas encore disponible.")
+        print("--- Préparer un camion ---")
+        if len(self.gestion) == 0:
+            print("  Aucun colis à charger.")
+            return
+        capacite = lire_entier(f"Capacité du camion en kg [{CAPACITE_PAR_DEFAUT}] : ",
+                               minimum=0, defaut=CAPACITE_PAR_DEFAUT)
+        colis = self.gestion.lister()
+        # Coût de la programmation dynamique : (nombre de colis) x (capacité + 1) cases
+        cases = len(colis) * (capacite + 1)
+        if cases > CASES_AVANT_CONFIRMATION:
+            print(f"  Attention : {len(colis)} colis x {capacite + 1} capacités = {cases:,} cases "
+                  f"(environ {cases / 1e6:.0f} Mo).".replace(",", " "))
+            if not lire_oui_non("  Le calcul exact peut prendre plusieurs secondes. Continuer ?"):
+                return
+        debut = time.perf_counter()
+        optimal = sac_a_dos_dp(colis, capacite)
+        duree_dp = time.perf_counter() - debut
+        debut = time.perf_counter()
+        approche = glouton(colis, capacite)
+        duree_glouton = time.perf_counter() - debut
+
+        self.chargement = optimal
+        print(f"\n  Chargement optimal (programmation dynamique, {formater_duree(duree_dp)}) :")
+        print(f"    {len(optimal.colis)} colis, {optimal.poids_total} / {capacite} kg, "
+              f"valeur totale {optimal.valeur_totale}")
+        ecart = optimal.score - approche.score
+        print(f"  Pour comparaison, glouton ({formater_duree(duree_glouton)}) : "
+              f"{len(approche.colis)} colis, {approche.poids_total} kg, valeur {approche.valeur_totale}"
+              + (f"  -> {ecart} de moins que l'optimum" if ecart else "  -> identique ici"))
+        print("  Option 6 : afficher le détail du chargement.")
 
     def afficher_chargement(self):
-        print("  Cette fonctionnalité n'est pas encore disponible.")
+        print("--- Chargement du camion ---")
+        ch = self.chargement
+        if ch is None:
+            print("  Aucun camion préparé : utilisez d'abord l'option 5.")
+            return
+        print(f"Méthode            : {ch.methode}")
+        print(f"Colis chargés      : {len(ch.colis)}")
+        print(f"Poids total        : {ch.poids_total} / {ch.capacite} kg "
+              f"(remplissage {100 * ch.taux_remplissage:.1f} %)")
+        print(f"Valeur totale      : {ch.valeur_totale}\n")
+        self.afficher_par_pages(ch.colis)
 
     def afficher_statistiques(self):
         s = self.gestion.statistiques()
@@ -184,6 +227,7 @@ class Application:
         remplacer = lire_oui_non("Remplacer la collection actuelle ?", defaut=True)
         if remplacer:
             self.gestion = GestionColis()
+            self.chargement = None
         # Les nouveaux identifiants commencent après le plus grand existant : aucun doublon
         debut = time.perf_counter()
         for colis in generer_colis(n, identifiant_depart=self.gestion.prochain_identifiant()):
@@ -209,6 +253,7 @@ class Application:
                 print(f"  Erreur : {erreur}. La collection n'est pas modifiée.")
                 return
             self.gestion = nouvelle
+            self.chargement = None       # l'ancien chargement ne correspond plus à la collection
             print(f"  {len(nouvelle)} colis chargés en {formater_duree(time.perf_counter() - debut)}.")
         else:
             chemin = lire_texte(f"Fichier de destination [{os.path.relpath(FICHIER_SAUVEGARDE, RACINE)}] : ",

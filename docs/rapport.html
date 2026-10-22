@@ -25,6 +25,7 @@
   th { font-weight: bold; background: #fff; }
   td.k { font-weight: bold; width: 22%; }   /* tableaux « Problème / Solution / ... » */
   td.n, th.n { text-align: right; }         /* colonnes de nombres */
+  td.n { white-space: nowrap; }             /* un nombre et son unité ne sont jamais coupés */
 
   code, pre { font-family: "Courier New", Courier, monospace; font-size: 9.5pt; }
   pre { border: 1px solid #000; padding: 6pt 8pt; margin: 6pt 0 12pt 0; white-space: pre-wrap; page-break-inside: avoid; }
@@ -717,7 +718,7 @@ recharger.</p>
   <tr><th>Donnée</th><th>Génération</th><th>Justification</th></tr>
   <tr><td>Identifiant</td><td>Entiers consécutifs, puis <b>mélangés</b></td><td>Les identifiants sont uniques par construction. Le mélange (algorithme de Fisher-Yates, O(n)) évite que l'ordre de la collection soit celui des identifiants, ce qui favoriserait artificiellement certaines recherches.</td></tr>
   <tr><td>Poids</td><td>Uniforme de 1 à 30 kg</td><td>Ordre de grandeur réaliste pour des colis.</td></tr>
-  <tr><td>Valeur</td><td>Entre 1 et 4 fois le poids, plus 0 à 10</td><td>La valeur est <b>corrélée au poids</b>, comme dans la réalité. Avec une valeur indépendante du poids, le meilleur chargement serait presque toujours « les colis les plus légers », ce qui rendrait le problème du camion (partie 8) artificiellement facile.</td></tr>
+  <tr><td>Valeur</td><td>Entre 1 et 4 fois le poids</td><td>La valeur est <b>corrélée au poids</b>, comme dans la réalité, et la valeur par kilo (de 1 à 4) ne dépend pas du poids. Avec une valeur indépendante du poids, ou un bonus fixe ajouté à chaque colis, les colis légers seraient beaucoup plus rentables au kilo : le meilleur chargement ne contiendrait que des colis de 1 kg, ce qui rendrait le problème du camion (partie 8) artificiellement facile. Une première version du générateur ajoutait un tel bonus (de 0 à 10) : l'étape suivante a montré que le camion de 1&nbsp;000 kg n'était alors rempli que de colis de 1 kg, et le bonus a été supprimé.</td></tr>
   <tr><td>Priorité</td><td>Uniforme de 1 à 5</td><td>Toutes les priorités sont représentées (environ 20 % chacune, figure 18).</td></tr>
   <tr><td>Destination</td><td>Une parmi 10 villes</td><td>Environ 10 % des colis par ville (figure 18).</td></tr>
 </table>
@@ -735,7 +736,7 @@ par pages, recherche, tri, statistiques, puis enregistrement et rechargement d'u
 </figure>
 <figure>
   <img src="captures/etape5_recherche_tri.png" style="width: 66%;" alt="Recherche et tri sur 100&nbsp;000 colis">
-  <figcaption>Figure 17 - Recherche (1,2 µs) et tri par priorité (3,3 ms) parmi 100&nbsp;000 colis</figcaption>
+  <figcaption>Figure 17 - Recherche (1,8 µs) et tri par priorité (3,2 ms) parmi 100&nbsp;000 colis</figcaption>
 </figure>
 <figure>
   <img src="captures/etape5_statistiques.png" style="width: 72%;" alt="Statistiques sur 100&nbsp;000 colis">
@@ -760,18 +761,18 @@ que les options 8 et 9 du menu, pagination et fichier absent compris.</p>
 temps sur trois exécutions ; moyenne sur 10&nbsp;000 recherches) :</p>
 <table>
   <tr><th>Opération</th><th>Complexité</th><th class="n">n = 100</th><th class="n">n = 1&nbsp;000</th><th class="n">n = 10&nbsp;000</th><th class="n">n = 100&nbsp;000</th></tr>
-  <tr><td>Recherche d'un colis</td><td>O(1)</td><td class="n">23 ns</td><td class="n">28 ns</td><td class="n">33 ns</td><td class="n">44 ns</td></tr>
-  <tr><td>Affichage d'une page (20 colis)</td><td>O(1)</td><td class="n">12,4 µs</td><td class="n">11,8 µs</td><td class="n">11,5 µs</td><td class="n">10,5 µs</td></tr>
-  <tr><td>Construction (n ajouts)</td><td>O(n)</td><td class="n">5,2 µs</td><td class="n">50,6 µs</td><td class="n">483 µs</td><td class="n">4,6 ms</td></tr>
-  <tr><td>Tri par priorité (comptage)</td><td>O(n)</td><td class="n">5,1 µs</td><td class="n">40,5 µs</td><td class="n">343 µs</td><td class="n">3,0 ms</td></tr>
-  <tr><td>Statistiques</td><td>O(n)</td><td class="n">15,9 µs</td><td class="n">132 µs</td><td class="n">1,3 ms</td><td class="n">12,4 ms</td></tr>
-  <tr><td>Écriture du fichier CSV</td><td>O(n)</td><td class="n">75 µs</td><td class="n">378 µs</td><td class="n">3,4 ms</td><td class="n">32,0 ms</td></tr>
-  <tr><td>Mise en forme de tous les colis</td><td>O(n)</td><td class="n">56 µs</td><td class="n">577 µs</td><td class="n">5,3 ms</td><td class="n">50,8 ms</td></tr>
-  <tr><td>Génération des colis</td><td>O(n)</td><td class="n">126 µs</td><td class="n">1,2 ms</td><td class="n">12,4 ms</td><td class="n">113,7 ms</td></tr>
-  <tr><td>Lecture CSV et construction</td><td>O(n)</td><td class="n">193 µs</td><td class="n">1,5 ms</td><td class="n">14,4 ms</td><td class="n">140,4 ms</td></tr>
-  <tr><td>Tri par poids (fusion)</td><td>O(n log n)</td><td class="n">68 µs</td><td class="n">891 µs</td><td class="n">10,8 ms</td><td class="n">120,4 ms</td></tr>
+  <tr><td>Recherche d'un colis</td><td>O(1)</td><td class="n">24 ns</td><td class="n">27 ns</td><td class="n">32 ns</td><td class="n">42 ns</td></tr>
+  <tr><td>Affichage d'une page (20 colis)</td><td>O(1)</td><td class="n">13,3 µs</td><td class="n">12,2 µs</td><td class="n">11,8 µs</td><td class="n">10,8 µs</td></tr>
+  <tr><td>Construction (n ajouts)</td><td>O(n)</td><td class="n">5,4 µs</td><td class="n">50,2 µs</td><td class="n">476 µs</td><td class="n">4,6 ms</td></tr>
+  <tr><td>Tri par priorité (comptage)</td><td>O(n)</td><td class="n">5,0 µs</td><td class="n">39,0 µs</td><td class="n">362 µs</td><td class="n">3,3 ms</td></tr>
+  <tr><td>Statistiques</td><td>O(n)</td><td class="n">15,5 µs</td><td class="n">133 µs</td><td class="n">1,3 ms</td><td class="n">12,3 ms</td></tr>
+  <tr><td>Écriture du fichier CSV</td><td>O(n)</td><td class="n">87 µs</td><td class="n">411 µs</td><td class="n">3,5 ms</td><td class="n">31,5 ms</td></tr>
+  <tr><td>Mise en forme de tous les colis</td><td>O(n)</td><td class="n">56 µs</td><td class="n">566 µs</td><td class="n">5,3 ms</td><td class="n">50,5 ms</td></tr>
+  <tr><td>Génération des colis</td><td>O(n)</td><td class="n">116 µs</td><td class="n">1,1 ms</td><td class="n">11,2 ms</td><td class="n">103,1 ms</td></tr>
+  <tr><td>Lecture CSV et construction</td><td>O(n)</td><td class="n">177 µs</td><td class="n">1,5 ms</td><td class="n">14,8 ms</td><td class="n">141,0 ms</td></tr>
+  <tr><td>Tri par poids (fusion)</td><td>O(n log n)</td><td class="n">67 µs</td><td class="n">895 µs</td><td class="n">10,8 ms</td><td class="n">120,2 ms</td></tr>
   <tr><td>Mémoire (colis et table)</td><td>O(n)</td><td class="n">12 Ko</td><td class="n">130 Ko</td><td class="n">1,3 Mo</td><td class="n">15,6 Mo</td></tr>
-  <tr><td>Taille du fichier CSV</td><td>O(n)</td><td class="n">2 Ko</td><td class="n">20 Ko</td><td class="n">211 Ko</td><td class="n">2,2 Mo</td></tr>
+  <tr><td>Taille du fichier CSV</td><td>O(n)</td><td class="n">2 Ko</td><td class="n">20 Ko</td><td class="n">210 Ko</td><td class="n">2,2 Mo</td></tr>
 </table>
 <figure>
   <img src="captures/etape5_mesures.png" style="width: 82%;" alt="Mesures aux quatre niveaux">
@@ -782,12 +783,12 @@ temps sur trois exécutions ; moyenne sur 10&nbsp;000 recherches) :</p>
 <p>Les mesures se rangent en trois familles, qui correspondent exactement aux complexités annoncées :</p>
 <ul>
   <li><b>Opérations en temps constant, O(1)</b> : la recherche par identifiant et l'affichage d'une page. Multiplier
-  le nombre de colis par 1&nbsp;000 ne change presque rien à leur durée (23 à 44 ns ; environ 11 µs par page).
+  le nombre de colis par 1&nbsp;000 ne change presque rien à leur durée (24 à 42 ns ; environ 11 à 13 µs par page).
   Elles sont <b>insensibles</b> au passage à l'échelle. C'est le bénéfice direct de la table de hachage et de
   la pagination.</li>
   <li><b>Opérations linéaires, O(n)</b> : construction, génération, lecture et écriture de fichier, statistiques, tri par
   comptage. Leur durée est multipliée par environ 10 quand n est multiplié par 10. À 100&nbsp;000 colis, la
-  plus lente, la lecture du fichier, prend 140 ms : c'est imperceptible pour l'utilisateur.</li>
+  plus lente, la lecture du fichier, prend 141 ms : c'est à peine perceptible pour l'utilisateur.</li>
   <li><b>Opération en O(n log n)</b> : le tri fusion, multiplié par environ 11 à 12 par décade. C'est l'opération
   de gestion dont le coût croît le plus vite, mais elle reste à 120 ms pour 100&nbsp;000 colis.</li>
 </ul>
@@ -795,7 +796,7 @@ temps sur trois exécutions ; moyenne sur 10&nbsp;000 recherches) :</p>
 pour 100&nbsp;000 colis, les choix retenus aux choix « naïfs » mesurés dans les parties 4 et 5 :</p>
 <table>
   <tr><th>Opération</th><th>Choix naïf</th><th class="n">Coût naïf (n = 100&nbsp;000)</th><th>Choix retenu</th><th class="n">Coût retenu</th></tr>
-  <tr><td>Rechercher un colis</td><td>Parcours séquentiel, O(n)</td><td class="n">519 µs</td><td>Table de hachage, O(1)</td><td class="n">44 ns</td></tr>
+  <tr><td>Rechercher un colis</td><td>Parcours séquentiel, O(n)</td><td class="n">519 µs</td><td>Table de hachage, O(1)</td><td class="n">42 ns</td></tr>
   <tr><td>Trier par poids</td><td>Tri par insertion, O(n²)</td><td class="n">&asymp; 100 s</td><td>Tri fusion, O(n log n)</td><td class="n">120 ms</td></tr>
   <tr><td>Trier par priorité</td><td>Tri fusion, O(n log n)</td><td class="n">117 ms</td><td>Tri par comptage, O(n)</td><td class="n">3 ms</td></tr>
   <tr><td>Charger 100&nbsp;000 colis sans doublon</td><td>Liste, contrôle par parcours, O(n²)</td><td class="n">&asymp; 5&times;10<sup>9</sup> comparaisons</td><td>Table de hachage, O(n)</td><td class="n">4,6 ms</td></tr>
@@ -811,9 +812,212 @@ traitée dans la partie 12.</p>
 <p><b>Interface.</b> Afficher tous les colis reste possible (51 ms de mise en forme pour 100&nbsp;000 colis),
 mais cela représenterait 5&nbsp;000 écrans. L'affichage par pages, en temps constant, est donc indispensable
 dès le niveau 3.</p>
-<p><b>Conclusion.</b> Jusqu'au niveau 4, toutes les opérations de gestion prennent moins de 150 ms et moins de
+<p><b>Conclusion.</b> Jusqu'au niveau 4, toutes les opérations de gestion prennent au plus 150 ms environ et moins de
 16 Mo : les structures et algorithmes retenus conviennent aux quatre tailles demandées, avec une marge confortable.
 L'opération dont le coût augmentera le plus vite est la préparation du camion, étudiée dans la partie 8.</p>
+
+<!-- ============================================================ -->
+<!-- 8. OPTIMISATION DU CHARGEMENT (étape 6)                      -->
+<!-- ============================================================ -->
+<h1>8. Optimisation du chargement du camion</h1>
+
+<h2>8.1 Problématique et modélisation</h2>
+<p>Le camion a une capacité maximale W (en kg). Il faut choisir les colis à charger de sorte que
+<b>poids total &le; W</b>, en transportant la <b>plus grande valeur totale possible</b>. Chaque colis est
+soit chargé entièrement, soit laissé : on ne peut pas en charger une partie. C'est le problème classique
+du <b>sac à dos 0/1</b>. En notant x<sub>i</sub> = 1 si le colis i est chargé, et 0 sinon :</p>
+<pre>maximiser    v1.x1 + v2.x2 + ... + vn.xn          (valeur transportée)
+sous         p1.x1 + p2.x2 + ... + pn.xn &lt;= W     (capacité du camion)
+avec         chaque xi égal à 0 ou 1</pre>
+<p>Comme le souligne le sujet, trouver une combinaison qui respecte la capacité ne suffit pas : il faut la
+<b>meilleure</b>. Or le nombre de combinaisons possibles est 2<sup>n</sup>. Il vaut 16 pour 4 colis, environ
+1 milliard pour 30 colis et environ 10<sup>30</sup> pour 100 colis. Les essayer toutes est donc impossible
+dès quelques dizaines de colis. Ce problème est d'ailleurs réputé difficile (NP-difficile) : on ne connaît
+pas d'algorithme exact dont le coût soit polynomial à la fois en n et en la taille de W.</p>
+<p><b>Exemple du sujet.</b> Les colis A (8 kg, valeur 20), B (6 kg, 25), C (5 kg, 18) et D (4 kg, 14) pèsent
+23 kg au total. Avec la capacité de 50 kg citée en exemple, ils tiennent tous et la question ne se pose pas.
+On fait donc varier la capacité. La capacité <b>W = 14 kg</b> sert d'exemple principal, car elle oblige
+à faire un vrai choix.</p>
+
+<h2>8.2 Première idée : l'algorithme glouton, et pourquoi il ne suffit pas</h2>
+<p>L'idée intuitive consiste à charger d'abord les colis qui « rapportent le plus par kilo », c'est-à-dire
+ceux dont le rapport valeur / poids est le plus élevé, tant qu'ils tiennent dans le camion :</p>
+<table>
+  <tr><th>Colis</th><th class="n">Poids</th><th class="n">Valeur</th><th class="n">Valeur / poids</th><th>Ordre du glouton</th></tr>
+  <tr><td>B</td><td class="n">6 kg</td><td class="n">25</td><td class="n">4,17</td><td>1<sup>er</sup></td></tr>
+  <tr><td>C</td><td class="n">5 kg</td><td class="n">18</td><td class="n">3,60</td><td>2<sup>e</sup></td></tr>
+  <tr><td>D</td><td class="n">4 kg</td><td class="n">14</td><td class="n">3,50</td><td>3<sup>e</sup></td></tr>
+  <tr><td>A</td><td class="n">8 kg</td><td class="n">20</td><td class="n">2,50</td><td>4<sup>e</sup></td></tr>
+</table>
+<p>Avec W = 14 kg, le glouton prend B (6 kg), puis C (11 kg). D ne tient plus (15 kg), ni A (19 kg). Il obtient
+donc <b>B + C = 43</b>, avec 3 kg inutilisés. Or <b>A + B = 45</b> remplit exactement les 14 kg :
+<b>le glouton n'est pas optimal</b>. Le colis C, très rentable au kilo, occupe une place qui aurait été mieux
+utilisée par A. Le glouton serait optimal si l'on pouvait charger une fraction de colis (sac à dos
+« fractionnaire ») : il compléterait alors les 3 kg restants avec 3/8 de A. En 0/1, ce n'est pas possible.
+Il faut donc une méthode qui examine réellement les combinaisons, sans les énumérer toutes.</p>
+
+<h2>8.3 Stratégie retenue : la programmation dynamique</h2>
+<h3>Principe</h3>
+<p>On découpe le problème en sous-problèmes plus petits, dont on mémorise les solutions pour ne jamais les
+recalculer. On note <b>T[i][w]</b> la meilleure valeur atteignable avec une capacité de w kg, en n'utilisant
+que les i premiers colis. Pour le colis i (poids p<sub>i</sub>, valeur v<sub>i</sub>), il n'y a que deux
+possibilités :</p>
+<ul>
+  <li>on <b>ne le prend pas</b> : la meilleure valeur est celle des i - 1 premiers colis avec la même capacité,
+  T[i-1][w] ;</li>
+  <li>on <b>le prend</b>, si p<sub>i</sub> &le; w : on gagne v<sub>i</sub>, et il reste w - p<sub>i</sub> kg pour les i - 1
+  premiers colis, d'où T[i-1][w - p<sub>i</sub>] + v<sub>i</sub>.</li>
+</ul>
+<pre>T[0][w] = 0                                        (aucun colis)
+T[i][w] = max( T[i-1][w] , T[i-1][w - pi] + vi )   si pi &lt;= w
+T[i][w] = T[i-1][w]                                sinon
+Réponse : T[n][W]</pre>
+
+<h3>Exemple pas à pas (A, B, C, D, W = 14 kg)</h3>
+<p>Le script <code>outils/etude_exemple_camion.py</code> affiche le tableau complet. On le remplit ligne par
+ligne : chaque case ne dépend que de la ligne précédente.</p>
+<figure>
+  <img src="captures/etape6_tableau_dp.png" style="width: 86%;" alt="Tableau de programmation dynamique">
+  <figcaption>Figure 22 - Tableau de la programmation dynamique pour les colis A, B, C, D et un camion de 14 kg</figcaption>
+</figure>
+<ul>
+  <li>Ligne « + B », colonne 14 : max(T[1][14] = 20 , T[1][14 - 6] + 25 = 20 + 25) = <b>45</b>. Prendre B, et
+  avec les 8 kg restants prendre A, vaut mieux que A seul.</li>
+  <li>Ligne « + D », colonne 9 : max(T[3][9] = 25 , T[3][5] + 14 = 18 + 14) = <b>32</b>, c'est-à-dire C + D. Pour
+  9 kg, le glouton ne trouve que B = 25 (figure 23).</li>
+  <li>Case finale T[4][14] : max(T[3][14] = 45 , T[3][10] + 14 = 25 + 14 = 39) = <b>45</b>.</li>
+</ul>
+<p><b>Retrouver les colis chargés.</b> On remonte depuis la case finale. Si T[i][w] = T[i-1][w], le colis i
+n'a pas été pris. Sinon, il l'a été, et l'on continue avec w - p<sub>i</sub>. Ici : D n'est pas pris
+(45 = 45), C non plus, B est pris (45 &ne; 20, w devient 8), A est pris (20 &ne; 0, w devient 0). On obtient
+<b>A + B = 45</b>.</p>
+
+<h3>Implémentation</h3>
+<p>Le programme (<code>sac_a_dos_dp</code> dans <code>src/chargement.py</code>) applique cette récurrence avec
+trois améliorations, qui ne changent pas le résultat :</p>
+<ul>
+  <li><b>Une seule ligne de valeurs.</b> La ligne i ne dépend que de la ligne i - 1 : on garde un seul
+  tableau <code>meilleur[0..W]</code>, mis à jour sur place. On le parcourt de w = W vers w = p<sub>i</sub>
+  (sens <b>décroissant</b>) : ainsi, <code>meilleur[w - p<sub>i</sub>]</code> contient encore la valeur de la
+  ligne précédente, et chaque colis n'est pris qu'une fois.</li>
+  <li><b>Des décisions sur un octet.</b> Pour reconstruire la solution, on mémorise pour chaque colis un tableau
+  d'octets <code>pris[w]</code>, qui vaut 1 si le colis améliore <code>meilleur[w]</code>. Une case coûte 1 octet,
+  contre au moins 8 pour un tableau de nombres Python : pour 100&nbsp;000 colis et 1&nbsp;000 kg, cela fait
+  environ 100 Mo au lieu de plus de 800 Mo.</li>
+  <li><b>Filtrage préalable.</b> Les colis plus lourds que le camion ne peuvent jamais être chargés : ils sont
+  écartés dès le départ, en O(n).</li>
+</ul>
+<pre>meilleur = [0] * (W + 1)
+pour chaque colis (p, v) :
+    pris = tableau de W + 1 octets à 0
+    pour w de W jusqu'à p (en décroissant) :
+        si meilleur[w - p] + v &gt; meilleur[w] :
+            meilleur[w] = meilleur[w - p] + v
+            pris[w] = 1
+remonter les colis du dernier au premier depuis w = W :
+    si pris[w] = 1 : charger le colis, w = w - p</pre>
+
+<h2>8.4 Analyse de la stratégie (questions de la partie 5.3 du sujet)</h2>
+<table>
+  <tr><td class="k">Pourquoi cette stratégie ?</td><td>Le sujet demande la <b>meilleure</b> valeur totale. Le glouton est rapide mais peut se tromper (8.2), et la force brute est exacte mais exponentielle. La programmation dynamique est la méthode exacte de référence lorsque les poids sont des entiers et que la capacité reste modérée : c'est le cas d'un camion, de quelques dizaines à quelques milliers de kg. Elle est simple à implémenter et à expliquer, et son coût est prévisible.</td></tr>
+  <tr><td class="k">La solution est-elle toujours optimale ?</td><td><b>Oui.</b> Par récurrence sur i : T[0][w] = 0 est optimal. Supposons la ligne i - 1 optimale. Une solution optimale pour (i, w) soit ne contient pas le colis i, et sa valeur vaut alors au plus T[i-1][w] ; soit le contient, et le reste est un chargement des i - 1 premiers colis dans w - p<sub>i</sub> kg, de valeur au plus T[i-1][w - p<sub>i</sub>]. La récurrence prend le maximum de ces deux cas : T[i][w] est donc optimal. <b>Vérification expérimentale</b> : sur 500 instances aléatoires et sur toutes les capacités de 0 à 23 kg de l'exemple du sujet, la programmation dynamique trouve toujours exactement la valeur de la force brute (8.5).</td></tr>
+  <tr><td class="k">Complexité temporelle</td><td><b>O(n &times; W)</b> : n colis &times; (W + 1) capacités, chaque case en O(1). S'y ajoutent O(n) pour le filtrage et la reconstruction. Cette complexité est dite <b>pseudo-polynomiale</b> : elle dépend de la <i>valeur</i> de W. Doubler la capacité double le temps de calcul.</td></tr>
+  <tr><td class="k">Complexité spatiale</td><td><b>O(n &times; W)</b> octets pour les décisions (n &times; (W + 1) octets), plus O(W) pour le tableau <code>meilleur</code>. Si l'on ne voulait que la valeur optimale, sans la liste des colis, O(W) suffirait.</td></tr>
+  <tr><td class="k">Autres approches possibles</td><td>
+    <b>Glouton</b> par rapport valeur / poids : O(n log n), mais sans garantie d'optimalité.<br>
+    <b>Force brute</b> : 2<sup>n</sup> combinaisons, exacte, utilisable jusqu'à une vingtaine de colis (sert ici à la vérification).<br>
+    <b>Séparation et évaluation</b> (branch and bound) : exploration des combinaisons en abandonnant les branches qui ne peuvent pas battre la meilleure solution connue, la borne étant donnée par le sac à dos fractionnaire. Exacte et souvent rapide, mais exponentielle dans le pire cas.<br>
+    <b>Programmation dynamique sur la valeur</b> plutôt que sur le poids : O(n &times; V), intéressante si les valeurs sont petites et les poids grands.<br>
+    <b>Schéma d'approximation</b> (FPTAS) : on arrondit les valeurs pour garantir au moins (1 - &epsilon;) fois l'optimum, en temps polynomial.<br>
+    <b>Solveur de programmation linéaire en nombres entiers</b> : exclu ici, car il s'agirait d'une bibliothèque externe résolvant directement le problème.</td></tr>
+</table>
+
+<p>Récapitulatif au format demandé pour les choix algorithmiques :</p>
+<table>
+  <tr><td class="k">Problème</td><td>Choisir les colis à charger sans dépasser la capacité W, en maximisant la valeur totale.</td></tr>
+  <tr><td class="k">Solution</td><td>Programmation dynamique du sac à dos 0/1, sur une ligne de valeurs, avec des décisions sur un octet.</td></tr>
+  <tr><td class="k">Temps</td><td>O(n &times; W).</td></tr>
+  <tr><td class="k">Espace</td><td>O(n &times; W) octets, plus O(W).</td></tr>
+  <tr><td class="k">Alternative</td><td>Glouton en O(n log n), non optimal ; force brute en O(2<sup>n</sup>).</td></tr>
+  <tr><td class="k">Justification</td><td>C'est la seule méthode simple qui <b>garantit</b> le meilleur chargement en un temps raisonnable pour un camion réel. Elle est prouvée et vérifiée expérimentalement.</td></tr>
+</table>
+
+<h2>8.5 Vérification de l'optimalité</h2>
+<p>Pour chaque capacité de 0 à 23 kg, le script compare les trois méthodes sur les colis A, B, C, D. La
+programmation dynamique trouve <b>toujours</b> la valeur de la force brute (le script le vérifie). Le glouton,
+lui, se trompe pour <b>7 capacités sur 24</b> : 9, 14, 18 et de 19 à 22 kg, avec jusqu'à 7 de valeur en
+moins.</p>
+<figure>
+  <img src="captures/etape6_comparaison.png" style="width: 76%;" alt="Comparaison des trois méthodes">
+  <figcaption>Figure 23 - Programmation dynamique, glouton et force brute pour toutes les capacités de 0 à 23 kg</figcaption>
+</figure>
+<p>Dix-sept tests (<code>tests/test_chargement.py</code>) complètent cette vérification :</p>
+<ul>
+  <li>les résultats exacts de l'exemple du sujet : 50 kg (tout est chargé, 77), 14 kg (A + B = 45, et le glouton
+  B + C = 43), 15 kg (B + C + D = 57), capacités trop petites, capacité invalide, colis trop lourd ignoré ;</li>
+  <li>sur <b>500 instances aléatoires</b> (jusqu'à 12 colis, capacité jusqu'à 60 kg), la programmation dynamique
+  égale la force brute, respecte la capacité et ne charge aucun colis en double ;</li>
+  <li>sur 500 autres instances, le glouton respecte toujours la capacité et ne dépasse jamais l'optimum, mais
+  il lui est strictement inférieur dans certains cas ;</li>
+  <li>les options 5 et 6 du menu, y compris la demande de confirmation avant un calcul très lourd.</li>
+</ul>
+<figure>
+  <img src="captures/etape6_tests.png" alt="Tests de l'étape 6">
+  <figcaption>Figure 24 - Exécution des tests de l'étape 6 : 17 tests réussis</figcaption>
+</figure>
+
+<h2>8.6 Utilisation depuis le menu</h2>
+<p>L'option 5 demande la capacité (50 kg par défaut, comme dans le sujet) et calcule le chargement optimal.
+Pour mettre en évidence l'intérêt de la méthode exacte, elle affiche aussi le résultat qu'aurait donné le
+glouton. L'option 6 détaille le dernier chargement : colis chargés, poids, taux de remplissage, valeur. La
+collection n'est pas modifiée : on peut préparer plusieurs camions de capacités différentes et les comparer.</p>
+<figure>
+  <img src="captures/etape6_menu_capacites.png" style="width: 72%;" alt="Préparation d'un camion">
+  <figcaption>Figure 25 - Colis du sujet : 50 kg (tout est chargé), puis 20 kg (optimum 80, glouton 70) et détail du chargement</figcaption>
+</figure>
+<figure>
+  <img src="captures/etape6_menu_sujet.png" style="width: 72%;" alt="Colis A, B, C, D, 14 kg">
+  <figcaption>Figure 26 - Colis A à D (identifiants 1 à 4, fichier <code>donnees/colis_camion.csv</code>), camion de 14 kg : A + B = 45</figcaption>
+</figure>
+<p>Avant un calcul très lourd (plus de 50 millions de cases n &times; W), le programme indique le nombre de
+cases et la mémoire nécessaire, puis demande une confirmation :</p>
+<figure>
+  <img src="captures/etape6_grand.png" style="width: 72%;" alt="Camion de 1&nbsp;000 kg parmi 100&nbsp;000 colis">
+  <figcaption>Figure 27 - Camion de 1&nbsp;000 kg parmi 100&nbsp;000 colis : confirmation, calcul en 2,07 s</figcaption>
+</figure>
+
+<h2>8.7 Coût mesuré</h2>
+<p>Le script <code>outils/mesure_chargement.py</code> mesure le temps et le pic de mémoire de la programmation
+dynamique. Il fait d'abord varier n avec W = 1&nbsp;000 kg, puis W avec n = 10&nbsp;000 colis :</p>
+<table>
+  <tr><th class="n">n</th><th class="n">W</th><th class="n">Cases n &times; W</th><th class="n">Temps DP</th><th class="n">Mémoire DP</th><th class="n">Temps glouton</th><th class="n">Valeur glouton / optimum</th></tr>
+  <tr><td class="n">100</td><td class="n">1&nbsp;000 kg</td><td class="n">0,1 million</td><td class="n">2,8 ms</td><td class="n">0,1 Mo</td><td class="n">0,1 ms</td><td class="n">99,87 %</td></tr>
+  <tr><td class="n">1&nbsp;000</td><td class="n">1&nbsp;000 kg</td><td class="n">1 million</td><td class="n">24,0 ms</td><td class="n">1,1 Mo</td><td class="n">1,0 ms</td><td class="n">100 %</td></tr>
+  <tr><td class="n">10&nbsp;000</td><td class="n">1&nbsp;000 kg</td><td class="n">10 millions</td><td class="n">205,9 ms</td><td class="n">11,3 Mo</td><td class="n">10,7 ms</td><td class="n">100 %</td></tr>
+  <tr><td class="n">100&nbsp;000</td><td class="n">1&nbsp;000 kg</td><td class="n">100 millions</td><td class="n">2,06 s</td><td class="n">113,7 Mo</td><td class="n">128,6 ms</td><td class="n">100 %</td></tr>
+  <tr><td class="n">10&nbsp;000</td><td class="n">100 kg</td><td class="n">1 million</td><td class="n">15,0 ms</td><td class="n">2,3 Mo</td><td class="n">10,6 ms</td><td class="n">100 %</td></tr>
+  <tr><td class="n">10&nbsp;000</td><td class="n">10&nbsp;000 kg</td><td class="n">100 millions</td><td class="n">2,21 s</td><td class="n">101,7 Mo</td><td class="n">10,8 ms</td><td class="n">100 %</td></tr>
+</table>
+<figure>
+  <img src="captures/etape6_mesures.png" style="width: 92%;" alt="Mesure du coût du chargement">
+  <figcaption>Figure 28 - Temps et mémoire de la programmation dynamique selon n et W</figcaption>
+</figure>
+<ul>
+  <li><b>Le coût suit exactement n &times; W.</b> Multiplier n par 10 multiplie le temps et la mémoire par
+  environ 10, et multiplier W par 10 aussi. Il faut environ 2 s et 100 Mo pour 100 millions de cases, que
+  ce soit avec 100&nbsp;000 colis et 1&nbsp;000 kg ou avec 10&nbsp;000 colis et 10&nbsp;000 kg.</li>
+  <li><b>C'est l'opération la plus coûteuse du programme.</b> À 100&nbsp;000 colis, elle prend 2 s, contre
+  120 ms pour un tri, et c'est la seule dont la mémoire dépasse largement celle de la collection. Elle reste
+  utilisable, mais un camion de plusieurs tonnes pesé au kilogramme près (W = 20&nbsp;000) rendrait le calcul
+  20 fois plus long et 20 fois plus gourmand.</li>
+  <li><b>Le glouton est 16 fois plus rapide</b> à 100&nbsp;000 colis, et il obtient ici la même valeur sur les
+  grandes instances : avec beaucoup de colis, on trouve facilement des colis très rentables qui remplissent
+  presque exactement le camion. Mais il ne donne <b>aucune garantie</b>. Il se trompe sur 7 des 24 capacités
+  de l'exemple du sujet, sur 100 colis (99,87 %) et dans les tests aléatoires.</li>
+</ul>
+<p>La programmation dynamique répond donc au besoin pour les quatre niveaux du sujet. Son coût en O(n &times; W)
+peut toutefois être fortement réduit sans perdre l'optimalité : c'est l'objet de l'étude des performances
+(partie 10).</p>
 
 </body>
 </html>

@@ -39,7 +39,7 @@ class TestGenerateur(unittest.TestCase):
     def test_valeurs_dans_les_bornes(self):
         for c in generer_colis(5_000, graine=3):
             self.assertTrue(POIDS_MIN <= c.poids <= POIDS_MAX)
-            self.assertTrue(c.poids <= c.valeur <= 4 * c.poids + 10)   # valeur corrélée au poids
+            self.assertTrue(c.poids <= c.valeur <= 4 * c.poids)   # valeur corrélée au poids
             self.assertTrue(PRIORITE_MIN <= c.priorite <= PRIORITE_MAX)
             self.assertIn(c.destination, DESTINATIONS)
 

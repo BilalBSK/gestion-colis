@@ -24,11 +24,12 @@ def generer_colis(n, graine=GRAINE_PAR_DEFAUT, identifiant_depart=1):
       donc tous différents, puis MÉLANGÉS (mélange de Fisher-Yates, O(n)) pour
       que l'ordre de la collection ne soit pas celui des identifiants.
     - Poids : uniforme entre 1 et 30 kg.
-    - Valeur : corrélée au poids (entre 1 et 4 fois le poids, plus 0 à 10).
-      Un colis lourd vaut en général davantage, comme dans la réalité. Avec des
-      valeurs indépendantes du poids, le meilleur chargement serait presque
-      toujours « les colis les plus légers », ce qui rendrait le problème du
-      camion artificiellement facile.
+    - Valeur : entre 1 et 4 fois le poids. Un colis lourd vaut en général
+      davantage, comme dans la réalité, et la valeur par kilo (entre 1 et 4) ne
+      dépend pas du poids. Avec une valeur indépendante du poids, ou un bonus
+      fixe ajouté à chaque colis, les colis légers seraient bien plus rentables
+      au kilo : le meilleur chargement ne contiendrait que des colis de 1 kg,
+      ce qui rendrait le problème du camion artificiellement facile.
     - Priorité : uniforme entre 1 et 5. Destination : une des 10 villes.
     """
     rng = random.Random(graine)
@@ -37,7 +38,7 @@ def generer_colis(n, graine=GRAINE_PAR_DEFAUT, identifiant_depart=1):
     colis = []
     for identifiant in identifiants:
         poids = rng.randint(POIDS_MIN, POIDS_MAX)
-        valeur = rng.randint(poids, 4 * poids) + rng.randint(0, 10)
+        valeur = rng.randint(poids, 4 * poids)
         priorite = rng.randint(PRIORITE_MIN, PRIORITE_MAX)
         colis.append(Colis(identifiant, poids, valeur, priorite, rng.choice(DESTINATIONS)))
     return colis
