@@ -21,7 +21,8 @@ délégués à des fonctions natives.
 python3 src/main.py
 ```
 
-Les 5 colis d'exemple du sujet sont chargés au démarrage. Menu :
+Les 5 colis d'exemple du sujet sont chargés au démarrage. L'option 8 génère 100, 1 000, 10 000
+ou 100 000 colis pour tester le passage à l'échelle. Menu :
 
 ```
 ===== GESTION DES LIVRAISONS =====
@@ -33,6 +34,8 @@ Les 5 colis d'exemple du sujet sont chargés au démarrage. Menu :
 5. Préparer un camion
 6. Afficher le chargement
 7. Afficher les statistiques
+8. Générer des colis (100 à 100 000)
+9. Charger / enregistrer un fichier CSV
 0. Quitter
 ```
 
@@ -52,6 +55,7 @@ projet/
 │   ├── gestion.py    collection de colis (table de hachage) : ajout, affichage, recherche, tris
 │   ├── affichage.py  mise en forme des colis en tableau
 │   ├── tris.py       tri fusion et tri par comptage (implémentés à la main)
+│   ├── generateur.py jeux de données aléatoires reproductibles (100 à 100 000 colis)
 │   ├── saisie.py     saisies clavier robustes
 │   └── main.py       interface en menu (point d'entrée)
 ├── tests/        tests unitaires

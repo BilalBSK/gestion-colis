@@ -96,7 +96,8 @@ class TestSessionsDuMenu(unittest.TestCase):
         for option in ("===== GESTION DES LIVRAISONS =====", "1. Afficher les colis",
                        "2. Ajouter un colis", "3. Rechercher un colis", "4. Organiser les colis",
                        "5. Préparer un camion", "6. Afficher le chargement",
-                       "7. Afficher les statistiques", "0. Quitter", "Au revoir."):
+                       "7. Afficher les statistiques", "8. Générer des colis (100 à 100 000)",
+                       "9. Charger / enregistrer un fichier CSV", "0. Quitter", "Au revoir."):
             self.assertIn(option, sortie)
 
     def test_afficher(self):
@@ -135,10 +136,10 @@ class TestSessionsDuMenu(unittest.TestCase):
         self.assertIn("Poids total         : 30 kg (moyenne 6.00 kg)", sortie)
 
     def test_choix_invalides_et_fin_de_saisie(self):
-        code, sortie = session("abc\n9\n")    # puis fin de l'entrée (Ctrl-D)
+        code, sortie = session("abc\n10\n")   # puis fin de l'entrée (Ctrl-D)
         self.assertEqual(code, 0)
         self.assertIn("Veuillez saisir un nombre entier.", sortie)
-        self.assertIn("La valeur doit être inférieure ou égale à 7.", sortie)
+        self.assertIn("La valeur doit être inférieure ou égale à 9.", sortie)
         self.assertIn("Au revoir.", sortie)
         self.assertNotIn("Traceback", sortie)
 

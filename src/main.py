@@ -11,11 +11,14 @@ import time
 
 from affichage import ENTETE, SEPARATEUR, ligne, page
 from colis import PRIORITE_MAX, PRIORITE_MIN, Colis
+from generateur import NIVEAUX, generer_colis
 from gestion import GestionColis
-from saisie import Abandon, lire_entier, lire_texte
+from saisie import Abandon, lire_entier, lire_oui_non, lire_texte
+from stockage import ecrire_csv
 
 RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FICHIER_EXEMPLE = os.path.join(RACINE, "donnees", "colis_exemple.csv")
+FICHIER_SAUVEGARDE = os.path.join(RACINE, "donnees", "sauvegarde.csv")
 TAILLE_PAGE = 20
 
 MENU = """
@@ -28,6 +31,8 @@ MENU = """
 5. Préparer un camion
 6. Afficher le chargement
 7. Afficher les statistiques
+8. Générer des colis (100 à 100 000)
+9. Charger / enregistrer un fichier CSV
 0. Quitter
 """
 
@@ -65,6 +70,8 @@ class Application:
             5: self.preparer_camion,
             6: self.afficher_chargement,
             7: self.afficher_statistiques,
+            8: self.generer_colis,
+            9: self.gerer_fichier,
         }
         while True:
             print(MENU)
@@ -168,6 +175,51 @@ class Application:
         print(f"{'Par destination':<20}:")
         for destination, (nombre, poids, valeur) in s["par_destination"].items():
             print(f"  {destination:<12} {nombre:>7} colis {poids:>9} kg   valeur {valeur:>9}")
+
+    def generer_colis(self):
+        print("--- Générer des colis ---")
+        for niveau, n in NIVEAUX.items():
+            print(f"{niveau}. Niveau {niveau} : {n:>7} colis")
+        n = NIVEAUX[lire_entier("Niveau : ", 1, len(NIVEAUX))]
+        remplacer = lire_oui_non("Remplacer la collection actuelle ?", defaut=True)
+        if remplacer:
+            self.gestion = GestionColis()
+        # Les nouveaux identifiants commencent après le plus grand existant : aucun doublon
+        debut = time.perf_counter()
+        for colis in generer_colis(n, identifiant_depart=self.gestion.prochain_identifiant()):
+            self.gestion.ajouter(colis)
+        duree = time.perf_counter() - debut
+        print(f"  {n} colis générés et ajoutés en {formater_duree(duree)}. "
+              f"La collection contient {len(self.gestion)} colis.")
+
+    def gerer_fichier(self):
+        print("--- Fichier CSV ---")
+        choix = lire_entier("1. Charger un fichier  2. Enregistrer la collection : ", 1, 2)
+        if choix == 1:
+            chemin = lire_texte(f"Fichier à charger [{os.path.relpath(FICHIER_EXEMPLE, RACINE)}] : ",
+                                defaut=FICHIER_EXEMPLE)
+            try:
+                debut = time.perf_counter()
+                nouvelle = GestionColis.depuis_csv(os.path.join(RACINE, chemin))
+            except FileNotFoundError:
+                print(f"  Erreur : fichier introuvable ({chemin}). La collection n'est pas modifiée.")
+                return
+            except (OSError, ValueError) as erreur:
+                # Un fichier invalide ne modifie pas la collection actuelle
+                print(f"  Erreur : {erreur}. La collection n'est pas modifiée.")
+                return
+            self.gestion = nouvelle
+            print(f"  {len(nouvelle)} colis chargés en {formater_duree(time.perf_counter() - debut)}.")
+        else:
+            chemin = lire_texte(f"Fichier de destination [{os.path.relpath(FICHIER_SAUVEGARDE, RACINE)}] : ",
+                                defaut=FICHIER_SAUVEGARDE)
+            try:
+                debut = time.perf_counter()
+                ecrire_csv(os.path.join(RACINE, chemin), self.gestion)
+            except OSError as erreur:
+                print(f"  Erreur : {erreur}")
+                return
+            print(f"  {len(self.gestion)} colis enregistrés en {formater_duree(time.perf_counter() - debut)}.")
 
 
 def main():

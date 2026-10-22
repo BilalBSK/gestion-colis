@@ -317,7 +317,7 @@ Pour retrouver le colis, on refait le même calcul et on accède directement à 
   <tr><td class="k">Complexité en temps</td><td>O(n) pour tout afficher, O(min(n, limite)) pour une page.</td></tr>
   <tr><td class="k">Complexité en espace</td><td>O(n) pour la copie de la liste des colis transmise à l'affichage.</td></tr>
   <tr><td class="k">Alternative</td><td>Toujours tout afficher.</td></tr>
-  <tr><td class="k">Justification</td><td>Afficher tous les colis coûte forcément O(n), puisque chacun doit être écrit. En revanche, 100&nbsp;000 lignes défilant dans un terminal sont illisibles et prennent plusieurs secondes. Afficher une page à la fois garde l'interface réactive. L'utilisateur pourra tout de même demander l'affichage complet (partie 6).</td></tr>
+  <tr><td class="k">Justification</td><td>Afficher tous les colis coûte forcément O(n), puisque chacun doit être écrit. En revanche, 100&nbsp;000 lignes défilant dans un terminal sont inexploitables : cela représente 5&nbsp;000 écrans de 20 lignes. Afficher une page à la fois coûte un temps constant (environ 11 µs, mesuré en partie 7) et garde l'interface lisible. L'utilisateur pourra tout de même demander l'affichage complet (partie 6).</td></tr>
 </table>
 
 <h2>4.4 Fonctionnalité 3 : rechercher un colis</h2>
@@ -595,7 +595,7 @@ projet avec la commande <code>python3 src/main.py</code>. Au démarrage, il char
 du sujet : toutes les fonctionnalités sont donc testables immédiatement, sans rien saisir au préalable.</p>
 
 <h2>6.1 Menu principal</h2>
-<p>Le menu reprend exactement l'organisation proposée par le sujet. Chaque option appelle une méthode de la
+<p>Le menu reprend l'organisation proposée par le sujet (options 1 à 7 et 0). Chaque option appelle une méthode de la
 collection, ce qui permet d'en rappeler l'algorithme et le coût :</p>
 <table>
   <tr><th>Option</th><th>Fonctionnalité</th><th>Méthode et algorithme</th><th>Coût</th></tr>
@@ -606,8 +606,13 @@ collection, ce qui permet d'en rappeler l'algorithme et le coût :</p>
   <tr><td>5</td><td>Préparer un camion</td><td>Optimisation du chargement (parties 8 et 9)</td><td>voir partie 8</td></tr>
   <tr><td>6</td><td>Afficher le chargement</td><td>Affichage du dernier chargement calculé (parties 8 et 9)</td><td>O(m), m colis chargés</td></tr>
   <tr><td>7</td><td>Afficher les statistiques</td><td><code>statistiques()</code> : un seul parcours de la collection</td><td>O(n)</td></tr>
+  <tr><td>8</td><td>Générer des colis</td><td><code>generer_colis()</code> : 100, 1&nbsp;000, 10&nbsp;000 ou 100&nbsp;000 colis (partie 7)</td><td>O(n)</td></tr>
+  <tr><td>9</td><td>Charger / enregistrer un fichier CSV</td><td>Lecture ou écriture ligne par ligne (partie 3.4)</td><td>O(n)</td></tr>
   <tr><td>0</td><td>Quitter</td><td>Fin de la boucle principale</td><td>O(1)</td></tr>
 </table>
+<p>Les options 8 et 9 complètent le menu proposé par le sujet : elles permettent de tester facilement le
+programme avec les quatre tailles de données demandées (partie 7) et de conserver une collection d'une
+utilisation à l'autre.</p>
 <figure>
   <img src="captures/etape4_menu.png" style="width: 58%;" alt="Menu principal">
   <figcaption>Figure 9 - Démarrage du programme, menu principal et affichage des colis (option 1)</figcaption>
@@ -668,7 +673,7 @@ d'observer directement le coût des algorithmes.</p>
   <tr><td class="k">Complexité en temps</td><td>O(n) pour le parcours, plus O(d log d) pour classer les d destinations. Comme d est très petit devant n, le coût total est O(n).</td></tr>
   <tr><td class="k">Complexité en espace</td><td>O(k + d) : 5 compteurs de priorité et 3 totaux par destination. Aucune copie de la collection.</td></tr>
   <tr><td class="k">Alternatives</td><td>(1) Un parcours par indicateur (somme, maximum, minimum...) : même complexité, mais 6 à 8 parcours au lieu d'un.<br>(2) Tenir les statistiques à jour à chaque ajout : consultation en O(1), mais un coût supplémentaire à chaque ajout, et un calcul plus délicat du minimum ou du maximum si l'on supprimait des colis.</td></tr>
-  <tr><td class="k">Justification</td><td>Les statistiques sont consultées ponctuellement, alors que les ajouts sont fréquents. Un parcours unique en O(n) est simple, toujours exact, et prend quelques millisecondes pour 100&nbsp;000 colis (partie 7).</td></tr>
+  <tr><td class="k">Justification</td><td>Les statistiques sont consultées ponctuellement, alors que les ajouts sont fréquents. Un parcours unique en O(n) est simple, toujours exact, et prend environ 13 ms pour 100&nbsp;000 colis (partie 7).</td></tr>
 </table>
 <figure>
   <img src="captures/etape4_statistiques.png" style="width: 70%;" alt="Statistiques">
@@ -688,6 +693,127 @@ apparaissent en <b>gras</b>. Pour alléger les captures, le menu n'est montré e
   <img src="captures/etape4_tests.png" alt="Tests de l'étape 4">
   <figcaption>Figure 15 - Exécution des tests de l'étape 4 : 17 tests réussis</figcaption>
 </figure>
+
+<!-- ============================================================ -->
+<!-- 7. PASSAGE À L'ÉCHELLE (étape 5)                             -->
+<!-- ============================================================ -->
+<h1>7. Passage à l'échelle</h1>
+<p>Le programme doit fonctionner avec les quatre tailles de données du sujet. Cette partie présente le
+générateur de jeux de données, vérifie que chaque fonctionnalité fonctionne à chaque niveau, puis analyse
+les conséquences de l'augmentation du nombre de colis.</p>
+<table>
+  <tr><th>Niveau</th><th class="n">Nombre de colis</th></tr>
+  <tr><td>Niveau 1</td><td class="n">100</td></tr>
+  <tr><td>Niveau 2</td><td class="n">1&nbsp;000</td></tr>
+  <tr><td>Niveau 3</td><td class="n">10&nbsp;000</td></tr>
+  <tr><td>Niveau 4</td><td class="n">100&nbsp;000</td></tr>
+</table>
+
+<h2>7.1 Génération des jeux de données</h2>
+<p>Le module <code>generateur.py</code> crée n colis aléatoires. Il est accessible depuis le menu (option 8),
+qui propose les quatre niveaux. L'option 9 permet d'enregistrer une collection dans un fichier CSV et de la
+recharger.</p>
+<table>
+  <tr><th>Donnée</th><th>Génération</th><th>Justification</th></tr>
+  <tr><td>Identifiant</td><td>Entiers consécutifs, puis <b>mélangés</b></td><td>Les identifiants sont uniques par construction. Le mélange (algorithme de Fisher-Yates, O(n)) évite que l'ordre de la collection soit celui des identifiants, ce qui favoriserait artificiellement certaines recherches.</td></tr>
+  <tr><td>Poids</td><td>Uniforme de 1 à 30 kg</td><td>Ordre de grandeur réaliste pour des colis.</td></tr>
+  <tr><td>Valeur</td><td>Entre 1 et 4 fois le poids, plus 0 à 10</td><td>La valeur est <b>corrélée au poids</b>, comme dans la réalité. Avec une valeur indépendante du poids, le meilleur chargement serait presque toujours « les colis les plus légers », ce qui rendrait le problème du camion (partie 8) artificiellement facile.</td></tr>
+  <tr><td>Priorité</td><td>Uniforme de 1 à 5</td><td>Toutes les priorités sont représentées (environ 20 % chacune, figure 18).</td></tr>
+  <tr><td>Destination</td><td>Une parmi 10 villes</td><td>Environ 10 % des colis par ville (figure 18).</td></tr>
+</table>
+<p>La génération est <b>reproductible</b> : avec la même graine, on obtient exactement les mêmes colis. Les
+mesures et les tests peuvent ainsi être refaits à l'identique. Lorsqu'on ajoute des colis générés à une
+collection existante, les identifiants commencent après le plus grand identifiant utilisé, ce qui évite tout
+doublon. Le coût de la génération est O(n) en temps et en mémoire.</p>
+
+<h2>7.2 Fonctionnement aux quatre niveaux</h2>
+<p>Les figures suivantes montrent le programme avec <b>100&nbsp;000 colis</b> (niveau 4) : génération, affichage
+par pages, recherche, tri, statistiques, puis enregistrement et rechargement d'un fichier.</p>
+<figure>
+  <img src="captures/etape5_generation.png" style="width: 70%;" alt="Génération de 100&nbsp;000 colis et pagination">
+  <figcaption>Figure 16 - Génération de 100&nbsp;000 colis, puis affichage des deux premières pages de 20 colis</figcaption>
+</figure>
+<figure>
+  <img src="captures/etape5_recherche_tri.png" style="width: 66%;" alt="Recherche et tri sur 100&nbsp;000 colis">
+  <figcaption>Figure 17 - Recherche (1,2 µs) et tri par priorité (3,3 ms) parmi 100&nbsp;000 colis</figcaption>
+</figure>
+<figure>
+  <img src="captures/etape5_statistiques.png" style="width: 72%;" alt="Statistiques sur 100&nbsp;000 colis">
+  <figcaption>Figure 18 - Statistiques des 100&nbsp;000 colis générés : priorités et destinations bien réparties</figcaption>
+</figure>
+<figure>
+  <img src="captures/etape5_fichier.png" style="width: 72%;" alt="Enregistrement et chargement CSV">
+  <figcaption>Figure 19 - Enregistrement puis rechargement de 100&nbsp;000 colis ; un fichier absent ne modifie pas la collection</figcaption>
+</figure>
+<p>Onze tests (<code>tests/test_echelle.py</code>) vérifient le générateur (identifiants uniques et mélangés,
+reproductibilité, bornes des valeurs) et, <b>pour chacun des quatre niveaux</b> : la recherche de 200 colis
+présents et d'un colis absent, la conformité des trois tris à <code>sorted()</code> et la cohérence des
+statistiques. Ils vérifient aussi l'écriture puis la relecture exacte d'un fichier de 100&nbsp;000 colis, ainsi
+que les options 8 et 9 du menu, pagination et fichier absent compris.</p>
+<figure>
+  <img src="captures/etape5_tests.png" alt="Tests de l'étape 5">
+  <figcaption>Figure 20 - Exécution des tests de l'étape 5 : 11 tests réussis</figcaption>
+</figure>
+
+<h2>7.3 Mesures aux quatre niveaux</h2>
+<p>Le script <code>outils/mesure_echelle.py</code> mesure chaque opération de gestion aux quatre niveaux (meilleur
+temps sur trois exécutions ; moyenne sur 10&nbsp;000 recherches) :</p>
+<table>
+  <tr><th>Opération</th><th>Complexité</th><th class="n">n = 100</th><th class="n">n = 1&nbsp;000</th><th class="n">n = 10&nbsp;000</th><th class="n">n = 100&nbsp;000</th></tr>
+  <tr><td>Recherche d'un colis</td><td>O(1)</td><td class="n">23 ns</td><td class="n">28 ns</td><td class="n">33 ns</td><td class="n">44 ns</td></tr>
+  <tr><td>Affichage d'une page (20 colis)</td><td>O(1)</td><td class="n">12,4 µs</td><td class="n">11,8 µs</td><td class="n">11,5 µs</td><td class="n">10,5 µs</td></tr>
+  <tr><td>Construction (n ajouts)</td><td>O(n)</td><td class="n">5,2 µs</td><td class="n">50,6 µs</td><td class="n">483 µs</td><td class="n">4,6 ms</td></tr>
+  <tr><td>Tri par priorité (comptage)</td><td>O(n)</td><td class="n">5,1 µs</td><td class="n">40,5 µs</td><td class="n">343 µs</td><td class="n">3,0 ms</td></tr>
+  <tr><td>Statistiques</td><td>O(n)</td><td class="n">15,9 µs</td><td class="n">132 µs</td><td class="n">1,3 ms</td><td class="n">12,4 ms</td></tr>
+  <tr><td>Écriture du fichier CSV</td><td>O(n)</td><td class="n">75 µs</td><td class="n">378 µs</td><td class="n">3,4 ms</td><td class="n">32,0 ms</td></tr>
+  <tr><td>Mise en forme de tous les colis</td><td>O(n)</td><td class="n">56 µs</td><td class="n">577 µs</td><td class="n">5,3 ms</td><td class="n">50,8 ms</td></tr>
+  <tr><td>Génération des colis</td><td>O(n)</td><td class="n">126 µs</td><td class="n">1,2 ms</td><td class="n">12,4 ms</td><td class="n">113,7 ms</td></tr>
+  <tr><td>Lecture CSV et construction</td><td>O(n)</td><td class="n">193 µs</td><td class="n">1,5 ms</td><td class="n">14,4 ms</td><td class="n">140,4 ms</td></tr>
+  <tr><td>Tri par poids (fusion)</td><td>O(n log n)</td><td class="n">68 µs</td><td class="n">891 µs</td><td class="n">10,8 ms</td><td class="n">120,4 ms</td></tr>
+  <tr><td>Mémoire (colis et table)</td><td>O(n)</td><td class="n">12 Ko</td><td class="n">130 Ko</td><td class="n">1,3 Mo</td><td class="n">15,6 Mo</td></tr>
+  <tr><td>Taille du fichier CSV</td><td>O(n)</td><td class="n">2 Ko</td><td class="n">20 Ko</td><td class="n">211 Ko</td><td class="n">2,2 Mo</td></tr>
+</table>
+<figure>
+  <img src="captures/etape5_mesures.png" style="width: 82%;" alt="Mesures aux quatre niveaux">
+  <figcaption>Figure 21 - Temps et mémoire des opérations de gestion aux quatre niveaux</figcaption>
+</figure>
+
+<h2>7.4 Conséquences de l'augmentation du nombre de colis</h2>
+<p>Les mesures se rangent en trois familles, qui correspondent exactement aux complexités annoncées :</p>
+<ul>
+  <li><b>Opérations en temps constant, O(1)</b> : la recherche par identifiant et l'affichage d'une page. Multiplier
+  le nombre de colis par 1&nbsp;000 ne change presque rien à leur durée (23 à 44 ns ; environ 11 µs par page).
+  Elles sont <b>insensibles</b> au passage à l'échelle. C'est le bénéfice direct de la table de hachage et de
+  la pagination.</li>
+  <li><b>Opérations linéaires, O(n)</b> : construction, génération, lecture et écriture de fichier, statistiques, tri par
+  comptage. Leur durée est multipliée par environ 10 quand n est multiplié par 10. À 100&nbsp;000 colis, la
+  plus lente, la lecture du fichier, prend 140 ms : c'est imperceptible pour l'utilisateur.</li>
+  <li><b>Opération en O(n log n)</b> : le tri fusion, multiplié par environ 11 à 12 par décade. C'est l'opération
+  de gestion dont le coût croît le plus vite, mais elle reste à 120 ms pour 100&nbsp;000 colis.</li>
+</ul>
+<p>Le passage à l'échelle montre surtout <b>l'importance des choix algorithmiques</b>. Le tableau suivant compare,
+pour 100&nbsp;000 colis, les choix retenus aux choix « naïfs » mesurés dans les parties 4 et 5 :</p>
+<table>
+  <tr><th>Opération</th><th>Choix naïf</th><th class="n">Coût naïf (n = 100&nbsp;000)</th><th>Choix retenu</th><th class="n">Coût retenu</th></tr>
+  <tr><td>Rechercher un colis</td><td>Parcours séquentiel, O(n)</td><td class="n">519 µs</td><td>Table de hachage, O(1)</td><td class="n">44 ns</td></tr>
+  <tr><td>Trier par poids</td><td>Tri par insertion, O(n²)</td><td class="n">&asymp; 100 s</td><td>Tri fusion, O(n log n)</td><td class="n">120 ms</td></tr>
+  <tr><td>Trier par priorité</td><td>Tri fusion, O(n log n)</td><td class="n">117 ms</td><td>Tri par comptage, O(n)</td><td class="n">3 ms</td></tr>
+  <tr><td>Charger 100&nbsp;000 colis sans doublon</td><td>Liste, contrôle par parcours, O(n²)</td><td class="n">&asymp; 5&times;10<sup>9</sup> comparaisons</td><td>Table de hachage, O(n)</td><td class="n">4,6 ms</td></tr>
+</table>
+<p>À 100 colis, tous ces choix seraient acceptables : le tri par insertion ne prend que 0,1 ms. C'est seulement
+quand n augmente que l'écart devient décisif : un facteur de près de 1&nbsp;000 pour le tri, et une durée de chargement qui
+deviendrait inacceptable avec une liste. Un algorithme se juge donc sur sa <b>croissance</b>, pas sur sa durée
+pour une petite entrée.</p>
+<p><b>Mémoire.</b> L'occupation est linéaire : environ <b>156 octets par colis</b>, soit 112 pour l'objet
+<code>Colis</code> et le reste pour la table de hachage, ce qui fait 15,6 Mo pour 100&nbsp;000 colis. On peut extrapoler
+environ 160 Mo pour un million de colis, ce qui reste raisonnable. La question des très grands volumes est
+traitée dans la partie 12.</p>
+<p><b>Interface.</b> Afficher tous les colis reste possible (51 ms de mise en forme pour 100&nbsp;000 colis),
+mais cela représenterait 5&nbsp;000 écrans. L'affichage par pages, en temps constant, est donc indispensable
+dès le niveau 3.</p>
+<p><b>Conclusion.</b> Jusqu'au niveau 4, toutes les opérations de gestion prennent moins de 150 ms et moins de
+16 Mo : les structures et algorithmes retenus conviennent aux quatre tailles demandées, avec une marge confortable.
+L'opération dont le coût augmentera le plus vite est la préparation du camion, étudiée dans la partie 8.</p>
 
 </body>
 </html>
