@@ -1,13 +1,12 @@
-"""Étude de l'exemple A, B, C, D du sujet (partie 5.2).
+"""L'exemple A, B, C, D du sujet (partie 5.2).
 
-1. Affiche le tableau complet de la programmation dynamique pour une capacité
-   donnée (par défaut 14 kg) : ligne i = meilleure valeur avec les i premiers
-   colis, colonne w = capacité disponible.
-2. Compare, pour chaque capacité de 0 à 23 kg, la programmation dynamique, le
-   glouton et la force brute.
+  tableau [W]  : affiche le tableau complet de la programmation dynamique
+                 (une ligne par colis ajouté, une colonne par capacité).
+  comparaison  : pour chaque capacité de 0 à 23 kg, compare la programmation
+                 dynamique, le glouton et la force brute.
 
 Usage, depuis la racine du projet :
-    python3 outils/etude_exemple_camion.py tableau [CAPACITE]
+    python3 outils/etude_exemple_camion.py tableau 14
     python3 outils/etude_exemple_camion.py comparaison
 """
 
@@ -29,8 +28,8 @@ def noms(chargement):
 
 
 def tableau(capacite):
-    """Version « tableau à deux dimensions » de la récurrence, pour l'explication :
-    T[i][w] = max(T[i-1][w], T[i-1][w - p_i] + v_i)."""
+    """Même récurrence que sac_a_dos_dp, mais je garde tout le tableau
+    T[i][w] = max(T[i-1][w], T[i-1][w - p_i] + v_i) pour pouvoir l'afficher."""
     T = [[0] * (capacite + 1)]
     for c in COLIS:
         precedent = T[-1]
@@ -41,7 +40,7 @@ def tableau(capacite):
     print("-" * (20 + 4 * (capacite + 1)))
     for titre, rangee in zip(titres, T):
         print(titre.ljust(20) + "".join(f"{v:>4}" for v in rangee))
-    # Remontée : si T[i][w] != T[i-1][w], le colis i est pris
+    # remontée : si T[i][w] != T[i-1][w], c'est que le colis i a été pris
     w, pris = capacite, []
     for i in range(len(COLIS), 0, -1):
         if T[i][w] != T[i - 1][w]:

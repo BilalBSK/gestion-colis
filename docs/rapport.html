@@ -2,9 +2,8 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<title>Rapport - Gestion des colis et optimisation du chargement d'un camion</title>
+<title>Rapport - Gestion des colis et chargement d'un camion</title>
 <style>
-  /* Mise en page sobre, type document Word : texte noir sur fond blanc */
   @page {
     size: A4;
     margin: 2.5cm 2.5cm 2.5cm 2.5cm;
@@ -13,7 +12,8 @@
   @page :first { @bottom-center { content: none; } }
 
   body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; line-height: 1.5; color: #000; background: #fff; }
-  h1 { font-size: 16pt; font-weight: bold; margin: 0 0 14pt 0; page-break-before: always; }
+  h1 { font-size: 16pt; font-weight: bold; margin: 30pt 0 14pt 0; page-break-after: avoid; }
+  h1.saut { page-break-before: always; margin-top: 0; }
   h2 { font-size: 13pt; font-weight: bold; margin: 20pt 0 8pt 0; page-break-after: avoid; }
   h3 { font-size: 11pt; font-weight: bold; margin: 14pt 0 6pt 0; page-break-after: avoid; }
   p  { margin: 0 0 9pt 0; text-align: justify; }
@@ -23,9 +23,9 @@
   table { border-collapse: collapse; width: 100%; margin: 6pt 0 14pt 0; font-size: 10pt; page-break-inside: avoid; }
   th, td { border: 1px solid #000; padding: 4pt 6pt; text-align: left; vertical-align: top; }
   th { font-weight: bold; background: #fff; }
-  td.k { font-weight: bold; width: 22%; }   /* tableaux « Problème / Solution / ... » */
-  td.n, th.n { text-align: right; }         /* colonnes de nombres */
-  td.n { white-space: nowrap; }             /* un nombre et son unité ne sont jamais coupés */
+  td.k { font-weight: bold; width: 22%; }
+  td.n, th.n { text-align: right; }
+  td.n { white-space: nowrap; }
 
   code, pre { font-family: "Courier New", Courier, monospace; font-size: 9.5pt; }
   pre { border: 1px solid #000; padding: 6pt 8pt; margin: 6pt 0 12pt 0; white-space: pre-wrap; page-break-inside: avoid; }
@@ -34,7 +34,6 @@
   figure img { max-width: 100%; border: 1px solid #000; }
   figcaption { font-size: 10pt; font-style: italic; margin-top: 4pt; }
 
-  /* Page de garde */
   .garde { height: 24cm; display: flex; flex-direction: column; justify-content: center; text-align: center; }
   .garde .matiere { font-size: 13pt; margin-bottom: 30pt; }
   .garde .titre { font-size: 22pt; font-weight: bold; line-height: 1.3; margin-bottom: 12pt; }
@@ -44,1039 +43,320 @@
   .garde td { border: none; padding: 3pt 6pt; }
   .garde td:first-child { font-weight: bold; text-align: right; width: 40%; }
 
-  /* Sommaire */
   .sommaire ol { list-style: none; padding-left: 0; }
   .sommaire li { margin-bottom: 5pt; }
   .sommaire ol ol { padding-left: 18pt; margin-top: 3pt; }
 </style>
+
 </head>
 <body>
 
-<!-- ============================================================ -->
-<!-- PAGE DE GARDE                                                -->
-<!-- ============================================================ -->
 <div class="garde">
   <div class="matiere">Projet informatique</div>
   <div class="titre">Gestion des colis et optimisation<br>du chargement d'un camion</div>
-  <div class="sous-titre">Rapport technique</div>
+  <div class="sous-titre">Rapport</div>
   <table>
-    <tr><td>Auteur :</td><td>[Prénom NOM]</td></tr>
+    <tr><td>Auteur :</td><td>Bilal BOUKHORISSA</td></tr>
     <tr><td>Langage :</td><td>Python 3</td></tr>
     <tr><td>Date :</td><td>Octobre 2026</td></tr>
     <tr><td>Dépôt GitHub :</td><td>https://github.com/BilalBSK/gestion-colis</td></tr>
   </table>
 </div>
 
-<!-- ============================================================ -->
-<!-- SOMMAIRE                                                     -->
-<!-- ============================================================ -->
-<h1 class="sommaire-titre">Sommaire</h1>
+<h1 class="saut">Sommaire</h1>
 <div class="sommaire">
 <ol>
   <li>1. Introduction et choix du langage</li>
   <li>2. Organisation du projet</li>
-  <li>3. Modélisation des données</li>
-  <li>4. Gestion des colis : ajout, affichage, recherche</li>
-  <li>5. Tri des colis</li>
-  <li>6. Interface utilisateur</li>
-  <li>7. Passage à l'échelle</li>
-  <li>8. Optimisation du chargement du camion</li>
-  <li>9. Prise en compte de la priorité</li>
-  <li>10. Étude des performances</li>
-  <li>11. Synthèse des choix algorithmiques majeurs</li>
-  <li>12. Questions de réflexion</li>
-  <li>13. Conclusion</li>
+  <li>3. Gestion des colis</li>
+  <li>4. Passage à l'échelle</li>
+  <li>5. Chargement optimal du camion</li>
+  <li>6. Prise en compte de la priorité</li>
+  <li>7. Étude des performances</li>
+  <li>8. Synthèse des choix algorithmiques</li>
+  <li>9. Questions de réflexion</li>
+  <li>10. Conclusion</li>
 </ol>
 </div>
 
-<!-- ============================================================ -->
-<!-- 1. INTRODUCTION                                              -->
-<!-- ============================================================ -->
-<h1>1. Introduction et choix du langage</h1>
+<h1 class="saut">1. Introduction et choix du langage</h1>
 
-<h2>1.1 Contexte</h2>
-<p>Une entreprise de livraison prépare chaque jour le chargement de ses camions à partir d'une liste
-de colis. Chaque colis est décrit par un identifiant, un poids, une valeur, une priorité et une destination.</p>
-<p>Le programme réalisé doit répondre à deux besoins :</p>
+<p>Le sujet demande un programme pour une entreprise de livraison : gérer la liste des colis (ajouter,
+afficher, rechercher, trier) et préparer le chargement d'un camion, c'est-à-dire choisir quels colis emporter
+sans dépasser la capacité, en gardant le plus de valeur possible. Ensuite, il faut aussi tenir compte de la
+priorité des colis. Tout ça doit marcher jusqu'à 100&nbsp;000 colis.</p>
+
+<p>J'ai fait le projet en <b>Python</b>. Je l'ai choisi surtout parce que le code reste lisible, assez proche
+du pseudo-code, et que je voulais passer mon temps sur les algorithmes plutôt que sur la gestion de la mémoire
+qu'il aurait fallu faire en C. La bibliothèque standard m'a suffi pour le reste (<code>unittest</code> pour les
+tests, <code>time</code> et <code>tracemalloc</code> pour les mesures, <code>csv</code> pour lire les fichiers),
+et je n'ai installé aucune bibliothèque externe. Par contre, une boucle Python est beaucoup plus lente qu'en C.
+Les complexités restent les mêmes, mais ça se voit sur les temps mesurés, j'en reparle dans la partie 7.</p>
+
+<p>Comme le sujet le demande, j'ai écrit moi-même les algorithmes principaux (les tris et le chargement du
+camion). Pour le dictionnaire, que j'utilise tel quel, j'explique comment il marche et ce qu'il coûte
+(partie 3.2).</p>
+
+<p>J'ai fixé deux conventions pour tout le projet :</p>
 <ul>
-  <li><b>gérer les colis</b> : ajouter, afficher, rechercher et trier une collection pouvant contenir
-  jusqu'à 100&nbsp;000 colis, voire davantage ;</li>
-  <li><b>préparer un camion</b> : choisir les colis à charger sans dépasser la capacité du camion, en
-  transportant la plus grande valeur possible et en favorisant les colis prioritaires.</li>
+  <li>la priorité va de 1 à 5 et <b>5 est la plus forte</b>. Le sujet ne le dit pas clairement, mais comme il
+  parle de colis à « priorité importante », j'ai considéré que plus le chiffre est grand, plus le colis est
+  important ;</li>
+  <li>les poids sont des <b>kilos entiers</b>, comme dans les exemples du sujet. J'en ai besoin pour le camion,
+  parce que l'algorithme utilise un tableau avec une case par kilo (0, 1, 2, ... kg). Pour être plus précis,
+  on pourrait compter en hectogrammes.</li>
 </ul>
 
-<h2>1.2 Choix du langage : Python</h2>
-<p>Le projet est réalisé en <b>Python 3</b>, avec la bibliothèque standard uniquement. Ce choix repose
-sur trois raisons :</p>
-<ul>
-  <li><b>Lisibilité.</b> Le code Python reste proche du pseudo-code. L'évaluation portant d'abord sur les
-  choix algorithmiques, on peut se concentrer sur les algorithmes plutôt que sur la gestion manuelle de la
-  mémoire (allocation, libération, tailles de tableaux).</li>
-  <li><b>Outils intégrés.</b> La bibliothèque standard fournit tout le nécessaire pour tester
-  (<code>unittest</code>), mesurer les temps d'exécution (<code>time</code>) et la mémoire
-  (<code>tracemalloc</code>), et lire des fichiers CSV (<code>csv</code>).</li>
-  <li><b>Structures de données prêtes à l'emploi</b> (listes dynamiques, dictionnaires), dont le
-  fonctionnement interne et la complexité sont connus et seront expliqués.</li>
-</ul>
-<p><b>Contrepartie assumée :</b> Python est un langage interprété. Une même boucle s'exécute en général
-10 à 100 fois plus lentement qu'en C. Cela ne change pas les complexités, mais cela change les temps
-mesurés. L'étude des performances en tiendra compte.</p>
-<p><b>Respect du sujet (partie 9) :</b> les algorithmes qui constituent le cœur du travail (tris,
-optimisation du chargement) sont <b>implémentés à la main</b>, et leur fonctionnement est expliqué dans
-ce rapport. Lorsqu'une fonction native est utilisée pour une opération courante, l'algorithme sous-jacent
-et sa complexité sont précisés. Aucune bibliothèque externe n'est utilisée.</p>
-
-<!-- ============================================================ -->
-<!-- 2. ORGANISATION DU PROJET                                    -->
-<!-- ============================================================ -->
 <h1>2. Organisation du projet</h1>
 
-<h2>2.1 Arborescence</h2>
-<p>Le dépôt respecte l'organisation demandée (dossier <code>src/</code>, <code>README.md</code>,
-<code>rapport.pdf</code>), complétée par quatre dossiers utiles :</p>
 <pre>projet/
-├── src/          code source du programme
-├── tests/        tests unitaires
-├── donnees/      fichiers de colis (exemple du sujet)
-├── docs/         source de ce rapport et captures d'écran
-├── outils/       génération du rapport, captures, mesures
-├── README.md     présentation et mode d'emploi
-└── rapport.pdf   ce rapport</pre>
+├── src/          le programme (point d'entrée : main.py)
+├── tests/        les tests unitaires
+├── donnees/      les colis d'exemple du sujet
+├── outils/       mes scripts de mesure, de capture d'écran et de génération du PDF
+├── docs/         la source de ce rapport, les captures et les mesures
+├── README.md
+└── rapport.pdf</pre>
 
-<h2>2.2 Démarche de travail</h2>
-<p>Le projet a été réalisé par étapes successives. Chaque étape a été <b>validée</b> (tests unitaires et
-exécution du programme) avant de passer à la suivante, puis enregistrée par un commit sur le dépôt
-GitHub. L'historique des commits reflète donc la progression du travail.</p>
-
-<!-- ============================================================ -->
-<!-- 3. MODÉLISATION DES DONNÉES (étape 1)                        -->
-<!-- ============================================================ -->
-<h1>3. Modélisation des données</h1>
-
-<h2>3.1 Informations portées par un colis</h2>
-<p>Le sujet impose au minimum cinq informations par colis. Le tableau suivant précise, pour chacune,
-le type retenu et les contraintes vérifiées à la création du colis.</p>
 <table>
-  <tr><th>Attribut</th><th>Type</th><th>Contrainte</th><th>Justification</th></tr>
-  <tr><td>identifiant</td><td>entier</td><td>&ge; 0, unique</td><td>Sert de clé pour retrouver un colis. L'unicité est vérifiée par la collection (partie 4).</td></tr>
-  <tr><td>poids</td><td>entier (kg)</td><td>&gt; 0</td><td>Un poids nul ou négatif n'a pas de sens physique. Le choix d'un <b>entier</b> est expliqué ci-dessous.</td></tr>
-  <tr><td>valeur</td><td>entier</td><td>&ge; 0</td><td>Une valeur nulle reste possible (colis sans valeur marchande).</td></tr>
-  <tr><td>priorité</td><td>entier</td><td>de 1 à 5</td><td>Échelle fermée, cohérente avec les exemples du sujet (valeurs de 1 à 5).</td></tr>
-  <tr><td>destination</td><td>texte</td><td>non vide</td><td>Les espaces en début et en fin sont supprimés (« Paris » saisi avec un espace en trop désigne toujours Paris).</td></tr>
+  <tr><th>Fichier</th><th>Contenu</th></tr>
+  <tr><td><code>colis.py</code></td><td>la classe <code>Colis</code> et la vérification des données</td></tr>
+  <tr><td><code>gestion.py</code></td><td>la collection de colis : ajout, recherche, tris, statistiques</td></tr>
+  <tr><td><code>tris.py</code></td><td>le tri fusion et le tri par comptage</td></tr>
+  <tr><td><code>chargement.py</code></td><td>la préparation du camion (programmation dynamique, glouton, force brute)</td></tr>
+  <tr><td><code>generateur.py</code></td><td>la génération de 100 à 100&nbsp;000 colis aléatoires</td></tr>
+  <tr><td><code>main.py</code>, <code>saisie.py</code>, <code>affichage.py</code>, <code>stockage.py</code></td><td>le menu, les saisies au clavier, l'affichage en tableau et la lecture des fichiers CSV</td></tr>
 </table>
 
-<h3>Deux conventions à préciser</h3>
-<ul>
-  <li><b>Sens de la priorité.</b> Le sujet ne précise pas si 1 ou 5 est la priorité la plus forte.
-  Nous retenons <b>5 = priorité la plus forte</b> et 1 = la plus faible, conformément à l'expression
-  « priorité importante » utilisée dans la partie 6 : une valeur élevée correspond à un colis important.</li>
-  <li><b>Poids entier.</b> Tous les poids du sujet sont des nombres entiers de kilogrammes. Les conserver
-  sous forme d'entiers est indispensable pour l'algorithme de chargement (partie 8), qui utilise un
-  tableau indexé par la capacité du camion (0, 1, 2, ... kg). Si une précision plus fine était nécessaire,
-  il suffirait d'exprimer les poids en hectogrammes ou en grammes, sans changer l'algorithme.</li>
-</ul>
+<p>Pour lancer le programme : <code>python3 src/main.py</code> depuis le dossier du projet. J'ai avancé étape
+par étape (modèle de données, collection, tris, menu, passage à l'échelle, camion, priorité, performances).
+À chaque fois, j'ai écrit les tests de l'étape avant de passer à la suivante, puis j'ai fait un commit, donc
+l'historique sur GitHub suit ces étapes.</p>
 
-<h2>3.2 Représentation d'un colis en mémoire</h2>
+<p>Il y a 63 tests en tout (<code>python3 -m unittest discover -s tests</code>). Ceux qui m'ont le plus servi
+comparent le chargement du programme avec la force brute sur 500 cas tirés au hasard, ou lancent le vrai menu
+avec des saisies (dont des saisies fausses) pour vérifier qu'il ne plante pas.</p>
+<figure>
+  <img src="captures/tests.png" style="width: 62%;" alt="Exécution des tests">
+  <figcaption>Figure 1 - Exécution de l'ensemble des tests</figcaption>
+</figure>
+
+<h1>3. Gestion des colis</h1>
+
+<h2>3.1 Représentation d'un colis</h2>
+<p>Chaque colis est un objet <code>Colis</code> avec ses cinq informations (identifiant, poids, valeur,
+priorité, destination). Je vérifie les données dès la création : un poids nul, une valeur négative, une
+priorité qui n'est pas entre 1 et 5 ou une destination vide sont refusés. Comme ça, un colis incohérent ne
+peut pas entrer dans le programme, et je n'ai pas besoin de refaire les vérifications dans les algorithmes.</p>
+<p>J'ai utilisé une <code>dataclass</code> avec deux options. Avec <code>frozen=True</code>, on ne peut plus
+modifier un colis après sa création. Je l'ai mis parce que l'identifiant sert de clé pour retrouver le colis :
+s'il changeait en cours de route, le colis serait perdu dans le dictionnaire. <code>slots=True</code> empêche
+Python de créer un dictionnaire caché pour chaque objet, ce qui fait gagner pas mal de mémoire avec
+100&nbsp;000 colis.</p>
+
+<h2>3.2 Le choix de la structure : un dictionnaire</h2>
+<p>Presque toutes les opérations dépendent de la façon dont je range la collection, donc j'ai commencé par
+comparer les possibilités :</p>
 <table>
-  <tr><td class="k">Problème</td><td>Représenter un colis de façon fiable et compacte, sachant que le programme doit en manipuler jusqu'à 100&nbsp;000, voire davantage.</td></tr>
-  <tr><td class="k">Solution retenue</td><td>Une <b>classe de données</b> Python (<code>@dataclass</code>) nommée <code>Colis</code>, déclarée avec deux options :
-    <ul>
-      <li><code>slots=True</code> : les cinq attributs sont rangés dans des emplacements fixes de l'objet, au lieu d'un dictionnaire propre à chaque colis ;</li>
-      <li><code>frozen=True</code> : le colis est <b>immuable</b> après sa création.</li>
-    </ul></td></tr>
-  <tr><td class="k">Complexité en temps</td><td>Création et accès à un attribut : O(1).</td></tr>
-  <tr><td class="k">Complexité en espace</td><td>O(1) par colis, soit O(n) pour n colis. Mesure : environ <b>112 octets par colis</b>.</td></tr>
-  <tr><td class="k">Alternatives</td><td>Un dictionnaire par colis, une <code>dataclass</code> classique (sans <code>slots</code>), un tuple nommé (<code>namedtuple</code>), ou des tableaux séparés par attribut (un tableau des poids, un tableau des valeurs, etc.).</td></tr>
-  <tr><td class="k">Justification</td><td>
-    <b>Mémoire :</b> c'est la représentation la plus compacte parmi celles qui restent lisibles (mesure ci-dessous) : deux fois moins qu'un dictionnaire par colis.<br>
-    <b>Fiabilité :</b> l'immuabilité empêche de modifier par erreur l'identifiant d'un colis déjà rangé dans la collection, ce qui rendrait l'index incohérent.<br>
-    <b>Lisibilité :</b> on écrit <code>colis.poids</code> plutôt que <code>colis["poids"]</code> ou <code>colis[1]</code>.<br>
-    Les tableaux séparés par attribut seraient encore plus compacts, mais beaucoup moins lisibles. Cette piste n'est intéressante qu'à partir de plusieurs millions de colis (partie 12).</td></tr>
+  <tr><th>Structure</th><th>Ajout (avec contrôle des doublons)</th><th>Recherche par identifiant</th><th>Remarque</th></tr>
+  <tr><td>Liste</td><td>O(n), il faut parcourir pour vérifier le doublon</td><td>O(n)</td><td>la plus simple</td></tr>
+  <tr><td>Liste triée par identifiant</td><td>O(n), il faut décaler les éléments</td><td>O(log n) par dichotomie</td><td>garde l'ordre des identifiants</td></tr>
+  <tr><td>Arbre équilibré</td><td>O(log n)</td><td>O(log n)</td><td>plus compliqué à écrire</td></tr>
+  <tr><td><b>Dictionnaire (retenu)</b></td><td><b>O(1) en moyenne</b></td><td><b>O(1) en moyenne</b></td><td>garde l'ordre d'ajout</td></tr>
+</table>
+<p>Un dictionnaire Python est une table de hachage. À partir de l'identifiant, Python calcule un nombre (le
+« haché ») qui donne directement la case où ranger le colis. Pour le retrouver, il refait le même calcul et va
+à la bonne case, sans regarder les autres colis. Si deux identifiants tombent sur la même case, il en essaie
+une autre, mais tant que la table n'est pas trop pleine, ça arrive peu. Quand elle est remplie aux deux tiers,
+Python la recopie dans une table plus grande. Cette recopie coûte O(n), mais comme elle est rare, un ajout
+reste en moyenne en temps constant (« O(1) amorti »). En plus, depuis Python 3.7, un dictionnaire garde l'ordre
+d'insertion, donc je n'ai pas eu besoin d'une liste à côté pour l'affichage.</p>
+
+<h2>3.3 Justification des opérations</h2>
+<p>Dans les tableaux suivants, <b>n</b> est le nombre de colis.</p>
+
+<h3>Ajouter un colis</h3>
+<table>
+  <tr><td class="k">Problème</td><td>Ajouter un colis sans jamais avoir deux colis avec le même identifiant.</td></tr>
+  <tr><td class="k">Algorithme</td><td>Je regarde si l'identifiant est déjà une clé du dictionnaire. Si oui, je refuse l'ajout ; sinon, je range le colis et je mets à jour le plus grand identifiant connu, ce qui permet au menu de proposer directement un identifiant libre.</td></tr>
+  <tr><td class="k">Temps</td><td>O(1) amorti par ajout, donc O(n) pour charger n colis.</td></tr>
+  <tr><td class="k">Espace</td><td>O(n) pour la collection.</td></tr>
+  <tr><td class="k">Alternative</td><td>Une liste, avec un parcours pour vérifier les doublons : O(n) par ajout, soit O(n²) pour charger n colis.</td></tr>
+  <tr><td class="k">Justification</td><td>J'ai écarté la liste parce que charger 100&nbsp;000 colis demanderait environ 5 milliards de comparaisons rien que pour vérifier les doublons. Avec le dictionnaire, ça prend 4,6 ms (partie 7).</td></tr>
 </table>
 
-<p>La mesure suivante compare la mémoire nécessaire pour créer 100&nbsp;000 colis avec chacune des
-représentations envisagées (script <code>outils/mesure_memoire_colis.py</code>, mesure réalisée avec le
-module <code>tracemalloc</code>, liste contenant les colis comprise) :</p>
+<h3>Afficher les colis</h3>
 <table>
-  <tr><th>Représentation</th><th class="n">Mémoire pour 100&nbsp;000 colis</th><th class="n">Par colis</th></tr>
-  <tr><td>Dictionnaire par colis</td><td class="n">22,4 Mo</td><td class="n">224 octets</td></tr>
-  <tr><td><code>dataclass</code> sans <code>slots</code></td><td class="n">15,2 Mo</td><td class="n">152 octets</td></tr>
-  <tr><td>Tuple nommé (<code>namedtuple</code>)</td><td class="n">13,6 Mo</td><td class="n">136 octets</td></tr>
-  <tr><td><b><code>dataclass</code> avec <code>slots</code> (retenu)</b></td><td class="n"><b>11,2 Mo</b></td><td class="n"><b>112 octets</b></td></tr>
-</table>
-<figure>
-  <img src="captures/etape1_memoire.png" style="width: 72%;" alt="Mesure de la mémoire">
-  <figcaption>Figure 1 - Mesure de la mémoire occupée selon la représentation choisie</figcaption>
-</figure>
-
-<h2>3.3 Validation des données à la création</h2>
-<p>Chaque colis est vérifié au moment de sa création (méthode <code>__post_init__</code>, coût O(1)).
-Un colis incohérent ne peut donc jamais entrer dans le programme : les algorithmes suivants n'ont pas
-à se méfier des données. Les règles vérifiées sont :</p>
-<ul>
-  <li>identifiant, poids, valeur et priorité sont des <b>entiers</b> (un nombre décimal ou un texte est refusé) ;</li>
-  <li>poids &gt; 0, valeur &ge; 0, identifiant &ge; 0, priorité comprise entre 1 et 5 ;</li>
-  <li>destination non vide.</li>
-</ul>
-<p>En cas d'erreur, une exception explicite est levée (par exemple « la priorité doit être comprise
-entre 1 et 5 »). L'interface pourra ainsi afficher un message clair à l'utilisateur au lieu de s'arrêter.</p>
-
-<h2>3.4 Données d'exemple et fichier CSV</h2>
-<p>Les cinq colis du sujet sont enregistrés dans le fichier <code>donnees/colis_exemple.csv</code> :</p>
-<pre>identifiant;poids;valeur;priorite;destination
-101;8;20;2;Paris
-102;3;10;5;Lille
-103;12;40;1;Lyon
-104;5;25;4;Paris
-105;2;15;3;Lille</pre>
-<p>Le format CSV a été choisi parce qu'il est simple, lisible par un humain et ouvrable dans un tableur.
-Le séparateur « ; » est celui des tableurs en français, où la virgule sert de séparateur décimal.
-Le module <code>stockage.py</code> lit et écrit ce format, en O(n) en temps et en mémoire pour n colis.
-Si une ligne est invalide, le message d'erreur indique son <b>numéro</b> (par exemple
-« ligne 3 : le poids doit être strictement positif »), ce qui permet de corriger le fichier facilement.</p>
-
-<h2>3.5 Validation de l'étape</h2>
-<p>Dix-sept tests unitaires (<code>tests/test_colis.py</code>) vérifient :</p>
-<ul>
-  <li>la création d'un colis valide, y compris aux bornes (priorité 1 et 5, valeur 0) ;</li>
-  <li>le refus de chaque donnée invalide : poids nul ou négatif, valeur négative, priorité hors de
-  l'intervalle, identifiant négatif, destination vide, types incorrects ;</li>
-  <li>l'immuabilité d'un colis ;</li>
-  <li>la lecture exacte des cinq colis du sujet, puis l'écriture et la relecture d'un fichier sans perte ;</li>
-  <li>la détection des fichiers mal formés (en-tête incorrect, colonne manquante, valeur non numérique),
-  avec le bon numéro de ligne.</li>
-</ul>
-<figure>
-  <img src="captures/etape1_tests.png" alt="Exécution des tests de l'étape 1">
-  <figcaption>Figure 2 - Exécution des tests unitaires de l'étape 1 : 17 tests réussis</figcaption>
-</figure>
-
-<!-- ============================================================ -->
-<!-- 4. GESTION DES COLIS (étape 2)                               -->
-<!-- ============================================================ -->
-<h1>4. Gestion des colis : ajout, affichage, recherche</h1>
-<p>Cette partie couvre les fonctionnalités 1 à 3 du sujet. Les trois opérations dépendent d'un même
-choix : la <b>structure de données</b> qui contient la collection. Ce choix est donc présenté en premier.
-Dans toute la suite, <b>n</b> désigne le nombre de colis de la collection.</p>
-
-<h2>4.1 Structure de la collection : une table de hachage</h2>
-
-<h3>Structures envisagées</h3>
-<table>
-  <tr><th>Structure</th><th>Ajout (avec contrôle des doublons)</th><th>Recherche par identifiant</th><th>Parcours</th><th>Mémoire</th></tr>
-  <tr><td>Liste non triée</td><td>O(n) : il faut parcourir la liste pour vérifier que l'identifiant est libre</td><td>O(n)</td><td>O(n), ordre d'insertion</td><td>O(n), la plus faible</td></tr>
-  <tr><td>Liste triée par identifiant</td><td>O(n) : il faut décaler les éléments pour insérer au bon endroit</td><td>O(log n) par dichotomie</td><td>O(n), ordre des identifiants</td><td>O(n)</td></tr>
-  <tr><td>Arbre binaire de recherche équilibré (AVL)</td><td>O(log n)</td><td>O(log n)</td><td>O(n), ordre des identifiants</td><td>O(n), mais deux pointeurs par nœud</td></tr>
-  <tr><td><b>Table de hachage (retenue)</b></td><td><b>O(1) en moyenne</b></td><td><b>O(1) en moyenne</b></td><td>O(n), ordre d'insertion</td><td>O(n)</td></tr>
+  <tr><td class="k">Problème</td><td>Afficher les colis de façon lisible, même quand il y en a 100&nbsp;000.</td></tr>
+  <tr><td class="k">Algorithme</td><td>Je parcours les colis dans l'ordre d'ajout et je les affiche par pages de 20. Seuls les colis de la page sont mis en forme.</td></tr>
+  <tr><td class="k">Temps</td><td>O(n) pour tout afficher, mais une page coûte toujours le même temps, quel que soit n.</td></tr>
+  <tr><td class="k">Espace</td><td>O(n) pour la copie de la liste des colis.</td></tr>
+  <tr><td class="k">Alternative</td><td>Tout afficher d'un coup.</td></tr>
+  <tr><td class="k">Justification</td><td>100&nbsp;000 lignes, ça ferait 5&nbsp;000 écrans à faire défiler, personne ne lirait ça. Avec les pages, on voit tout de suite le début, et on continue si on veut.</td></tr>
 </table>
 
-<h3>Fonctionnement d'une table de hachage</h3>
-<p>Une table de hachage est un tableau de cases. Pour ranger un colis, on calcule à partir de son
-identifiant un nombre appelé <b>haché</b>, qui désigne directement la case où le colis doit être placé.
-Pour retrouver le colis, on refait le même calcul et on accède directement à la bonne case :
-<b>il n'est pas nécessaire de parcourir la collection</b>.</p>
-<ul>
-  <li><b>Collisions.</b> Deux identifiants peuvent désigner la même case. Le dictionnaire Python essaie alors
-  d'autres cases selon une suite déterminée (adressage ouvert). Tant que la table est peu remplie, ces essais
-  supplémentaires restent rares : le coût moyen reste O(1).</li>
-  <li><b>Agrandissement.</b> Lorsque la table est remplie aux deux tiers, Python alloue une table plus grande
-  et y recopie tous les éléments. Cette recopie coûte O(n), mais elle est rare, car la taille augmente à
-  chaque fois d'un facteur constant. Réparti sur l'ensemble des ajouts, son coût reste constant : on parle
-  de coût <b>O(1) amorti</b>.</li>
-  <li><b>Pire cas.</b> Si tous les identifiants tombaient dans la même case, la recherche coûterait O(n).
-  Avec des identifiants entiers, ce cas ne se produit pas en pratique.</li>
-  <li><b>Ordre.</b> Depuis Python 3.7, le dictionnaire conserve l'ordre d'insertion : il range les entrées
-  dans un tableau compact, dans l'ordre d'arrivée, et la table de hachage ne contient que leurs positions.
-  On peut donc afficher les colis dans leur ordre d'enregistrement sans liste supplémentaire.</li>
-</ul>
-
+<h3>Rechercher un colis</h3>
 <table>
-  <tr><td class="k">Problème</td><td>Stocker un nombre potentiellement important de colis, empêcher deux colis d'avoir le même identifiant et retrouver rapidement un colis à partir de son identifiant.</td></tr>
-  <tr><td class="k">Solution retenue</td><td>Une table de hachage (<code>dict</code> Python) qui associe à chaque identifiant le colis correspondant : <code>identifiant &rarr; Colis</code>.</td></tr>
-  <tr><td class="k">Complexité en temps</td><td>Ajout, test de doublon, recherche : O(1) en moyenne (O(1) amorti pour l'ajout). Parcours complet : O(n).</td></tr>
-  <tr><td class="k">Complexité en espace</td><td>O(n). Mesure : de 30 à 52 octets par colis selon le taux de remplissage de la table, en plus des colis eux-mêmes (partie 3).</td></tr>
-  <tr><td class="k">Alternatives</td><td>Liste non triée, liste triée et recherche dichotomique, arbre binaire de recherche équilibré (tableau ci-dessus).</td></tr>
-  <tr><td class="k">Justification</td><td>La recherche par identifiant et l'ajout sont les opérations les plus fréquentes : la table de hachage les rend <b>indépendantes du nombre de colis</b>. Les deux avantages d'un arbre (parcours dans l'ordre des identifiants, recherche par intervalle) ne sont pas demandés par le sujet. Les tris par poids, valeur ou priorité sont traités à part (partie 5). Le surcoût mémoire, environ 5 Mo pour 100&nbsp;000 colis, est faible.</td></tr>
+  <tr><td class="k">Problème</td><td>Retrouver un colis à partir de son identifiant, ou dire qu'il n'existe pas.</td></tr>
+  <tr><td class="k">Algorithme</td><td>Accès direct dans le dictionnaire.</td></tr>
+  <tr><td class="k">Temps</td><td>O(1) en moyenne (O(n) dans le pire cas théorique, si tous les identifiants tombaient dans la même case, ce qui n'arrive pas avec des entiers).</td></tr>
+  <tr><td class="k">Espace</td><td>Rien en plus.</td></tr>
+  <tr><td class="k">Alternative</td><td>Parcourir tous les colis (O(n)), ou une dichotomie dans une liste triée (O(log n), mais il faut garder la liste triée à chaque ajout, en O(n)).</td></tr>
+  <tr><td class="k">Justification</td><td>Le sujet précise que l'entreprise recherche souvent des colis, donc c'est l'opération que je voulais la plus rapide. Avec 100&nbsp;000 colis, une recherche prend 43 ns, contre 529 µs en parcourant tous les colis (partie 7).</td></tr>
 </table>
 
-<h2>4.2 Fonctionnalité 1 : ajouter un colis</h2>
+<h3>Trier par poids et par valeur : le tri fusion</h3>
+<p>Le tri fusion coupe la liste en deux, trie chaque moitié de la même façon, puis fusionne les deux moitiés
+triées. Pour fusionner, je compare les deux premiers éléments, je prends le plus petit, et je recommence jusqu'à
+ce qu'une des deux listes soit vide :</p>
+<pre>fusion de [3, 8] et [2, 5, 12] :
+  3 ou 2  -> 2         [2]
+  3 ou 5  -> 3         [2, 3]
+  8 ou 5  -> 5         [2, 3, 5]
+  8 ou 12 -> 8         [2, 3, 5, 8]
+  il reste 12          [2, 3, 5, 8, 12]</pre>
+<p>Il y a log<sub>2</sub>(n) niveaux de découpage, et à chaque niveau on fusionne les n éléments une fois, ce
+qui donne O(n log n). En cas d'égalité, je prends l'élément de gauche, donc le tri est <b>stable</b> : deux colis
+de même poids restent dans leur ordre d'ajout. C'est plus pratique à l'affichage, l'ordre ne change pas d'une
+fois sur l'autre.</p>
 <table>
-  <tr><td class="k">Problème</td><td>Ajouter un nouveau colis à la collection sans jamais créer deux colis de même identifiant.</td></tr>
-  <tr><td class="k">Algorithme</td><td>1. Vérifier que l'identifiant n'est pas déjà une clé de la table (<code>identifiant in table</code>).<br>
-  2. Si c'est le cas, refuser l'ajout avec un message explicite : la collection reste inchangée.<br>
-  3. Sinon, insérer le colis et mettre à jour le plus grand identifiant connu.</td></tr>
-  <tr><td class="k">Complexité en temps</td><td>O(1) amorti. Charger un fichier de n colis coûte donc O(n).</td></tr>
-  <tr><td class="k">Complexité en espace</td><td>O(1) supplémentaire par ajout.</td></tr>
-  <tr><td class="k">Alternative</td><td>Ranger les colis dans une liste et vérifier les doublons par un parcours : O(n) par ajout, donc O(n²) pour charger n colis.</td></tr>
-  <tr><td class="k">Justification</td><td>Avec une liste, charger 100&nbsp;000 colis demanderait environ n²/2 = 5 milliards de comparaisons. Avec la table de hachage, il suffit de 100&nbsp;000 opérations en temps constant. Le plus grand identifiant est tenu à jour à chaque ajout : l'interface peut ainsi proposer un identifiant libre en O(1), au lieu de rechercher le maximum en O(n) à chaque fois.</td></tr>
+  <tr><td class="k">Problème</td><td>Classer les colis par poids ou par valeur. Ces grandeurs n'ont pas de limite connue à l'avance.</td></tr>
+  <tr><td class="k">Algorithme</td><td>Tri fusion écrit à la main. Il renvoie une nouvelle liste, sans modifier la collection.</td></tr>
+  <tr><td class="k">Temps</td><td>O(n log n) dans tous les cas, même si les colis sont déjà dans un ordre défavorable.</td></tr>
+  <tr><td class="k">Espace</td><td>O(n) : deux tampons créés une seule fois, plus la pile des appels récursifs (O(log n)).</td></tr>
+  <tr><td class="k">Alternatives</td><td>Le tri par insertion est simple mais en O(n²) : je l'ai mesuré, il met déjà 1 s pour 10&nbsp;000 colis. Le tri rapide est en O(n log n) en moyenne mais O(n²) dans le pire cas, et il n'est pas stable. La fonction native <code>sorted()</code> utilise Timsort, une variante du tri fusion écrite en C.</td></tr>
+  <tr><td class="k">Justification</td><td>Sa complexité est garantie et il est stable. <code>sorted()</code> va environ 19 fois plus vite parce qu'il est écrit en C, mais sa complexité est la même. Comme le sujet demande de savoir expliquer l'algorithme, j'ai préféré écrire le mien, et <code>sorted()</code> me sert dans les tests pour vérifier que j'obtiens le même résultat.</td></tr>
 </table>
 
-<h2>4.3 Fonctionnalité 2 : afficher les colis</h2>
+<h3>Trier par priorité : le tri par comptage</h3>
+<p>La priorité n'a que 5 valeurs possibles, donc on peut trier sans comparer les colis entre eux. Je prépare
+un « seau » par priorité, je mets chaque colis dans le sien, puis je vide les seaux dans l'ordre.</p>
 <table>
-  <tr><td class="k">Problème</td><td>Afficher les colis enregistrés de façon lisible, y compris lorsque la collection en contient 100&nbsp;000.</td></tr>
-  <tr><td class="k">Algorithme</td><td>Parcourir les colis dans l'ordre d'insertion et mettre chacun en forme sur une ligne de tableau (identifiant, poids, valeur, priorité, destination). Un paramètre <code>limite</code> permet de n'afficher qu'une page, suivie du nombre de colis restants.</td></tr>
-  <tr><td class="k">Complexité en temps</td><td>O(n) pour tout afficher, O(min(n, limite)) pour une page.</td></tr>
-  <tr><td class="k">Complexité en espace</td><td>O(n) pour la copie de la liste des colis transmise à l'affichage.</td></tr>
-  <tr><td class="k">Alternative</td><td>Toujours tout afficher.</td></tr>
-  <tr><td class="k">Justification</td><td>Afficher tous les colis coûte forcément O(n), puisque chacun doit être écrit. En revanche, 100&nbsp;000 lignes défilant dans un terminal sont inexploitables : cela représente 5&nbsp;000 écrans de 20 lignes. Afficher une page à la fois coûte un temps constant (environ 11 µs, mesuré en partie 7) et garde l'interface lisible. L'utilisateur pourra tout de même demander l'affichage complet (partie 6).</td></tr>
+  <tr><td class="k">Problème</td><td>Classer les colis par priorité, un entier de 1 à 5.</td></tr>
+  <tr><td class="k">Algorithme</td><td>Tri par comptage avec 5 seaux. Il est stable lui aussi.</td></tr>
+  <tr><td class="k">Temps</td><td>O(n + k) avec k = 5, donc O(n).</td></tr>
+  <tr><td class="k">Espace</td><td>O(n + k).</td></tr>
+  <tr><td class="k">Alternative</td><td>Le tri fusion, en O(n log n).</td></tr>
+  <tr><td class="k">Justification</td><td>Je profite du fait que la priorité est bornée. Un tri qui compare les éléments ne peut pas faire moins de n log n comparaisons, alors qu'ici la priorité donne directement le seau, sans comparaison. Sur 100&nbsp;000 colis, il va environ 40 fois plus vite que le tri fusion (3,1 ms contre 120 ms). Par contre, ça ne marche pas pour le poids ou la valeur, qui n'ont pas de borne fixée.</td></tr>
+</table>
+<p>Les statistiques (option 7) sont calculées en un seul parcours de la collection, donc en O(n) : les sommes,
+les colis extrêmes, et le nombre de colis par priorité et par destination (figure 4).</p>
+
+<h2>3.4 Le menu</h2>
+<p>J'ai repris le menu proposé dans le sujet, et j'ai ajouté deux options pour tester plus facilement : la 8
+génère de 100 à 100&nbsp;000 colis, et la 9 charge un fichier de colis (par exemple les colis A, B, C, D de la
+partie 5). Au démarrage, les cinq colis du sujet sont déjà chargés. Toutes les saisies sont vérifiées : si la
+réponse n'est pas valide, la question est reposée, un identifiant déjà pris est refusé tout de suite sans
+demander le reste, et Ctrl-D ferme le programme sans erreur.</p>
+<figure>
+  <img src="captures/menu.png" style="width: 56%;" alt="Menu principal">
+  <figcaption>Figure 2 - Démarrage du programme et affichage des colis du sujet</figcaption>
+</figure>
+<figure>
+  <img src="captures/ajout.png" style="width: 62%;" alt="Ajout et recherche">
+  <figcaption>Figure 3 - Ajout d'un colis avec des saisies fausses, refus d'un doublon, puis recherche (les saisies sont en gras)</figcaption>
+</figure>
+<figure>
+  <img src="captures/organiser.png" style="width: 56%;" alt="Tris et statistiques">
+  <figcaption>Figure 4 - Tri par poids (croissant), tri par valeur (décroissant), puis statistiques</figcaption>
+</figure>
+
+<h1>4. Passage à l'échelle</h1>
+
+<p>Pour tester les quatre tailles du sujet (100, 1&nbsp;000, 10&nbsp;000 et 100&nbsp;000 colis), j'ai écrit un
+générateur de colis aléatoires. Il est reproductible : avec la même graine, on obtient les mêmes colis, ce qui
+permet de refaire une mesure. Les identifiants sont tous différents et mélangés, le poids va de 1 à 30 kg, et
+la valeur est entre 1 et 4 fois le poids.</p>
+<p>Pour la valeur, je me suis trompé au début. Dans ma première version, j'ajoutais un petit bonus fixe à
+chaque valeur. En testant un camion de 1&nbsp;000 kg sur 100&nbsp;000 colis, j'ai vu qu'il ne chargeait que des
+colis de 1 kg : avec le bonus, c'étaient de loin les plus rentables au kilo, et le résultat ne voulait plus
+rien dire. J'ai enlevé le bonus. Maintenant, la valeur au kilo ne dépend plus du poids, et le camion prend des
+colis de toutes les tailles.</p>
+<p>Les tests vérifient, pour les quatre tailles, que la recherche, les trois tris et les statistiques donnent
+le bon résultat. Même avec 100&nbsp;000 colis, tout reste rapide (figure 5) :</p>
+<figure>
+  <img src="captures/taille_100000.png" style="width: 62%;" alt="100&nbsp;000 colis">
+  <figcaption>Figure 5 - Génération de 100&nbsp;000 colis, recherche et tri par priorité</figcaption>
+</figure>
+<p>En passant de 100 à 100&nbsp;000 colis, j'ai surtout vu l'écart se creuser entre les bons et les mauvais
+algorithmes. Avec 100 colis, même le tri par insertion est instantané (0,1 ms). Avec 100&nbsp;000, il lui
+faudrait environ 100 s, contre 0,12 s pour le tri fusion. Sur une petite liste, on ne voit pas la différence,
+il faut regarder comment le temps augmente avec n. C'est aussi pour ça que l'affichage se fait par pages.
+Toutes les mesures sont dans la partie 7.</p>
+
+<h1>5. Chargement optimal du camion</h1>
+
+<h2>5.1 Le problème</h2>
+<p>Il faut choisir des colis dont le poids total ne dépasse pas la capacité W du camion, avec la plus grande
+valeur totale possible. Un colis est chargé en entier ou pas du tout : c'est le problème du <b>sac à dos
+0/1</b>. Le sujet insiste, il ne suffit pas de trouver une combinaison qui rentre, il faut la meilleure. La
+difficulté, c'est qu'il y a 2<sup>n</sup> combinaisons possibles : 16 pour 4 colis, mais déjà plus d'un
+milliard pour 30 colis. On ne peut donc pas toutes les essayer, sauf sur de tout petits exemples.</p>
+<p>Avec les colis du sujet (A : 8 kg et 20, B : 6 kg et 25, C : 5 kg et 18, D : 4 kg et 14) et la capacité de
+50 kg de l'exemple, tout rentre (23 kg en tout), donc il n'y a rien à choisir. J'ai surtout travaillé avec des
+capacités plus petites, en particulier <b>14 kg</b>.</p>
+
+<h2>5.2 Première idée : l'algorithme glouton</h2>
+<p>Ma première idée a été de prendre d'abord les colis qui rapportent le plus par kilo. Ici, ça donne B
+(4,17 par kg), puis C (3,6), D (3,5) et A (2,5). Avec 14 kg, le glouton prend B puis C, et il ne reste plus
+assez de place pour D ou A : il obtient <b>B + C = 43</b> et laisse 3 kg vides. Pourtant, <b>A + B = 45</b>
+remplit exactement les 14 kg. Le glouton n'est donc pas optimal. Il le serait si on avait le droit de couper
+un colis (on compléterait avec un morceau de A), mais ce n'est pas le cas ici.</p>
+
+<h2>5.3 La solution retenue : la programmation dynamique</h2>
+<p>Je note T[i][w] la meilleure valeur possible avec w kg de place, en n'utilisant que les i premiers colis.
+Pour le colis i (poids p, valeur v), il y a seulement deux possibilités : je ne le prends pas et je garde
+T[i-1][w], ou je le prends et j'obtiens T[i-1][w - p] + v. Je garde la meilleure des deux :</p>
+<pre>T[0][w] = 0
+T[i][w] = max( T[i-1][w] , T[i-1][w - p] + v )    si p &lt;= w,   sinon T[i-1][w]
+résultat : T[n][W]</pre>
+<p>Le tableau se remplit ligne par ligne. Voici celui de l'exemple avec 14 kg :</p>
+<figure>
+  <img src="captures/tableau_dp.png" style="width: 84%;" alt="Tableau de programmation dynamique">
+  <figcaption>Figure 6 - Tableau de la programmation dynamique pour A, B, C, D et un camion de 14 kg</figcaption>
+</figure>
+<p>Par exemple, ligne « + B », colonne 14 : max(20, T[1][8] + 25 = 20 + 25) = 45, donc prendre B et garder
+8 kg pour A vaut mieux que A seul. Pour retrouver les colis, je pars de la dernière case et je remonte. Si la
+valeur est la même que sur la ligne du dessus, le colis n'a pas été pris ; sinon, il a été pris et j'enlève
+son poids. Ici, D et C ne sont pas pris, B est pris (il reste 8 kg), puis A. On retrouve bien A + B = 45.</p>
+<p>Dans le programme, je ne garde pas tout le tableau des valeurs. Une seule ligne suffit, à condition de la
+parcourir de w = W vers w = p (dans l'autre sens, un colis pourrait être compté deux fois). Pour retrouver les
+colis, je garde quand même, pour chaque colis, un tableau d'octets qui note s'il a été pris pour chaque
+capacité. Un octet par case au lieu d'un nombre Python, ça prend au moins huit fois moins de mémoire.</p>
+
+<h2>5.4 Analyse de la stratégie</h2>
+<table>
+  <tr><td class="k">Pourquoi ce choix</td><td>Le sujet demande la meilleure valeur possible. J'ai d'abord pensé au glouton, mais il peut se tromper (5.2), et la force brute est exacte mais exponentielle. J'ai donc pris la programmation dynamique : elle donne la solution exacte en un temps raisonnable, à condition que les poids soient des entiers et que la capacité ne dépasse pas quelques milliers de kilos, ce qui est le cas pour un camion.</td></tr>
+  <tr><td class="k">Est-ce toujours optimal ?</td><td>Oui. Pour une case donnée, la meilleure solution soit ne contient pas le colis i, et elle vaut alors au plus T[i-1][w], soit elle le contient, et le reste est un chargement des colis précédents dans w - p kg, qui vaut au plus T[i-1][w - p]. La formule prend le maximum des deux, donc si la ligne d'avant est optimale, la nouvelle l'est aussi, et on conclut par récurrence. Je l'ai aussi vérifié en pratique : sur 500 cas aléatoires, le programme trouve toujours la même valeur que la force brute.</td></tr>
+  <tr><td class="k">Complexité temporelle</td><td>O(n &times; W) : pour chaque colis, je passe sur les W + 1 capacités. Ça dépend de la valeur de W et pas seulement du nombre de colis : si on double la capacité, le temps double.</td></tr>
+  <tr><td class="k">Complexité spatiale</td><td>n &times; (W + 1) octets pour retrouver les colis choisis, plus O(W) pour la ligne de valeurs. Si on voulait seulement la valeur, sans la liste des colis, O(W) suffirait.</td></tr>
+  <tr><td class="k">Autres approches</td><td>Le glouton (O(n log n), mais pas optimal), la force brute (O(2<sup>n</sup>)), ou une recherche en arbre avec élagage (« séparation et évaluation »), exacte et souvent rapide, mais exponentielle dans le pire cas. On peut aussi faire la programmation dynamique sur la valeur au lieu du poids, ce qui est intéressant quand les valeurs sont petites.</td></tr>
 </table>
 
-<h2>4.4 Fonctionnalité 3 : rechercher un colis</h2>
+<h2>5.5 Vérification sur l'exemple du sujet</h2>
+<p>J'ai comparé les trois méthodes pour toutes les capacités de 0 à 23 kg. La programmation dynamique trouve
+toujours la même valeur que la force brute. Le glouton se trompe pour 7 capacités sur 24 (9, 14, 18 et de 19 à
+22 kg), et perd jusqu'à 7 de valeur.</p>
+<figure>
+  <img src="captures/comparaison.png" style="width: 74%;" alt="Comparaison des trois méthodes">
+  <figcaption>Figure 7 - Programmation dynamique, glouton et force brute pour les capacités de 0 à 23 kg</figcaption>
+</figure>
+
+<h1>6. Prise en compte de la priorité</h1>
+
+<p>L'entreprise veut maintenant favoriser les colis importants. Avec les priorités de la partie 6.1 du sujet
+(A : 5, B : 1, C : 4, D : 3) et un camion de 14 kg, ma version de la partie 5 charge A + B, alors que B est
+justement le colis le moins prioritaire.</p>
+<p>Je n'ai pas changé d'algorithme, j'ai changé ce qu'il maximise. Au lieu de la valeur, la programmation
+dynamique maximise une « utilité » :</p>
+<pre>utilité = valeur x (1 + alpha x (priorité - 1) / 4)</pre>
+<p>Le coefficient va de 1 pour une priorité 1 jusqu'à 1 + &alpha; pour une priorité 5. Avec &alpha; = 1 (la
+valeur par défaut), un colis de priorité 5 compte double. Avec &alpha; = 0, on retrouve exactement la partie 5.
+Le poids reste la contrainte à ne pas dépasser, la valeur sert de base, et la priorité vient l'augmenter.</p>
+<p>Sur l'exemple, avec &alpha; = 1, les utilités valent A = 40, B = 25, C = 31,5 et D = 21. Voici les
+chargements possibles dans 14 kg :</p>
 <table>
-  <tr><td class="k">Problème</td><td>Retrouver un colis à partir de son identifiant, ou signaler qu'il n'existe pas.</td></tr>
-  <tr><td class="k">Algorithme</td><td>Accès direct dans la table de hachage : l'identifiant est haché, on lit la case correspondante.</td></tr>
-  <tr><td class="k">Complexité en temps</td><td>O(1) en moyenne (O(n) dans le pire cas théorique).</td></tr>
-  <tr><td class="k">Complexité en espace</td><td>O(1) : aucune mémoire supplémentaire.</td></tr>
-  <tr><td class="k">Alternatives</td><td><b>Recherche séquentielle</b> : comparer l'identifiant à celui de chaque colis, en O(n).<br>
-  <b>Recherche dichotomique</b> dans une liste triée par identifiant : on compare l'identifiant cherché à celui du milieu, puis on ne garde que la moitié qui peut le contenir. Coût O(log n), mais la liste doit rester triée : chaque ajout coûte O(n).</td></tr>
-  <tr><td class="k">Justification</td><td>Seule la table de hachage offre à la fois une recherche et un ajout rapides. Les mesures ci-dessous le confirment.</td></tr>
-</table>
-
-<h3>Mesures</h3>
-<p>Le script <code>outils/mesure_recherche.py</code> compare les trois méthodes. Pour chaque taille, il effectue
-20&nbsp;000 recherches d'identifiants existants tirés au hasard (moins pour la séquentielle, trop lente) et donne
-le temps moyen d'une recherche. La colonne « absent » mesure la séquentielle quand l'identifiant n'existe pas,
-ce qui est son pire cas. La dernière colonne donne la mémoire occupée par la table de hachage.</p>
-<table>
-  <tr><th class="n">n</th><th class="n">Hachage (retenu)</th><th class="n">Dichotomie</th><th class="n">Séquentielle</th><th class="n">Séquentielle, id absent</th><th class="n">Mémoire de la table</th></tr>
-  <tr><td class="n">100</td><td class="n">23 ns</td><td class="n">233 ns</td><td class="n">450 ns</td><td class="n">824 ns</td><td class="n">5 Ko</td></tr>
-  <tr><td class="n">1&nbsp;000</td><td class="n">25 ns</td><td class="n">358 ns</td><td class="n">3,5 µs</td><td class="n">7,1 µs</td><td class="n">37 Ko</td></tr>
-  <tr><td class="n">10&nbsp;000</td><td class="n">33 ns</td><td class="n">476 ns</td><td class="n">33,2 µs</td><td class="n">68,5 µs</td><td class="n">295 Ko</td></tr>
-  <tr><td class="n">100&nbsp;000</td><td class="n">124 ns</td><td class="n">665 ns</td><td class="n">518,6 µs</td><td class="n">944,3 µs</td><td class="n">5&nbsp;243 Ko</td></tr>
-</table>
-<figure>
-  <img src="captures/etape2_recherche.png" style="width: 92%;" alt="Mesure des temps de recherche">
-  <figcaption>Figure 3 - Temps moyen d'une recherche selon la méthode et le nombre de colis</figcaption>
-</figure>
-
-<h3>Analyse des mesures</h3>
-<ul>
-  <li><b>Recherche séquentielle :</b> le temps est multiplié par environ 10 chaque fois que n est multiplié
-  par 10 (450 ns, puis 3,5 µs, puis 33 µs). C'est le comportement attendu d'un coût O(n). Un identifiant
-  absent coûte environ <b>deux fois plus</b> qu'un identifiant présent : en moyenne, on trouve le colis
-  au milieu de la liste (n/2 comparaisons), alors qu'un absent oblige à tout parcourir (n comparaisons).
-  La mesure confirme ce raisonnement.</li>
-  <li><b>Recherche dichotomique :</b> le temps n'augmente que d'environ 120 à 190 ns chaque fois que n est
-  multiplié par 10, c'est-à-dire d'environ 3,3 tours de boucle (log<sub>2</sub> 10 &asymp; 3,3). C'est la
-  signature d'un coût O(log n).</li>
-  <li><b>Table de hachage :</b> le temps reste quasi constant (23 à 33 ns jusqu'à 10&nbsp;000 colis). À 100&nbsp;000 colis,
-  il passe à 124 ns : la table occupe alors environ 5 Mo et ne tient plus dans la mémoire cache du processeur,
-  si bien que chaque accès mémoire est plus lent. Le <b>nombre d'opérations</b>, lui, ne dépend pas de n.
-  À 100&nbsp;000 colis, la recherche par hachage est environ <b>4&nbsp;000 fois plus rapide</b> que la recherche
-  séquentielle.</li>
-  <li><b>Mémoire :</b> la table occupe entre 30 et 52 octets par colis. Elle augmente par paliers, car la
-  table est agrandie d'un coup lorsqu'elle est remplie aux deux tiers. C'est le prix à payer pour un accès
-  en temps constant.</li>
-</ul>
-
-<h2>4.5 Validation de l'étape</h2>
-<p>Quinze tests unitaires (<code>tests/test_gestion.py</code>) vérifient :</p>
-<ul>
-  <li>l'ajout d'un colis et le <b>refus d'un doublon</b>, la collection restant inchangée, y compris lorsque
-  le doublon provient d'un fichier ;</li>
-  <li>le calcul du prochain identifiant libre ;</li>
-  <li>la conservation de l'ordre d'insertion, la mise en forme du tableau, l'affichage limité à une page
-  et le cas de la collection vide ;</li>
-  <li>la recherche d'un colis existant et d'un colis absent ;</li>
-  <li>la <b>concordance</b> entre la recherche par hachage et la recherche séquentielle sur 2&nbsp;000 colis
-  et 202 recherches : les deux méthodes renvoient toujours le même résultat.</li>
-</ul>
-<p>Le script <code>outils/demo_etape2.py</code> enchaîne les trois fonctionnalités sur les données du sujet :</p>
-<figure>
-  <img src="captures/etape2_demo.png" style="width: 72%;" alt="Démonstration ajout, affichage, recherche">
-  <figcaption>Figure 4 - Ajout d'un colis, refus d'un doublon, affichage et recherche</figcaption>
-</figure>
-<figure>
-  <img src="captures/etape2_tests.png" alt="Tests de l'étape 2">
-  <figcaption>Figure 5 - Exécution des tests unitaires de l'étape 2 : 15 tests réussis</figcaption>
-</figure>
-
-<!-- ============================================================ -->
-<!-- 5. TRI DES COLIS (étape 3)                                   -->
-<!-- ============================================================ -->
-<h1>5. Tri des colis</h1>
-<p>Cette partie couvre les fonctionnalités 4, 5 et 6 du sujet : afficher les colis triés par poids, par
-valeur et par priorité. Les algorithmes de tri font partie du cœur algorithmique du projet. Conformément
-à la partie 9 du sujet, ils sont donc <b>implémentés à la main</b> (fichier <code>src/tris.py</code>) au
-lieu d'utiliser la fonction native <code>sorted()</code>. Celle-ci sert seulement de référence, pour
-vérifier les résultats et comparer les temps.</p>
-<p>Les trois tris ont des caractéristiques communes :</p>
-<ul>
-  <li>ils fonctionnent en ordre <b>croissant ou décroissant</b> ;</li>
-  <li>ils renvoient une <b>nouvelle liste</b> : la collection garde l'ordre d'enregistrement des colis, et on
-  peut enchaîner plusieurs tris différents sans rien perdre ;</li>
-  <li>ils sont <b>stables</b> : deux colis de même clé, par exemple de même poids, restent dans leur ordre
-  d'origine. Cette propriété garantit un affichage prévisible et permet de combiner deux critères (5.3).</li>
-</ul>
-
-<h2>5.1 Tri par poids et par valeur : le tri fusion</h2>
-
-<h3>Principe</h3>
-<p>Le tri fusion applique la méthode « <b>diviser pour régner</b> » :</p>
-<ol>
-  <li><b>Diviser</b> : couper la liste en deux moitiés ;</li>
-  <li><b>Régner</b> : trier chaque moitié, en appliquant la même méthode récursivement ;</li>
-  <li><b>Combiner</b> : <b>fusionner</b> les deux moitiés triées en une seule liste triée.</li>
-</ol>
-<p>Une liste de 0 ou 1 élément est déjà triée : c'est la condition d'arrêt. Exemple avec les poids des
-cinq colis du sujet (101 : 8 kg, 102 : 3 kg, 103 : 12 kg, 104 : 5 kg, 105 : 2 kg) :</p>
-<pre>Découpage :              [8, 3, 12, 5, 2]
-                        /                \
-                   [8, 3]            [12, 5, 2]
-                   /    \            /        \
-                 [8]    [3]        [12]     [5, 2]
-                                            /    \
-                                          [5]    [2]
-Fusions :
-                 [8] + [3]          ->  [3, 8]
-                 [5] + [2]          ->  [2, 5]
-                 [12] + [2, 5]      ->  [2, 5, 12]
-                 [3, 8] + [2, 5, 12] -> [2, 3, 5, 8, 12]</pre>
-
-<h3>La fusion</h3>
-<p>Pour fusionner deux listes déjà triées, on compare leurs premiers éléments et on retire le plus petit,
-jusqu'à épuiser l'une des deux listes. Il ne reste alors qu'à recopier la fin de l'autre :</p>
-<pre>Fusion de [3, 8] et [2, 5, 12] :
-  3 ou 2  -> 2        résultat : [2]
-  3 ou 5  -> 3        résultat : [2, 3]
-  8 ou 5  -> 5        résultat : [2, 3, 5]
-  8 ou 12 -> 8        résultat : [2, 3, 5, 8]
-  il reste [12]       résultat : [2, 3, 5, 8, 12]</pre>
-<p>Chaque comparaison place définitivement un élément : fusionner deux listes de longueurs totales m
-coûte donc O(m). En cas d'égalité, on prend l'élément de la moitié <b>gauche</b>, arrivé le premier :
-c'est ce qui rend le tri <b>stable</b>.</p>
-
-<h3>Complexité</h3>
-<p>La liste est coupée en deux à chaque niveau : il y a donc log<sub>2</sub>(n) niveaux de découpage. À
-chaque niveau, les fusions traitent en tout les n éléments une fois chacun. Le coût total est donc
-<b>O(n log n)</b>. Ce coût ne dépend pas de l'ordre initial des colis : le tri fusion n'a <b>pas de
-pire cas défavorable</b>. Pour 100&nbsp;000 colis, cela représente environ 100&nbsp;000 &times; 17 &asymp; 1,7 million
-d'opérations élémentaires, contre environ 5 milliards (n²/2) pour un tri naïf.</p>
-<p>En mémoire, l'implémentation alloue <b>une seule fois</b> deux tampons de n cases (l'un pour les colis,
-l'autre pour leurs clés), partagés par toutes les fusions, au lieu de créer de nouvelles listes à chaque appel. S'y ajoute la pile des appels récursifs, de profondeur
-log<sub>2</sub>(n), soit 17 pour 100&nbsp;000 colis. La clé de tri (poids ou valeur) est lue <b>une seule fois</b>
-par colis, puis déplacée avec lui.</p>
-
-<table>
-  <tr><td class="k">Problème</td><td>Afficher les colis classés selon leur poids ou leur valeur. Ces grandeurs n'ont pas de borne fixée à l'avance : un colis peut peser 2&nbsp;kg comme 800&nbsp;kg.</td></tr>
-  <tr><td class="k">Algorithme</td><td>Tri fusion récursif, stable, avec des tampons alloués une seule fois (détaillé ci-dessus).</td></tr>
-  <tr><td class="k">Complexité en temps</td><td><b>O(n log n)</b> dans le meilleur, le moyen et le pire cas.</td></tr>
-  <tr><td class="k">Complexité en espace</td><td><b>O(n)</b> : liste des clés et deux tampons de n cases. S'y ajoutent O(log n) pour la récursion.</td></tr>
-  <tr><td class="k">Alternatives</td><td><b>Tri par insertion</b> : simple, mais O(n²). Mesuré ci-dessous, il prend 1 s pour 10&nbsp;000 colis, et il faudrait environ 100 s pour 100&nbsp;000.<br>
-  <b>Tri rapide</b> (quicksort) : O(n log n) en moyenne, en place, mais O(n²) dans le pire cas et non stable.<br>
-  <b>Tri par tas</b> (heapsort) : O(n log n) dans tous les cas et en place, mais non stable.<br>
-  <b>Tri par comptage</b> : impossible ici, car le poids et la valeur ne sont pas bornés (voir 5.2).<br>
-  <b><code>sorted()</code></b> de Python (voir 5.4).</td></tr>
-  <tr><td class="k">Justification</td><td>Le tri fusion est le seul tri par comparaison classique qui soit à la fois <b>garanti en O(n log n)</b> et <b>stable</b>. La stabilité est indispensable au tri combiné (5.3). Sa contrepartie, la mémoire supplémentaire en O(n), ne représente qu'environ 2,4 Mo pour 100&nbsp;000 colis (trois listes de 100&nbsp;000 références de 8 octets).</td></tr>
-</table>
-
-<h2>5.2 Tri par priorité : le tri par comptage</h2>
-
-<h3>Principe</h3>
-<p>La priorité ne peut prendre que <b>5 valeurs</b> (1 à 5). On peut donc trier <b>sans comparer les colis
-entre eux</b>. On prépare 5 « seaux », un par priorité, et on range chaque colis dans le seau de sa priorité,
-dans l'ordre où il arrive. Il suffit ensuite de vider les seaux dans l'ordre : de 1 à 5 pour un tri croissant,
-de 5 à 1 pour un tri décroissant. Exemple avec les colis du sujet et un colis 106 de priorité 5 :</p>
-<pre>Colis parcourus dans l'ordre :
-  101 (p2), 102 (p5), 103 (p1), 104 (p4), 105 (p3), 106 (p5)
-
-  seau priorité 1 : [103]
-  seau priorité 2 : [101]
-  seau priorité 3 : [105]
-  seau priorité 4 : [104]
-  seau priorité 5 : [102, 106]   &lt;- 102, arrivé avant 106,
-                                    reste devant (stabilité)
-
-Lecture des seaux de 5 à 1 (décroissant) : 102, 106, 104, 105, 101, 103</pre>
-
-<h3>Pourquoi est-ce plus rapide qu'un tri fusion ?</h3>
-<p>On démontre qu'un tri qui procède <b>uniquement par comparaisons</b> ne peut pas faire mieux que
-n log n comparaisons dans le pire cas. Il y a n! ordres possibles des colis, et chaque comparaison
-apporte une seule réponse oui/non : il faut donc au moins log<sub>2</sub>(n!) &asymp; n log<sub>2</sub> n
-comparaisons pour distinguer tous les cas. Le tri par comptage échappe à cette limite parce qu'il
-<b>n'effectue aucune comparaison</b> : la priorité donne directement le seau. Il parcourt une fois
-les n colis, puis les k = 5 seaux, d'où un coût <b>O(n + k) = O(n)</b>.</p>
-
-<table>
-  <tr><td class="k">Problème</td><td>Afficher les colis classés selon leur priorité, une clé entière comprise entre 1 et 5.</td></tr>
-  <tr><td class="k">Algorithme</td><td>Tri par comptage, avec un seau par valeur de priorité (détaillé ci-dessus). Stable.</td></tr>
-  <tr><td class="k">Complexité en temps</td><td><b>O(n + k)</b>, soit O(n) puisque k = 5.</td></tr>
-  <tr><td class="k">Complexité en espace</td><td><b>O(n + k)</b> : les seaux contiennent les n colis et la liste résultat.</td></tr>
-  <tr><td class="k">Alternative</td><td>Le tri fusion de 5.1, en O(n log n), qui fonctionne aussi mais ne tire pas parti du petit nombre de priorités.</td></tr>
-  <tr><td class="k">Justification</td><td>Le domaine de la clé est petit et connu à l'avance : c'est le cas idéal du tri par comptage. Mesuré à 100&nbsp;000 colis, il prend <b>2,9 ms, contre 116,5 ms</b> pour le tri fusion sur la même clé, soit <b>40 fois plus rapide</b>. Ce tri ne convient pas au poids ni à la valeur : sans borne connue, il faudrait autant de seaux que de valeurs possibles.</td></tr>
-</table>
-
-<h2>5.3 Tri combiné : priorité, puis valeur</h2>
-<p>Trier par priorité seule laisse les colis de même priorité dans leur ordre d'enregistrement. Pour les
-départager par valeur, on exploite la <b>stabilité</b> :</p>
-<ol>
-  <li>on trie d'abord par <b>valeur</b> (tri fusion) ;</li>
-  <li>puis on trie ce résultat par <b>priorité</b> (tri par comptage, stable).</li>
-</ol>
-<p>Le second tri regroupe les colis par priorité. Comme il est stable, il conserve à l'intérieur de chaque
-priorité l'ordre des valeurs obtenu au premier tri. Le coût total est O(n log n) + O(n) = <b>O(n log n)</b>.
-Sur la figure 6, le tri par priorité seul place 102 devant 106 (ordre d'enregistrement), alors que le tri
-combiné place 106 (valeur 30) devant 102 (valeur 10). Les tests vérifient ce tri sur 1&nbsp;000 colis
-aléatoires, en le comparant à un tri de référence sur le couple (priorité, valeur).</p>
-<figure>
-  <img src="captures/etape3_demo.png" style="width: 64%;" alt="Démonstration des tris">
-  <figcaption>Figure 6 - Les quatre tris appliqués aux colis du sujet (plus le colis 106)</figcaption>
-</figure>
-
-<h2>5.4 Fonction native <code>sorted()</code> : fonctionnement et raison de ne pas l'utiliser</h2>
-<p>La fonction <code>sorted()</code> de Python utilise l'algorithme <b>Timsort</b>. Il repère dans la liste
-les portions déjà triées (appelées « runs »), trie les petites portions par insertion, puis les fusionne
-deux à deux comme le tri fusion. Il est stable, s'exécute en O(n log n) dans le pire cas et en O(n) sur
-une liste déjà triée, et utilise O(n) de mémoire. Comme il est écrit en C, il est environ <b>19 fois plus
-rapide</b> que notre tri fusion écrit en Python (6,2 ms contre 119,9 ms pour 100&nbsp;000 colis), pour une
-complexité identique.</p>
-<p>Il n'est pas utilisé dans le programme, parce que le sujet demande de maîtriser l'algorithme au cœur de
-chaque fonctionnalité. Il sert en revanche de <b>référence</b> : les tests vérifient que nos tris donnent
-exactement le même résultat que <code>sorted()</code>, y compris l'ordre des égalités. Dans un logiciel
-en production, on utiliserait <code>sorted()</code> pour le poids et la valeur, et l'on conserverait le
-tri par comptage pour la priorité : même face à <code>sorted()</code>, il reste deux fois plus rapide
-(2,9 ms contre 6,2 ms).</p>
-
-<h2>5.5 Mesures</h2>
-<p>Le script <code>outils/mesure_tris.py</code> trie des collections de 100 à 100&nbsp;000 colis aléatoires et
-retient le meilleur temps sur plusieurs exécutions. Le tri par insertion n'est mesuré que jusqu'à
-10&nbsp;000 colis : au-delà, il prendrait plusieurs minutes.</p>
-<table>
-  <tr><th class="n">n</th><th class="n">Poids : insertion</th><th class="n">Poids : fusion (retenu)</th><th class="n">Poids : <code>sorted()</code></th><th class="n">Priorité : comptage (retenu)</th><th class="n">Priorité : fusion</th></tr>
-  <tr><td class="n">100</td><td class="n">112 µs</td><td class="n">60 µs</td><td class="n">4 µs</td><td class="n">4 µs</td><td class="n">60 µs</td></tr>
-  <tr><td class="n">1&nbsp;000</td><td class="n">10,6 ms</td><td class="n">861 µs</td><td class="n">51 µs</td><td class="n">34 µs</td><td class="n">839 µs</td></tr>
-  <tr><td class="n">10&nbsp;000</td><td class="n">1,04 s</td><td class="n">10,1 ms</td><td class="n">595 µs</td><td class="n">285 µs</td><td class="n">9,8 ms</td></tr>
-  <tr><td class="n">100&nbsp;000</td><td class="n">&asymp; 100 s (estimé)</td><td class="n">119,9 ms</td><td class="n">6,2 ms</td><td class="n">2,9 ms</td><td class="n">116,5 ms</td></tr>
-</table>
-<figure>
-  <img src="captures/etape3_mesures.png" style="width: 80%;" alt="Mesure des temps de tri">
-  <figcaption>Figure 7 - Temps de tri selon l'algorithme et le nombre de colis</figcaption>
-</figure>
-
-<h3>Analyse des mesures</h3>
-<ul>
-  <li><b>Tri par insertion :</b> le temps est multiplié par environ <b>100</b> chaque fois que n est multiplié
-  par 10 (112 µs, puis 10,6 ms, puis 1,04 s). C'est la signature d'un coût O(n²). À 10&nbsp;000 colis, il est déjà
-  100 fois plus lent que le tri fusion.</li>
-  <li><b>Tri fusion :</b> le temps est multiplié par environ <b>12</b> quand n est multiplié par 10 (10,1 ms, puis
-  119,9 ms). La théorie prévoit 10 &times; log(100&nbsp;000) / log(10&nbsp;000) = 12,5. La mesure est conforme à O(n log n).</li>
-  <li><b>Tri par comptage :</b> le temps est multiplié par environ <b>10</b> quand n est multiplié par 10 (285 µs,
-  puis 2,9 ms). C'est bien une croissance linéaire, O(n).</li>
-  <li><b>Natif contre maison :</b> <code>sorted()</code> a la même croissance que notre tri fusion, avec un
-  facteur constant environ 19 fois plus petit. Ce n'est pas un meilleur algorithme : c'est le même type
-  d'algorithme, exécuté en C plutôt qu'interprété.</li>
-</ul>
-<p>Conclusion : avec 100&nbsp;000 colis, les tris retenus restent largement assez rapides pour une utilisation
-interactive : 120 ms au plus, 3 ms pour la priorité. Un tri naïf en O(n²) serait inutilisable.</p>
-
-<h2>5.6 Validation de l'étape</h2>
-<p>Seize tests unitaires (<code>tests/test_tris.py</code>) vérifient :</p>
-<ul>
-  <li>les cas limites : liste vide, un seul élément, liste déjà triée, en ordre inverse, éléments tous égaux ;</li>
-  <li>que le tri fusion donne <b>exactement</b> le même résultat que <code>sorted()</code> sur plus de 50 listes
-  aléatoires, de 0 à 5&nbsp;000 éléments, dans les deux sens ;</li>
-  <li>la <b>stabilité</b> des trois tris, sur 2&nbsp;000 éléments comportant de nombreuses égalités ;</li>
-  <li>que la liste d'origine n'est pas modifiée et que la clé n'est calculée qu'une fois par élément ;</li>
-  <li>les ordres exacts attendus pour les colis du sujet, pour chaque critère et dans les deux sens ;</li>
-  <li>le tri combiné « priorité puis valeur », et la conformité à <code>sorted()</code> sur 20&nbsp;000 colis
-  pour les trois critères.</li>
-</ul>
-<figure>
-  <img src="captures/etape3_tests.png" alt="Tests de l'étape 3">
-  <figcaption>Figure 8 - Exécution des tests unitaires de l'étape 3 : 16 tests réussis</figcaption>
-</figure>
-
-<!-- ============================================================ -->
-<!-- 6. INTERFACE UTILISATEUR (étape 4)                           -->
-<!-- ============================================================ -->
-<h1>6. Interface utilisateur</h1>
-<p>L'objectif fixé par le sujet n'est pas une interface complexe, mais une utilisation <b>cohérente</b> qui
-permette de <b>tester facilement</b> toutes les fonctionnalités. Le programme se lance depuis la racine du
-projet avec la commande <code>python3 src/main.py</code>. Au démarrage, il charge les cinq colis d'exemple
-du sujet : toutes les fonctionnalités sont donc testables immédiatement, sans rien saisir au préalable.</p>
-
-<h2>6.1 Menu principal</h2>
-<p>Le menu reprend l'organisation proposée par le sujet (options 1 à 7 et 0). Chaque option appelle une méthode de la
-collection, ce qui permet d'en rappeler l'algorithme et le coût :</p>
-<table>
-  <tr><th>Option</th><th>Fonctionnalité</th><th>Méthode et algorithme</th><th>Coût</th></tr>
-  <tr><td>1</td><td>Afficher les colis</td><td><code>lister()</code>, puis affichage par pages de 20 colis</td><td>O(20) par page</td></tr>
-  <tr><td>2</td><td>Ajouter un colis</td><td><code>ajouter()</code> : table de hachage, contrôle des doublons</td><td>O(1) amorti</td></tr>
-  <tr><td>3</td><td>Rechercher un colis</td><td><code>rechercher()</code> : table de hachage</td><td>O(1) en moyenne</td></tr>
-  <tr><td>4</td><td>Organiser les colis</td><td><code>trier()</code> : tri fusion (poids, valeur), tri par comptage (priorité), ou les deux (priorité puis valeur)</td><td>O(n log n) ou O(n)</td></tr>
-  <tr><td>5</td><td>Préparer un camion</td><td>Optimisation du chargement (parties 8 et 9)</td><td>voir partie 8</td></tr>
-  <tr><td>6</td><td>Afficher le chargement</td><td>Affichage du dernier chargement calculé (parties 8 et 9)</td><td>O(m), m colis chargés</td></tr>
-  <tr><td>7</td><td>Afficher les statistiques</td><td><code>statistiques()</code> : un seul parcours de la collection</td><td>O(n)</td></tr>
-  <tr><td>8</td><td>Générer des colis</td><td><code>generer_colis()</code> : 100, 1&nbsp;000, 10&nbsp;000 ou 100&nbsp;000 colis (partie 7)</td><td>O(n)</td></tr>
-  <tr><td>9</td><td>Charger / enregistrer un fichier CSV</td><td>Lecture ou écriture ligne par ligne (partie 3.4)</td><td>O(n)</td></tr>
-  <tr><td>0</td><td>Quitter</td><td>Fin de la boucle principale</td><td>O(1)</td></tr>
-</table>
-<p>Les options 8 et 9 complètent le menu proposé par le sujet : elles permettent de tester facilement le
-programme avec les quatre tailles de données demandées (partie 7) et de conserver une collection d'une
-utilisation à l'autre.</p>
-<figure>
-  <img src="captures/etape4_menu.png" style="width: 58%;" alt="Menu principal">
-  <figcaption>Figure 9 - Démarrage du programme, menu principal et affichage des colis (option 1)</figcaption>
-</figure>
-
-<h2>6.2 Organisation du code de l'interface</h2>
-<p>L'interface est <b>séparée de la logique</b> : les modules de calcul (<code>gestion.py</code>,
-<code>tris.py</code>) ne lisent jamais le clavier et n'affichent rien. Ils reçoivent des données et renvoient
-des résultats. Cette séparation permet de tester les algorithmes indépendamment de l'interface et de les
-réutiliser ailleurs, par exemple dans les scripts de mesure.</p>
-<table>
-  <tr><th>Module</th><th>Rôle</th></tr>
-  <tr><td><code>main.py</code></td><td>Classe <code>Application</code> : affiche le menu, lit le choix et appelle l'action correspondante. Le choix est associé à son action par un dictionnaire (<code>numéro &rarr; méthode</code>), soit un accès en O(1) au lieu d'une longue suite de <code>if</code>.</td></tr>
-  <tr><td><code>saisie.py</code></td><td>Saisies robustes : entier borné, texte obligatoire, question oui/non.</td></tr>
-  <tr><td><code>affichage.py</code></td><td>Mise en forme des colis en tableau et découpage en pages.</td></tr>
-</table>
-
-<h2>6.3 Robustesse des saisies</h2>
-<p>Une erreur de frappe ne doit jamais arrêter le programme ni corrompre la collection. Chaque saisie est donc
-<b>vérifiée puis redemandée</b> tant qu'elle est invalide :</p>
-<ul>
-  <li>un texte à la place d'un nombre : « Veuillez saisir un nombre entier » ;</li>
-  <li>une valeur hors bornes (poids &le; 0, priorité hors de 1 à 5, choix de menu inexistant) : le message
-  indique la borne à respecter ;</li>
-  <li>une destination vide : « Saisie obligatoire » ;</li>
-  <li>un identifiant déjà utilisé : l'ajout est refusé <b>dès la saisie de l'identifiant</b>, avant de demander
-  les autres informations (test en O(1) dans la table de hachage) ;</li>
-  <li><b>Ctrl-D</b> (fin de l'entrée) : le programme se termine proprement ; <b>Ctrl-C</b> : l'action en cours
-  est annulée et le menu réapparaît.</li>
-</ul>
-<p>Deux aides à la saisie complètent ce dispositif. L'identifiant libre suivant est proposé par défaut :
-il suffit d'appuyer sur Entrée, et son calcul est en O(1) grâce au plus grand identifiant tenu à jour
-(partie 4.2). Les temps de recherche et de tri sont affichés après chaque opération, ce qui permet
-d'observer directement le coût des algorithmes.</p>
-<figure>
-  <img src="captures/etape4_ajout.png" style="width: 62%;" alt="Ajout d'un colis avec erreurs de saisie">
-  <figcaption>Figure 10 - Ajout d'un colis avec saisies invalides corrigées, puis refus d'un identifiant existant</figcaption>
-</figure>
-<figure>
-  <img src="captures/etape4_robustesse.png" style="width: 58%;" alt="Choix de menu invalides">
-  <figcaption>Figure 11 - Choix de menu invalides, puis fermeture de l'entrée (Ctrl-D) : arrêt propre</figcaption>
-</figure>
-
-<h2>6.4 Recherche et organisation des colis depuis le menu</h2>
-<figure>
-  <img src="captures/etape4_recherche.png" style="width: 70%;" alt="Recherche d'un colis">
-  <figcaption>Figure 12 - Recherche d'un colis existant (103) puis d'un colis absent (999)</figcaption>
-</figure>
-<figure>
-  <img src="captures/etape4_organiser.png" style="width: 80%;" alt="Organisation des colis">
-  <figcaption>Figure 13 - Option 4 : tri par priorité décroissante, avec l'algorithme utilisé et sa durée</figcaption>
-</figure>
-
-<h2>6.5 Statistiques (option 7)</h2>
-<table>
-  <tr><td class="k">Problème</td><td>Donner une vue d'ensemble de la collection : nombre de colis, poids et valeur totaux et moyens, colis extrêmes, répartition par priorité et par destination.</td></tr>
-  <tr><td class="k">Algorithme</td><td><b>Un seul parcours</b> de la collection, qui met à jour tous les indicateurs à la fois : sommes, extrêmes et compteurs rangés dans des dictionnaires (priorité &rarr; nombre, destination &rarr; nombre, poids et valeur). Les destinations sont ensuite classées par ordre alphabétique pour l'affichage.</td></tr>
-  <tr><td class="k">Complexité en temps</td><td>O(n) pour le parcours, plus O(d log d) pour classer les d destinations. Comme d est très petit devant n, le coût total est O(n).</td></tr>
-  <tr><td class="k">Complexité en espace</td><td>O(k + d) : 5 compteurs de priorité et 3 totaux par destination. Aucune copie de la collection.</td></tr>
-  <tr><td class="k">Alternatives</td><td>(1) Un parcours par indicateur (somme, maximum, minimum...) : même complexité, mais 6 à 8 parcours au lieu d'un.<br>(2) Tenir les statistiques à jour à chaque ajout : consultation en O(1), mais un coût supplémentaire à chaque ajout, et un calcul plus délicat du minimum ou du maximum si l'on supprimait des colis.</td></tr>
-  <tr><td class="k">Justification</td><td>Les statistiques sont consultées ponctuellement, alors que les ajouts sont fréquents. Un parcours unique en O(n) est simple, toujours exact, et prend environ 13 ms pour 100&nbsp;000 colis (partie 7).</td></tr>
-</table>
-<figure>
-  <img src="captures/etape4_statistiques.png" style="width: 70%;" alt="Statistiques">
-  <figcaption>Figure 14 - Statistiques des colis du sujet</figcaption>
-</figure>
-
-<h2>6.6 Validation de l'étape</h2>
-<p>Dix-sept tests (<code>tests/test_interface.py</code>) vérifient les saisies, les statistiques et la
-pagination. Neuf d'entre eux lancent <b>le vrai programme</b> en lui envoyant des saisies, exactement comme
-un utilisateur : présence de toutes les options du menu, ajout puis recherche, saisies invalides corrigées,
-identifiant existant refusé, recherche d'un colis absent, ordre exact d'un tri, statistiques, choix invalides,
-et arrêt propre par Ctrl-D sans aucune erreur Python.</p>
-<p>Les captures de cette partie ont été produites de la même manière, en exécutant réellement le programme
-(scripts <code>outils/capture.py</code> et <code>outils/session.py</code>). Les saisies de l'utilisateur
-apparaissent en <b>gras</b>. Pour alléger les captures, le menu n'est montré en entier que sur la figure 9.</p>
-<figure>
-  <img src="captures/etape4_tests.png" alt="Tests de l'étape 4">
-  <figcaption>Figure 15 - Exécution des tests de l'étape 4 : 17 tests réussis</figcaption>
-</figure>
-
-<!-- ============================================================ -->
-<!-- 7. PASSAGE À L'ÉCHELLE (étape 5)                             -->
-<!-- ============================================================ -->
-<h1>7. Passage à l'échelle</h1>
-<p>Le programme doit fonctionner avec les quatre tailles de données du sujet. Cette partie présente le
-générateur de jeux de données, vérifie que chaque fonctionnalité fonctionne à chaque niveau, puis analyse
-les conséquences de l'augmentation du nombre de colis.</p>
-<table>
-  <tr><th>Niveau</th><th class="n">Nombre de colis</th></tr>
-  <tr><td>Niveau 1</td><td class="n">100</td></tr>
-  <tr><td>Niveau 2</td><td class="n">1&nbsp;000</td></tr>
-  <tr><td>Niveau 3</td><td class="n">10&nbsp;000</td></tr>
-  <tr><td>Niveau 4</td><td class="n">100&nbsp;000</td></tr>
-</table>
-
-<h2>7.1 Génération des jeux de données</h2>
-<p>Le module <code>generateur.py</code> crée n colis aléatoires. Il est accessible depuis le menu (option 8),
-qui propose les quatre niveaux. L'option 9 permet d'enregistrer une collection dans un fichier CSV et de la
-recharger.</p>
-<table>
-  <tr><th>Donnée</th><th>Génération</th><th>Justification</th></tr>
-  <tr><td>Identifiant</td><td>Entiers consécutifs, puis <b>mélangés</b></td><td>Les identifiants sont uniques par construction. Le mélange (algorithme de Fisher-Yates, O(n)) évite que l'ordre de la collection soit celui des identifiants, ce qui favoriserait artificiellement certaines recherches.</td></tr>
-  <tr><td>Poids</td><td>Uniforme de 1 à 30 kg</td><td>Ordre de grandeur réaliste pour des colis.</td></tr>
-  <tr><td>Valeur</td><td>Entre 1 et 4 fois le poids</td><td>La valeur est <b>corrélée au poids</b>, comme dans la réalité, et la valeur par kilo (de 1 à 4) ne dépend pas du poids. Avec une valeur indépendante du poids, ou un bonus fixe ajouté à chaque colis, les colis légers seraient beaucoup plus rentables au kilo : le meilleur chargement ne contiendrait que des colis de 1 kg, ce qui rendrait le problème du camion (partie 8) artificiellement facile. Une première version du générateur ajoutait un tel bonus (de 0 à 10) : l'étape suivante a montré que le camion de 1&nbsp;000 kg n'était alors rempli que de colis de 1 kg, et le bonus a été supprimé.</td></tr>
-  <tr><td>Priorité</td><td>Uniforme de 1 à 5</td><td>Toutes les priorités sont représentées (environ 20 % chacune, figure 18).</td></tr>
-  <tr><td>Destination</td><td>Une parmi 10 villes</td><td>Environ 10 % des colis par ville (figure 18).</td></tr>
-</table>
-<p>La génération est <b>reproductible</b> : avec la même graine, on obtient exactement les mêmes colis. Les
-mesures et les tests peuvent ainsi être refaits à l'identique. Lorsqu'on ajoute des colis générés à une
-collection existante, les identifiants commencent après le plus grand identifiant utilisé, ce qui évite tout
-doublon. Le coût de la génération est O(n) en temps et en mémoire.</p>
-
-<h2>7.2 Fonctionnement aux quatre niveaux</h2>
-<p>Les figures suivantes montrent le programme avec <b>100&nbsp;000 colis</b> (niveau 4) : génération, affichage
-par pages, recherche, tri, statistiques, puis enregistrement et rechargement d'un fichier.</p>
-<figure>
-  <img src="captures/etape5_generation.png" style="width: 70%;" alt="Génération de 100&nbsp;000 colis et pagination">
-  <figcaption>Figure 16 - Génération de 100&nbsp;000 colis, puis affichage des deux premières pages de 20 colis</figcaption>
-</figure>
-<figure>
-  <img src="captures/etape5_recherche_tri.png" style="width: 66%;" alt="Recherche et tri sur 100&nbsp;000 colis">
-  <figcaption>Figure 17 - Recherche (1,8 µs) et tri par priorité (3,2 ms) parmi 100&nbsp;000 colis</figcaption>
-</figure>
-<figure>
-  <img src="captures/etape5_statistiques.png" style="width: 72%;" alt="Statistiques sur 100&nbsp;000 colis">
-  <figcaption>Figure 18 - Statistiques des 100&nbsp;000 colis générés : priorités et destinations bien réparties</figcaption>
-</figure>
-<figure>
-  <img src="captures/etape5_fichier.png" style="width: 72%;" alt="Enregistrement et chargement CSV">
-  <figcaption>Figure 19 - Enregistrement puis rechargement de 100&nbsp;000 colis ; un fichier absent ne modifie pas la collection</figcaption>
-</figure>
-<p>Onze tests (<code>tests/test_echelle.py</code>) vérifient le générateur (identifiants uniques et mélangés,
-reproductibilité, bornes des valeurs) et, <b>pour chacun des quatre niveaux</b> : la recherche de 200 colis
-présents et d'un colis absent, la conformité des trois tris à <code>sorted()</code> et la cohérence des
-statistiques. Ils vérifient aussi l'écriture puis la relecture exacte d'un fichier de 100&nbsp;000 colis, ainsi
-que les options 8 et 9 du menu, pagination et fichier absent compris.</p>
-<figure>
-  <img src="captures/etape5_tests.png" alt="Tests de l'étape 5">
-  <figcaption>Figure 20 - Exécution des tests de l'étape 5 : 11 tests réussis</figcaption>
-</figure>
-
-<h2>7.3 Mesures aux quatre niveaux</h2>
-<p>Le script <code>outils/mesure_echelle.py</code> mesure chaque opération de gestion aux quatre niveaux (meilleur
-temps sur trois exécutions ; moyenne sur 10&nbsp;000 recherches) :</p>
-<table>
-  <tr><th>Opération</th><th>Complexité</th><th class="n">n = 100</th><th class="n">n = 1&nbsp;000</th><th class="n">n = 10&nbsp;000</th><th class="n">n = 100&nbsp;000</th></tr>
-  <tr><td>Recherche d'un colis</td><td>O(1)</td><td class="n">24 ns</td><td class="n">27 ns</td><td class="n">32 ns</td><td class="n">42 ns</td></tr>
-  <tr><td>Affichage d'une page (20 colis)</td><td>O(1)</td><td class="n">13,3 µs</td><td class="n">12,2 µs</td><td class="n">11,8 µs</td><td class="n">10,8 µs</td></tr>
-  <tr><td>Construction (n ajouts)</td><td>O(n)</td><td class="n">5,4 µs</td><td class="n">50,2 µs</td><td class="n">476 µs</td><td class="n">4,6 ms</td></tr>
-  <tr><td>Tri par priorité (comptage)</td><td>O(n)</td><td class="n">5,0 µs</td><td class="n">39,0 µs</td><td class="n">362 µs</td><td class="n">3,3 ms</td></tr>
-  <tr><td>Statistiques</td><td>O(n)</td><td class="n">15,5 µs</td><td class="n">133 µs</td><td class="n">1,3 ms</td><td class="n">12,3 ms</td></tr>
-  <tr><td>Écriture du fichier CSV</td><td>O(n)</td><td class="n">87 µs</td><td class="n">411 µs</td><td class="n">3,5 ms</td><td class="n">31,5 ms</td></tr>
-  <tr><td>Mise en forme de tous les colis</td><td>O(n)</td><td class="n">56 µs</td><td class="n">566 µs</td><td class="n">5,3 ms</td><td class="n">50,5 ms</td></tr>
-  <tr><td>Génération des colis</td><td>O(n)</td><td class="n">116 µs</td><td class="n">1,1 ms</td><td class="n">11,2 ms</td><td class="n">103,1 ms</td></tr>
-  <tr><td>Lecture CSV et construction</td><td>O(n)</td><td class="n">177 µs</td><td class="n">1,5 ms</td><td class="n">14,8 ms</td><td class="n">141,0 ms</td></tr>
-  <tr><td>Tri par poids (fusion)</td><td>O(n log n)</td><td class="n">67 µs</td><td class="n">895 µs</td><td class="n">10,8 ms</td><td class="n">120,2 ms</td></tr>
-  <tr><td>Mémoire (colis et table)</td><td>O(n)</td><td class="n">12 Ko</td><td class="n">130 Ko</td><td class="n">1,3 Mo</td><td class="n">15,6 Mo</td></tr>
-  <tr><td>Taille du fichier CSV</td><td>O(n)</td><td class="n">2 Ko</td><td class="n">20 Ko</td><td class="n">210 Ko</td><td class="n">2,2 Mo</td></tr>
-</table>
-<figure>
-  <img src="captures/etape5_mesures.png" style="width: 82%;" alt="Mesures aux quatre niveaux">
-  <figcaption>Figure 21 - Temps et mémoire des opérations de gestion aux quatre niveaux</figcaption>
-</figure>
-
-<h2>7.4 Conséquences de l'augmentation du nombre de colis</h2>
-<p>Les mesures se rangent en trois familles, qui correspondent exactement aux complexités annoncées :</p>
-<ul>
-  <li><b>Opérations en temps constant, O(1)</b> : la recherche par identifiant et l'affichage d'une page. Multiplier
-  le nombre de colis par 1&nbsp;000 ne change presque rien à leur durée (24 à 42 ns ; environ 11 à 13 µs par page).
-  Elles sont <b>insensibles</b> au passage à l'échelle. C'est le bénéfice direct de la table de hachage et de
-  la pagination.</li>
-  <li><b>Opérations linéaires, O(n)</b> : construction, génération, lecture et écriture de fichier, statistiques, tri par
-  comptage. Leur durée est multipliée par environ 10 quand n est multiplié par 10. À 100&nbsp;000 colis, la
-  plus lente, la lecture du fichier, prend 141 ms : c'est à peine perceptible pour l'utilisateur.</li>
-  <li><b>Opération en O(n log n)</b> : le tri fusion, multiplié par environ 11 à 12 par décade. C'est l'opération
-  de gestion dont le coût croît le plus vite, mais elle reste à 120 ms pour 100&nbsp;000 colis.</li>
-</ul>
-<p>Le passage à l'échelle montre surtout <b>l'importance des choix algorithmiques</b>. Le tableau suivant compare,
-pour 100&nbsp;000 colis, les choix retenus aux choix « naïfs » mesurés dans les parties 4 et 5 :</p>
-<table>
-  <tr><th>Opération</th><th>Choix naïf</th><th class="n">Coût naïf (n = 100&nbsp;000)</th><th>Choix retenu</th><th class="n">Coût retenu</th></tr>
-  <tr><td>Rechercher un colis</td><td>Parcours séquentiel, O(n)</td><td class="n">519 µs</td><td>Table de hachage, O(1)</td><td class="n">42 ns</td></tr>
-  <tr><td>Trier par poids</td><td>Tri par insertion, O(n²)</td><td class="n">&asymp; 100 s</td><td>Tri fusion, O(n log n)</td><td class="n">120 ms</td></tr>
-  <tr><td>Trier par priorité</td><td>Tri fusion, O(n log n)</td><td class="n">117 ms</td><td>Tri par comptage, O(n)</td><td class="n">3 ms</td></tr>
-  <tr><td>Charger 100&nbsp;000 colis sans doublon</td><td>Liste, contrôle par parcours, O(n²)</td><td class="n">&asymp; 5&times;10<sup>9</sup> comparaisons</td><td>Table de hachage, O(n)</td><td class="n">4,6 ms</td></tr>
-</table>
-<p>À 100 colis, tous ces choix seraient acceptables : le tri par insertion ne prend que 0,1 ms. C'est seulement
-quand n augmente que l'écart devient décisif : un facteur de près de 1&nbsp;000 pour le tri, et une durée de chargement qui
-deviendrait inacceptable avec une liste. Un algorithme se juge donc sur sa <b>croissance</b>, pas sur sa durée
-pour une petite entrée.</p>
-<p><b>Mémoire.</b> L'occupation est linéaire : environ <b>156 octets par colis</b>, soit 112 pour l'objet
-<code>Colis</code> et le reste pour la table de hachage, ce qui fait 15,6 Mo pour 100&nbsp;000 colis. On peut extrapoler
-environ 160 Mo pour un million de colis, ce qui reste raisonnable. La question des très grands volumes est
-traitée dans la partie 12.</p>
-<p><b>Interface.</b> Afficher tous les colis reste possible (51 ms de mise en forme pour 100&nbsp;000 colis),
-mais cela représenterait 5&nbsp;000 écrans. L'affichage par pages, en temps constant, est donc indispensable
-dès le niveau 3.</p>
-<p><b>Conclusion.</b> Jusqu'au niveau 4, toutes les opérations de gestion prennent au plus 150 ms environ et moins de
-16 Mo : les structures et algorithmes retenus conviennent aux quatre tailles demandées, avec une marge confortable.
-L'opération dont le coût augmentera le plus vite est la préparation du camion, étudiée dans la partie 8.</p>
-
-<!-- ============================================================ -->
-<!-- 8. OPTIMISATION DU CHARGEMENT (étape 6)                      -->
-<!-- ============================================================ -->
-<h1>8. Optimisation du chargement du camion</h1>
-
-<h2>8.1 Problématique et modélisation</h2>
-<p>Le camion a une capacité maximale W (en kg). Il faut choisir les colis à charger de sorte que
-<b>poids total &le; W</b>, en transportant la <b>plus grande valeur totale possible</b>. Chaque colis est
-soit chargé entièrement, soit laissé : on ne peut pas en charger une partie. C'est le problème classique
-du <b>sac à dos 0/1</b>. En notant x<sub>i</sub> = 1 si le colis i est chargé, et 0 sinon :</p>
-<pre>maximiser    v1.x1 + v2.x2 + ... + vn.xn          (valeur transportée)
-sous         p1.x1 + p2.x2 + ... + pn.xn &lt;= W     (capacité du camion)
-avec         chaque xi égal à 0 ou 1</pre>
-<p>Comme le souligne le sujet, trouver une combinaison qui respecte la capacité ne suffit pas : il faut la
-<b>meilleure</b>. Or le nombre de combinaisons possibles est 2<sup>n</sup>. Il vaut 16 pour 4 colis, environ
-1 milliard pour 30 colis et environ 10<sup>30</sup> pour 100 colis. Les essayer toutes est donc impossible
-dès quelques dizaines de colis. Ce problème est d'ailleurs réputé difficile (NP-difficile) : on ne connaît
-pas d'algorithme exact dont le coût soit polynomial à la fois en n et en la taille de W.</p>
-<p><b>Exemple du sujet.</b> Les colis A (8 kg, valeur 20), B (6 kg, 25), C (5 kg, 18) et D (4 kg, 14) pèsent
-23 kg au total. Avec la capacité de 50 kg citée en exemple, ils tiennent tous et la question ne se pose pas.
-On fait donc varier la capacité. La capacité <b>W = 14 kg</b> sert d'exemple principal, car elle oblige
-à faire un vrai choix.</p>
-
-<h2>8.2 Première idée : l'algorithme glouton, et pourquoi il ne suffit pas</h2>
-<p>L'idée intuitive consiste à charger d'abord les colis qui « rapportent le plus par kilo », c'est-à-dire
-ceux dont le rapport valeur / poids est le plus élevé, tant qu'ils tiennent dans le camion :</p>
-<table>
-  <tr><th>Colis</th><th class="n">Poids</th><th class="n">Valeur</th><th class="n">Valeur / poids</th><th>Ordre du glouton</th></tr>
-  <tr><td>B</td><td class="n">6 kg</td><td class="n">25</td><td class="n">4,17</td><td>1<sup>er</sup></td></tr>
-  <tr><td>C</td><td class="n">5 kg</td><td class="n">18</td><td class="n">3,60</td><td>2<sup>e</sup></td></tr>
-  <tr><td>D</td><td class="n">4 kg</td><td class="n">14</td><td class="n">3,50</td><td>3<sup>e</sup></td></tr>
-  <tr><td>A</td><td class="n">8 kg</td><td class="n">20</td><td class="n">2,50</td><td>4<sup>e</sup></td></tr>
-</table>
-<p>Avec W = 14 kg, le glouton prend B (6 kg), puis C (11 kg). D ne tient plus (15 kg), ni A (19 kg). Il obtient
-donc <b>B + C = 43</b>, avec 3 kg inutilisés. Or <b>A + B = 45</b> remplit exactement les 14 kg :
-<b>le glouton n'est pas optimal</b>. Le colis C, très rentable au kilo, occupe une place qui aurait été mieux
-utilisée par A. Le glouton serait optimal si l'on pouvait charger une fraction de colis (sac à dos
-« fractionnaire ») : il compléterait alors les 3 kg restants avec 3/8 de A. En 0/1, ce n'est pas possible.
-Il faut donc une méthode qui examine réellement les combinaisons, sans les énumérer toutes.</p>
-
-<h2>8.3 Stratégie retenue : la programmation dynamique</h2>
-<h3>Principe</h3>
-<p>On découpe le problème en sous-problèmes plus petits, dont on mémorise les solutions pour ne jamais les
-recalculer. On note <b>T[i][w]</b> la meilleure valeur atteignable avec une capacité de w kg, en n'utilisant
-que les i premiers colis. Pour le colis i (poids p<sub>i</sub>, valeur v<sub>i</sub>), il n'y a que deux
-possibilités :</p>
-<ul>
-  <li>on <b>ne le prend pas</b> : la meilleure valeur est celle des i - 1 premiers colis avec la même capacité,
-  T[i-1][w] ;</li>
-  <li>on <b>le prend</b>, si p<sub>i</sub> &le; w : on gagne v<sub>i</sub>, et il reste w - p<sub>i</sub> kg pour les i - 1
-  premiers colis, d'où T[i-1][w - p<sub>i</sub>] + v<sub>i</sub>.</li>
-</ul>
-<pre>T[0][w] = 0                                        (aucun colis)
-T[i][w] = max( T[i-1][w] , T[i-1][w - pi] + vi )   si pi &lt;= w
-T[i][w] = T[i-1][w]                                sinon
-Réponse : T[n][W]</pre>
-
-<h3>Exemple pas à pas (A, B, C, D, W = 14 kg)</h3>
-<p>Le script <code>outils/etude_exemple_camion.py</code> affiche le tableau complet. On le remplit ligne par
-ligne : chaque case ne dépend que de la ligne précédente.</p>
-<figure>
-  <img src="captures/etape6_tableau_dp.png" style="width: 86%;" alt="Tableau de programmation dynamique">
-  <figcaption>Figure 22 - Tableau de la programmation dynamique pour les colis A, B, C, D et un camion de 14 kg</figcaption>
-</figure>
-<ul>
-  <li>Ligne « + B », colonne 14 : max(T[1][14] = 20 , T[1][14 - 6] + 25 = 20 + 25) = <b>45</b>. Prendre B, et
-  avec les 8 kg restants prendre A, vaut mieux que A seul.</li>
-  <li>Ligne « + D », colonne 9 : max(T[3][9] = 25 , T[3][5] + 14 = 18 + 14) = <b>32</b>, c'est-à-dire C + D. Pour
-  9 kg, le glouton ne trouve que B = 25 (figure 23).</li>
-  <li>Case finale T[4][14] : max(T[3][14] = 45 , T[3][10] + 14 = 25 + 14 = 39) = <b>45</b>.</li>
-</ul>
-<p><b>Retrouver les colis chargés.</b> On remonte depuis la case finale. Si T[i][w] = T[i-1][w], le colis i
-n'a pas été pris. Sinon, il l'a été, et l'on continue avec w - p<sub>i</sub>. Ici : D n'est pas pris
-(45 = 45), C non plus, B est pris (45 &ne; 20, w devient 8), A est pris (20 &ne; 0, w devient 0). On obtient
-<b>A + B = 45</b>.</p>
-
-<h3>Implémentation</h3>
-<p>Le programme (<code>sac_a_dos_dp</code> dans <code>src/chargement.py</code>) applique cette récurrence avec
-trois améliorations, qui ne changent pas le résultat :</p>
-<ul>
-  <li><b>Une seule ligne de valeurs.</b> La ligne i ne dépend que de la ligne i - 1 : on garde un seul
-  tableau <code>meilleur[0..W]</code>, mis à jour sur place. On le parcourt de w = W vers w = p<sub>i</sub>
-  (sens <b>décroissant</b>) : ainsi, <code>meilleur[w - p<sub>i</sub>]</code> contient encore la valeur de la
-  ligne précédente, et chaque colis n'est pris qu'une fois.</li>
-  <li><b>Des décisions sur un octet.</b> Pour reconstruire la solution, on mémorise pour chaque colis un tableau
-  d'octets <code>pris[w]</code>, qui vaut 1 si le colis améliore <code>meilleur[w]</code>. Une case coûte 1 octet,
-  contre au moins 8 pour un tableau de nombres Python : pour 100&nbsp;000 colis et 1&nbsp;000 kg, cela fait
-  environ 100 Mo au lieu de plus de 800 Mo.</li>
-  <li><b>Filtrage préalable.</b> Les colis plus lourds que le camion ne peuvent jamais être chargés : ils sont
-  écartés dès le départ, en O(n).</li>
-</ul>
-<pre>meilleur = [0] * (W + 1)
-pour chaque colis (p, v) :
-    pris = tableau de W + 1 octets à 0
-    pour w de W jusqu'à p (en décroissant) :
-        si meilleur[w - p] + v &gt; meilleur[w] :
-            meilleur[w] = meilleur[w - p] + v
-            pris[w] = 1
-remonter les colis du dernier au premier depuis w = W :
-    si pris[w] = 1 : charger le colis, w = w - p</pre>
-
-<h2>8.4 Analyse de la stratégie (questions de la partie 5.3 du sujet)</h2>
-<table>
-  <tr><td class="k">Pourquoi cette stratégie ?</td><td>Le sujet demande la <b>meilleure</b> valeur totale. Le glouton est rapide mais peut se tromper (8.2), et la force brute est exacte mais exponentielle. La programmation dynamique est la méthode exacte de référence lorsque les poids sont des entiers et que la capacité reste modérée : c'est le cas d'un camion, de quelques dizaines à quelques milliers de kg. Elle est simple à implémenter et à expliquer, et son coût est prévisible.</td></tr>
-  <tr><td class="k">La solution est-elle toujours optimale ?</td><td><b>Oui.</b> Par récurrence sur i : T[0][w] = 0 est optimal. Supposons la ligne i - 1 optimale. Une solution optimale pour (i, w) soit ne contient pas le colis i, et sa valeur vaut alors au plus T[i-1][w] ; soit le contient, et le reste est un chargement des i - 1 premiers colis dans w - p<sub>i</sub> kg, de valeur au plus T[i-1][w - p<sub>i</sub>]. La récurrence prend le maximum de ces deux cas : T[i][w] est donc optimal. <b>Vérification expérimentale</b> : sur 500 instances aléatoires et sur toutes les capacités de 0 à 23 kg de l'exemple du sujet, la programmation dynamique trouve toujours exactement la valeur de la force brute (8.5).</td></tr>
-  <tr><td class="k">Complexité temporelle</td><td><b>O(n &times; W)</b> : n colis &times; (W + 1) capacités, chaque case en O(1). S'y ajoutent O(n) pour le filtrage et la reconstruction. Cette complexité est dite <b>pseudo-polynomiale</b> : elle dépend de la <i>valeur</i> de W. Doubler la capacité double le temps de calcul.</td></tr>
-  <tr><td class="k">Complexité spatiale</td><td><b>O(n &times; W)</b> octets pour les décisions (n &times; (W + 1) octets), plus O(W) pour le tableau <code>meilleur</code>. Si l'on ne voulait que la valeur optimale, sans la liste des colis, O(W) suffirait.</td></tr>
-  <tr><td class="k">Autres approches possibles</td><td>
-    <b>Glouton</b> par rapport valeur / poids : O(n log n), mais sans garantie d'optimalité.<br>
-    <b>Force brute</b> : 2<sup>n</sup> combinaisons, exacte, utilisable jusqu'à une vingtaine de colis (sert ici à la vérification).<br>
-    <b>Séparation et évaluation</b> (branch and bound) : exploration des combinaisons en abandonnant les branches qui ne peuvent pas battre la meilleure solution connue, la borne étant donnée par le sac à dos fractionnaire. Exacte et souvent rapide, mais exponentielle dans le pire cas.<br>
-    <b>Programmation dynamique sur la valeur</b> plutôt que sur le poids : O(n &times; V), intéressante si les valeurs sont petites et les poids grands.<br>
-    <b>Schéma d'approximation</b> (FPTAS) : on arrondit les valeurs pour garantir au moins (1 - &epsilon;) fois l'optimum, en temps polynomial.<br>
-    <b>Solveur de programmation linéaire en nombres entiers</b> : exclu ici, car il s'agirait d'une bibliothèque externe résolvant directement le problème.</td></tr>
-</table>
-
-<p>Récapitulatif au format demandé pour les choix algorithmiques :</p>
-<table>
-  <tr><td class="k">Problème</td><td>Choisir les colis à charger sans dépasser la capacité W, en maximisant la valeur totale.</td></tr>
-  <tr><td class="k">Solution</td><td>Programmation dynamique du sac à dos 0/1, sur une ligne de valeurs, avec des décisions sur un octet.</td></tr>
-  <tr><td class="k">Temps</td><td>O(n &times; W).</td></tr>
-  <tr><td class="k">Espace</td><td>O(n &times; W) octets, plus O(W).</td></tr>
-  <tr><td class="k">Alternative</td><td>Glouton en O(n log n), non optimal ; force brute en O(2<sup>n</sup>).</td></tr>
-  <tr><td class="k">Justification</td><td>C'est la seule méthode simple qui <b>garantit</b> le meilleur chargement en un temps raisonnable pour un camion réel. Elle est prouvée et vérifiée expérimentalement.</td></tr>
-</table>
-
-<h2>8.5 Vérification de l'optimalité</h2>
-<p>Pour chaque capacité de 0 à 23 kg, le script compare les trois méthodes sur les colis A, B, C, D. La
-programmation dynamique trouve <b>toujours</b> la valeur de la force brute (le script le vérifie). Le glouton,
-lui, se trompe pour <b>7 capacités sur 24</b> : 9, 14, 18 et de 19 à 22 kg, avec jusqu'à 7 de valeur en
-moins.</p>
-<figure>
-  <img src="captures/etape6_comparaison.png" style="width: 76%;" alt="Comparaison des trois méthodes">
-  <figcaption>Figure 23 - Programmation dynamique, glouton et force brute pour toutes les capacités de 0 à 23 kg</figcaption>
-</figure>
-<p>Dix-huit tests (<code>tests/test_chargement.py</code>) complètent cette vérification :</p>
-<ul>
-  <li>les résultats exacts de l'exemple du sujet : 50 kg (tout est chargé, 77), 14 kg (A + B = 45, et le glouton
-  B + C = 43), 15 kg (B + C + D = 57), capacités trop petites, capacité invalide, colis trop lourd ignoré ;</li>
-  <li>sur <b>500 instances aléatoires</b> (jusqu'à 12 colis, capacité jusqu'à 60 kg), la programmation dynamique
-  égale la force brute, respecte la capacité et ne charge aucun colis en double ;</li>
-  <li>sur 500 autres instances, le glouton respecte toujours la capacité et ne dépasse jamais l'optimum, mais
-  il lui est strictement inférieur dans certains cas ;</li>
-  <li>les options 5 et 6 du menu, y compris la demande de confirmation avant un calcul très lourd (et son absence
-  lorsque l'élagage de la partie 10 rend le calcul léger).</li>
-</ul>
-<figure>
-  <img src="captures/etape6_tests.png" alt="Tests de l'étape 6">
-  <figcaption>Figure 24 - Exécution des tests de l'étape 6 : 18 tests réussis</figcaption>
-</figure>
-
-<h2>8.6 Utilisation depuis le menu</h2>
-<p>L'option 5 demande la capacité (50 kg par défaut, comme dans le sujet), puis la règle de sélection
-présentée dans la partie 9. Dans cette partie, on choisit la règle 1 (valeur seule), qui correspond à la
-partie 5 du sujet. Le programme calcule alors le chargement optimal.
-Pour mettre en évidence l'intérêt de la méthode exacte, elle affiche aussi le résultat qu'aurait donné le
-glouton. L'option 6 détaille le dernier chargement : colis chargés, poids, taux de remplissage, valeur. La
-collection n'est pas modifiée : on peut préparer plusieurs camions de capacités différentes et les comparer.</p>
-<figure>
-  <img src="captures/etape6_menu_capacites.png" style="width: 72%;" alt="Préparation d'un camion">
-  <figcaption>Figure 25 - Colis du sujet : 50 kg (tout est chargé), puis 20 kg (optimum 80, glouton 70) et détail du chargement</figcaption>
-</figure>
-<figure>
-  <img src="captures/etape6_menu_sujet.png" style="width: 72%;" alt="Colis A, B, C, D, 14 kg">
-  <figcaption>Figure 26 - Colis A à D (identifiants 1 à 4, fichier <code>donnees/colis_camion.csv</code>), camion de 14 kg : A + B = 45</figcaption>
-</figure>
-<p>Avant un calcul très lourd (plus de 50 millions de cases n &times; W), le programme indique le nombre de
-cases et la mémoire nécessaire, puis demande une confirmation :</p>
-<figure>
-  <img src="captures/etape6_grand.png" style="width: 72%;" alt="Camion de 1&nbsp;000 kg parmi 100&nbsp;000 colis">
-  <figcaption>Figure 27 - Camion de 1&nbsp;000 kg parmi 100&nbsp;000 colis : confirmation, calcul en 2,06 s (version de base, sans l'élagage de la partie 10)</figcaption>
-</figure>
-
-<h2>8.7 Coût mesuré</h2>
-<p>Le script <code>outils/mesure_chargement.py</code> mesure le temps et le pic de mémoire de la programmation
-dynamique. Il fait d'abord varier n avec W = 1&nbsp;000 kg, puis W avec n = 10&nbsp;000 colis :</p>
-<table>
-  <tr><th class="n">n</th><th class="n">W</th><th class="n">Cases n &times; W</th><th class="n">Temps DP</th><th class="n">Mémoire DP</th><th class="n">Temps glouton</th><th class="n">Valeur glouton / optimum</th></tr>
-  <tr><td class="n">100</td><td class="n">1&nbsp;000 kg</td><td class="n">0,1 million</td><td class="n">2,8 ms</td><td class="n">0,1 Mo</td><td class="n">0,1 ms</td><td class="n">99,87 %</td></tr>
-  <tr><td class="n">1&nbsp;000</td><td class="n">1&nbsp;000 kg</td><td class="n">1 million</td><td class="n">24,0 ms</td><td class="n">1,1 Mo</td><td class="n">1,0 ms</td><td class="n">100 %</td></tr>
-  <tr><td class="n">10&nbsp;000</td><td class="n">1&nbsp;000 kg</td><td class="n">10 millions</td><td class="n">205,9 ms</td><td class="n">11,3 Mo</td><td class="n">10,7 ms</td><td class="n">100 %</td></tr>
-  <tr><td class="n">100&nbsp;000</td><td class="n">1&nbsp;000 kg</td><td class="n">100 millions</td><td class="n">2,06 s</td><td class="n">113,7 Mo</td><td class="n">128,6 ms</td><td class="n">100 %</td></tr>
-  <tr><td class="n">10&nbsp;000</td><td class="n">100 kg</td><td class="n">1 million</td><td class="n">15,0 ms</td><td class="n">2,3 Mo</td><td class="n">10,6 ms</td><td class="n">100 %</td></tr>
-  <tr><td class="n">10&nbsp;000</td><td class="n">10&nbsp;000 kg</td><td class="n">100 millions</td><td class="n">2,21 s</td><td class="n">101,7 Mo</td><td class="n">10,8 ms</td><td class="n">100 %</td></tr>
-</table>
-<figure>
-  <img src="captures/etape6_mesures.png" style="width: 92%;" alt="Mesure du coût du chargement">
-  <figcaption>Figure 28 - Temps et mémoire de la programmation dynamique selon n et W</figcaption>
-</figure>
-<ul>
-  <li><b>Le coût suit exactement n &times; W.</b> Multiplier n par 10 multiplie le temps et la mémoire par
-  environ 10, et multiplier W par 10 aussi. Il faut environ 2 s et 100 Mo pour 100 millions de cases, que
-  ce soit avec 100&nbsp;000 colis et 1&nbsp;000 kg ou avec 10&nbsp;000 colis et 10&nbsp;000 kg.</li>
-  <li><b>C'est l'opération la plus coûteuse du programme.</b> À 100&nbsp;000 colis, elle prend 2 s, contre
-  120 ms pour un tri, et c'est la seule dont la mémoire dépasse largement celle de la collection. Elle reste
-  utilisable, mais un camion de plusieurs tonnes pesé au kilogramme près (W = 20&nbsp;000) rendrait le calcul
-  20 fois plus long et 20 fois plus gourmand.</li>
-  <li><b>Le glouton est 16 fois plus rapide</b> à 100&nbsp;000 colis, et il obtient ici la même valeur sur les
-  grandes instances : avec beaucoup de colis, on trouve facilement des colis très rentables qui remplissent
-  presque exactement le camion. Mais il ne donne <b>aucune garantie</b>. Il se trompe sur 7 des 24 capacités
-  de l'exemple du sujet, sur 100 colis (99,87 %) et dans les tests aléatoires.</li>
-</ul>
-<p>La programmation dynamique répond donc au besoin pour les quatre niveaux du sujet. Son coût en O(n &times; W)
-peut toutefois être fortement réduit sans perdre l'optimalité : c'est l'objet de l'étude des performances
-(partie 10).</p>
-
-<!-- ============================================================ -->
-<!-- 9. PRISE EN COMPTE DE LA PRIORITÉ (étape 7)                  -->
-<!-- ============================================================ -->
-<h1>9. Prise en compte de la priorité</h1>
-
-<h2>9.1 Objectif</h2>
-<p>L'entreprise souhaite favoriser les colis dont la priorité est importante. Le sujet n'impose aucune
-formule : il demande une règle cohérente qui tienne compte du poids, de la valeur et de la priorité. On
-rappelle la convention de la partie 3 : <b>5 est la priorité la plus forte</b>. Les données de la
-partie 6.1 du sujet sont :</p>
-<table>
-  <tr><th>Colis</th><th class="n">Poids</th><th class="n">Valeur</th><th class="n">Priorité</th></tr>
-  <tr><td>A</td><td class="n">8 kg</td><td class="n">20</td><td class="n">5</td></tr>
-  <tr><td>B</td><td class="n">6 kg</td><td class="n">25</td><td class="n">1</td></tr>
-  <tr><td>C</td><td class="n">5 kg</td><td class="n">18</td><td class="n">4</td></tr>
-  <tr><td>D</td><td class="n">4 kg</td><td class="n">14</td><td class="n">3</td></tr>
-</table>
-<p>Avec un camion de 14 kg, la partie 8 charge A + B (valeur 45). Or B est le colis le <b>moins</b>
-prioritaire (priorité 1). L'objectif est qu'une règle tenant compte de la priorité puisse préférer un
-chargement plus prioritaire, au prix d'un peu de valeur.</p>
-
-<h2>9.2 Principe : changer ce que l'on maximise, pas l'algorithme</h2>
-<p>La programmation dynamique de la partie 8 maximise une somme d'« utilités » sous la contrainte de poids.
-Jusqu'ici, l'utilité d'un colis était sa valeur. Pour prendre en compte la priorité, il suffit de
-<b>définir une autre utilité</b>, qui dépend de la valeur et de la priorité, et de la donner au même
-algorithme (fonction <code>fabrique_utilite</code> de <code>src/chargement.py</code>). Ce choix a trois
-avantages :</p>
-<ul>
-  <li>le chargement obtenu est <b>optimal pour la règle choisie</b>, avec la même preuve que dans la partie 8 ;</li>
-  <li>la complexité ne change pas : O(n &times; W) en temps et en mémoire ;</li>
-  <li>le code de l'algorithme n'est ni dupliqué ni modifié. Les trois règles partagent la même implémentation,
-  déjà vérifiée.</li>
-</ul>
-<p>Les trois critères demandés par le sujet ont chacun un rôle précis :</p>
-<table>
-  <tr><th>Critère</th><th>Rôle dans la sélection</th></tr>
-  <tr><td>Poids</td><td><b>Contrainte stricte</b> de la programmation dynamique : le poids total ne dépasse jamais la capacité.</td></tr>
-  <tr><td>Valeur</td><td><b>Base de l'utilité</b> : à priorité égale, le colis de plus grande valeur est toujours préféré.</td></tr>
-  <tr><td>Priorité</td><td><b>Coefficient multiplicateur</b> de la valeur : plus la priorité est forte, plus le colis « compte ».</td></tr>
-</table>
-
-<h2>9.3 Règle retenue : la valeur pondérée par la priorité</h2>
-<pre>utilité(colis) = valeur x ( 1 + alpha x (priorité - 1) / 4 )        avec alpha &gt;= 0</pre>
-<p>Le coefficient appliqué à la valeur va de 1 pour une priorité 1 à 1 + &alpha; pour une priorité 5.
-Le paramètre <b>&alpha;</b> règle l'importance accordée à la priorité. Par défaut, &alpha; = 1 :</p>
-<table>
-  <tr><th>Priorité</th><th class="n">1</th><th class="n">2</th><th class="n">3</th><th class="n">4</th><th class="n">5</th></tr>
-  <tr><td>Coefficient (&alpha; = 1)</td><td class="n">1</td><td class="n">1,25</td><td class="n">1,5</td><td class="n">1,75</td><td class="n">2</td></tr>
-  <tr><td>Coefficient (&alpha; = 0,5)</td><td class="n">1</td><td class="n">1,125</td><td class="n">1,25</td><td class="n">1,375</td><td class="n">1,5</td></tr>
-</table>
-<p><b>Application à l'exemple 6.1</b> (&alpha; = 1, W = 14 kg). Les utilités valent A = 20 &times; 2 = 40,
-B = 25 &times; 1 = 25, C = 18 &times; 1,75 = 31,5 et D = 14 &times; 1,5 = 21. Les combinaisons qui tiennent dans
-14 kg sont :</p>
-<table>
-  <tr><th>Combinaison</th><th class="n">Poids</th><th class="n">Valeur réelle</th><th class="n">Utilité</th><th class="n">Priorité moyenne</th></tr>
+  <tr><th>Chargement</th><th class="n">Poids</th><th class="n">Valeur</th><th class="n">Utilité</th><th class="n">Priorité moyenne</th></tr>
   <tr><td>A + B</td><td class="n">14 kg</td><td class="n">45</td><td class="n">65</td><td class="n">3,0</td></tr>
   <tr><td><b>A + C</b></td><td class="n">13 kg</td><td class="n">38</td><td class="n"><b>71,5</b></td><td class="n">4,5</td></tr>
   <tr><td>A + D</td><td class="n">12 kg</td><td class="n">34</td><td class="n">61</td><td class="n">4,0</td></tr>
@@ -1084,270 +364,175 @@ B = 25 &times; 1 = 25, C = 18 &times; 1,75 = 31,5 et D = 14 &times; 1,5 = 21. Le
   <tr><td>C + D</td><td class="n">9 kg</td><td class="n">32</td><td class="n">52,5</td><td class="n">3,5</td></tr>
   <tr><td>B + D</td><td class="n">10 kg</td><td class="n">39</td><td class="n">46</td><td class="n">2,0</td></tr>
 </table>
-<p>La règle choisit <b>A + C</b>. B (priorité 1) est remplacé par C (priorité 4) : la valeur transportée passe
-de 45 à 38, mais la priorité moyenne passe de 3,0 à 4,5. Le programme affiche explicitement ce compromis
-(figure 31).</p>
-<p><b>Rôle de &alpha;.</b> A + B a pour utilité 45 + 20&alpha;, et A + C a pour utilité 38 + 33,5&alpha;. A + C
-l'emporte dès que 13,5&alpha; &gt; 7, c'est-à-dire &alpha; &gt; 0,52. Avec &alpha; = 0,5, le programme garde donc
-A + B (figure 32), et avec &alpha; = 1, il choisit A + C. L'entreprise fixe ainsi elle-même le prix qu'elle accepte
-de payer en valeur pour servir les colis importants.</p>
-
-<h3>Justification</h3>
+<p>Le programme choisit donc A + C. On perd 7 de valeur, mais la priorité moyenne passe de 3 à 4,5. C'est
+&alpha; qui règle ce compromis : A + B vaut 45 + 20&alpha; et A + C vaut 38 + 33,5&alpha;, donc A + C passe devant
+dès que &alpha; dépasse environ 0,52. L'entreprise peut donc régler elle-même combien de valeur elle accepte de
+perdre pour les colis prioritaires.</p>
+<figure>
+  <img src="captures/camion.png" style="width: 72%;" alt="Préparation du camion avec priorité">
+  <figcaption>Figure 8 - Colis A à D, camion de 14 kg, &alpha; = 1 : le programme affiche aussi ce que la priorité a coûté</figcaption>
+</figure>
+<p><b>Pourquoi j'ai choisi cette règle.</b> Elle prend en compte le poids, la valeur et la priorité, on la
+règle avec un seul nombre, et avec &alpha; = 0 on retombe sur la partie 5. J'ai préféré multiplier la valeur
+plutôt que lui ajouter un bonus : comme ça, un colis prioritaire mais sans valeur ne prend pas la place d'un
+colis utile, et entre deux colis de même priorité, c'est toujours la valeur qui décide. Et comme je garde le
+même algorithme, le chargement reste optimal pour cette règle, avec la même complexité O(n &times; W).</p>
+<p><b>Et avec beaucoup de colis ?</b> Sur 4 colis, la priorité coûte 7 de valeur sur 45, c'est beaucoup. J'ai
+voulu voir ce que ça donnait avec plus de choix : 10&nbsp;000 colis générés (dont 1&nbsp;944 de priorité 5) et
+un camion de 1&nbsp;000 kg :</p>
+<table>
+  <tr><th>Règle</th><th class="n">Valeur</th><th class="n">% du maximum</th><th class="n">Priorité moyenne</th><th class="n">Colis p5</th><th class="n">Colis p1</th></tr>
+  <tr><td>&alpha; = 0 (valeur seule)</td><td class="n">4&nbsp;000</td><td class="n">100,0 %</td><td class="n">2,94</td><td class="n">25</td><td class="n">28</td></tr>
+  <tr><td>&alpha; = 0,25</td><td class="n">3&nbsp;988</td><td class="n">99,7 %</td><td class="n">4,98</td><td class="n">101</td><td class="n">0</td></tr>
+  <tr><td><b>&alpha; = 1</b></td><td class="n">3&nbsp;987</td><td class="n">99,7 %</td><td class="n">5,00</td><td class="n">97</td><td class="n">0</td></tr>
+  <tr><td>&alpha; = 5</td><td class="n">3&nbsp;987</td><td class="n">99,7 %</td><td class="n">5,00</td><td class="n">97</td><td class="n">0</td></tr>
+</table>
+<p>Là, il y a assez de colis de priorité 5 rentables pour remplir le camion presque sans rien perdre : la
+priorité moyenne passe de 2,94 à 5, pour seulement 0,3 % de valeur en moins. En fait, la priorité ne coûte
+cher que quand il y a peu de colis à choisir, comme dans l'exemple du sujet. C'est pour ça que j'ai laissé
+&alpha; réglable au lieu de le fixer. Le temps de calcul ne change pas (environ 73 ms à chaque fois).</p>
+<p><b>Autres règles que j'ai envisagées.</b></p>
 <ul>
-  <li><b>La règle tient compte des trois critères</b>, chacun dans un rôle clair : le poids comme contrainte,
-  la valeur comme base, la priorité comme coefficient.</li>
-  <li><b>Elle est réglable et continue.</b> Avec &alpha; = 0, on retrouve exactement la règle de la partie 5, et
-  plus &alpha; augmente, plus la priorité pèse. Il n'y a pas de seuil arbitraire.</li>
-  <li><b>Elle est multiplicative.</b> La priorité augmente l'utilité <i>proportionnellement</i> à la valeur :
-  un colis prioritaire sans valeur ne prend pas la place d'un colis utile, et deux colis de même priorité
-  restent départagés par leur valeur. Une règle additive (valeur + &beta; &times; priorité) mélangerait deux
-  grandeurs sans unité commune : l'effet de &beta; dépendrait de l'ordre de grandeur des valeurs.</li>
-  <li><b>Elle conserve l'optimalité et la complexité</b> de la programmation dynamique (9.2). Les utilités
-  pouvant être décimales, les sommes sont calculées en nombres à virgule flottante. Les écarts d'arrondi,
-  de l'ordre de 10<sup>-15</sup>, ne peuvent départager que deux chargements d'utilité pratiquement égale :
-  retenir l'un ou l'autre est alors sans conséquence.</li>
+  <li>Une priorité stricte : un colis de priorité 5 passe toujours avant tous les colis moins prioritaires.
+  C'est logique si les priorités sont des engagements, mais ça peut coûter très cher : avec 9 kg, on
+  chargerait A seul (valeur 20) au lieu de C + D (valeur 32).</li>
+  <li>Rendre obligatoires les colis au-dessus d'une certaine priorité. C'est simple à expliquer, mais ça ne
+  marche plus si ces colis dépassent la capacité, et le seuil serait choisi un peu au hasard.</li>
+  <li>Ajouter la priorité à la valeur (valeur + &beta; &times; priorité) : on additionne deux choses qui n'ont
+  pas la même unité, et le bon &beta; dépend des données.</li>
+  <li>Trier par priorité et charger dans cet ordre : très rapide, mais c'est un glouton, donc le chargement
+  n'est pas optimisé du tout.</li>
 </ul>
 
-<h2>9.4 Règles alternatives</h2>
-<p><b>Priorité stricte (implémentée, règle 3 du menu).</b> On veut qu'un colis de priorité p passe avant
-<i>n'importe quel</i> ensemble de colis moins prioritaires. On pose :</p>
-<pre>utilité(colis) = (valeur + 1) x B^(priorité - 1)
-avec  B = 1 + somme des (valeur + 1) de tous les colis</pre>
-<p>Tous les colis de priorité inférieure à p réunis ont une utilité totale strictement inférieure à
-B<sup>p-1</sup>, donc à l'utilité d'un seul colis de priorité p. Maximiser la somme revient ainsi à maximiser
-<b>d'abord</b> ce qui est chargé en priorité 5, puis en priorité 4, etc. : c'est un <b>ordre lexicographique</b>.
-Le « + 1 » permet de compter aussi un colis prioritaire de valeur nulle. Les entiers Python n'ayant pas de
-taille limite, le calcul reste exact. Pour l'exemple 6.1, on a B = 82 et la règle choisit aussi A + C. Cette
-règle convient lorsque les priorités traduisent des engagements contractuels. Elle peut cependant sacrifier
-beaucoup de valeur : avec 9 kg, elle charge A seul (valeur 20) plutôt que C + D (valeur 32), et un test vérifie
-qu'un colis de priorité 5 et de valeur 1 est préféré à deux colis de valeur 100.</p>
+<h1>7. Étude des performances</h1>
+
+<h2>7.1 Mesures</h2>
+<p>J'ai fait les mesures sur un Mac Apple M5 avec Python 3.14, avec le script <code>outils/benchmark.py</code>.
+Pour chaque opération, je garde le meilleur temps sur plusieurs essais. Pour la recherche, c'est une moyenne sur
+10&nbsp;000 recherches, et le camion fait 1&nbsp;000 kg.</p>
+<figure>
+  <img src="captures/mesures.png" style="width: 96%;" alt="Mesures">
+  <figcaption>Figure 9 - Temps et mémoire des principales opérations pour les quatre tailles</figcaption>
+</figure>
+<p>Les deux graphiques reprennent ces temps, avec une échelle logarithmique sur les deux axes. Comme ça, une
+opération en O(1) donne une ligne plate, et une opération en O(n) monte d'une graduation chaque fois que n est
+multiplié par 10. On peut donc lire la complexité avec la pente des courbes.</p>
+<figure>
+  <img src="graphiques/gestion.svg" style="width: 86%;" alt="Opérations de gestion">
+  <figcaption>Figure 10 - Opérations de gestion</figcaption>
+</figure>
+<figure>
+  <img src="graphiques/chargement.svg" style="width: 86%;" alt="Chargement du camion">
+  <figcaption>Figure 11 - Préparation du camion, avec et sans l'élagage décrit en 7.3</figcaption>
+</figure>
+
+<h2>7.2 Analyse de trois opérations</h2>
+<h3>Rechercher un colis</h3>
 <table>
-  <tr><th>Règle</th><th>Avantages</th><th>Inconvénients</th></tr>
-  <tr><td><b>Valeur pondérée (retenue)</b></td><td>Compromis réglable par &alpha;, généralise la partie 5, optimale pour la règle.</td><td>&alpha; doit être choisi par l'entreprise.</td></tr>
-  <tr><td>Priorité stricte (implémentée)</td><td>Aucun colis prioritaire n'est jamais sacrifié pour des colis moins prioritaires.</td><td>Peut perdre beaucoup de valeur ; calcul sur de très grands entiers, environ 40 % plus lent (9.6).</td></tr>
-  <tr><td>Colis obligatoires au-dessus d'un seuil</td><td>Très simple à expliquer : « tous les colis de priorité 5 partent ».</td><td>Impossible si les colis obligatoires dépassent la capacité. Le seuil est arbitraire, et un colis de priorité 4 compte autant qu'un colis de priorité 1.</td></tr>
-  <tr><td>Somme additive : valeur + &beta; &times; priorité</td><td>Simple.</td><td>Mélange deux grandeurs sans unité commune : le bon &beta; dépend des données.</td></tr>
-  <tr><td>Trier par priorité puis charger dans l'ordre</td><td>Très rapide, en O(n) avec le tri par comptage.</td><td>Glouton : ni la capacité ni la valeur ne sont optimisées.</td></tr>
+  <tr><td class="k">Opération</td><td>Retrouver un colis par son identifiant.</td></tr>
+  <tr><td class="k">Complexité</td><td>O(1) en moyenne avec le dictionnaire, O(n) avec un parcours. Le dictionnaire prend O(n) en mémoire.</td></tr>
+  <tr><td class="k">Évolution</td><td>De 100 à 100&nbsp;000 colis, la recherche par hachage passe seulement de 23 à 43 ns. La petite hausse vient du cache du processeur (la table ne tient plus dedans), mais le nombre d'opérations ne change pas. Le parcours, lui, est multiplié par 10 à chaque fois et arrive à 529 µs, plus de 10&nbsp;000 fois plus lent.</td></tr>
+  <tr><td class="k">Adaptée aux grandes quantités ?</td><td>Oui, le coût d'une recherche ne dépend pas du nombre de colis.</td></tr>
+  <tr><td class="k">Amélioration possible</td><td>Pour la recherche par identifiant, on ne peut pas vraiment faire mieux. Si on voulait chercher par destination, il faudrait un deuxième dictionnaire (destination vers liste de colis). Et si les données ne tenaient plus en mémoire, il faudrait passer à une base de données avec un index.</td></tr>
 </table>
 
-<h2>9.5 Comparaison des règles sur l'exemple du sujet</h2>
-<p>Le script <code>outils/etude_priorite.py</code> applique chaque règle aux colis A, B, C, D pour toutes les
-capacités de 8 à 23 kg :</p>
-<figure>
-  <img src="captures/etape7_exemple.png" style="width: 90%;" alt="Comparaison des règles sur l'exemple">
-  <figcaption>Figure 29 - Chargement obtenu selon la règle, pour les colis A, B, C, D et des capacités de 8 à 23 kg</figcaption>
-</figure>
-<ul>
-  <li>La règle <b>valeur seule</b> charge souvent B, le colis le moins prioritaire (par exemple A + B à 14 kg,
-  B + C + D de 15 à 17 kg).</li>
-  <li>La règle <b>pondérée</b> remplace B par des colis plus prioritaires dès que la perte de valeur est modérée.
-  Plus &alpha; est grand, plus elle accepte de perdre de la valeur (à 15 kg : B + C + D = 57 pour &alpha; = 1, mais
-  A + C = 38 pour &alpha; = 2).</li>
-  <li>La règle <b>stricte</b> place toujours A (priorité 5) en premier, même quand cela coûte cher : A seul
-  (valeur 20) de 9 à 11 kg.</li>
-  <li>Quand tout tient dans le camion (23 kg), toutes les règles chargent les quatre colis : la priorité n'a
-  d'effet que lorsqu'il faut faire un choix.</li>
-</ul>
-
-<h2>9.6 Effet à grande échelle</h2>
-<p>Sur 10&nbsp;000 colis générés (dont 1&nbsp;944 de priorité 5) et un camion de 1&nbsp;000 kg :</p>
+<h3>Trier les colis</h3>
 <table>
-  <tr><th>Règle</th><th class="n">Valeur</th><th class="n">% du maximum</th><th class="n">Priorité moyenne</th><th class="n">Colis p5</th><th class="n">Colis p1</th><th class="n">Temps</th></tr>
-  <tr><td>Valeur seule</td><td class="n">4&nbsp;000</td><td class="n">100,0 %</td><td class="n">3,06</td><td class="n">33</td><td class="n">26</td><td class="n">212 ms</td></tr>
-  <tr><td>Pondérée, &alpha; = 0,25</td><td class="n">3&nbsp;988</td><td class="n">99,7 %</td><td class="n">4,99</td><td class="n">101</td><td class="n">0</td><td class="n">205 ms</td></tr>
-  <tr><td>Pondérée, &alpha; = 1</td><td class="n">3&nbsp;987</td><td class="n">99,7 %</td><td class="n">5,00</td><td class="n">97</td><td class="n">0</td><td class="n">206 ms</td></tr>
-  <tr><td>Pondérée, &alpha; = 5</td><td class="n">3&nbsp;987</td><td class="n">99,7 %</td><td class="n">5,00</td><td class="n">97</td><td class="n">0</td><td class="n">206 ms</td></tr>
-  <tr><td>Stricte</td><td class="n">3&nbsp;976</td><td class="n">99,4 %</td><td class="n">5,00</td><td class="n">113</td><td class="n">0</td><td class="n">293 ms</td></tr>
-</table>
-<figure>
-  <img src="captures/etape7_echelle.png" style="width: 86%;" alt="Effet des règles sur 10&nbsp;000 colis">
-  <figcaption>Figure 30 - Compromis valeur / priorité selon la règle, pour 10&nbsp;000 colis et un camion de 1&nbsp;000 kg</figcaption>
-</figure>
-<ul>
-  <li>Avec beaucoup de colis, on trouve parmi les colis de priorité 5 assez de colis rentables pour remplir le
-  camion. La règle pondérée fait ainsi passer la priorité moyenne de 3,06 à 5,00 pour seulement
-  <b>0,3 % de valeur en moins</b>. <b>Plus le choix est large, moins la priorité coûte cher.</b></li>
-  <li>Sur les petites instances, au contraire, le coût peut être important : 7 de valeur sur 45 dans l'exemple
-  6.1. C'est précisément pour cela que &alpha; est réglable.</li>
-  <li>Le temps de calcul est le même pour les règles valeur et pondérée (environ 206 ms). La règle stricte est
-  environ 40 % plus lente : B<sup>4</sup> dépasse 10<sup>22</sup>, et les additions se font sur de très grands
-  entiers, plus coûteux que des nombres ordinaires.</li>
-</ul>
-
-<h2>9.7 Utilisation depuis le menu</h2>
-<p>L'option 5 propose les trois règles, la règle pondérée étant choisie par défaut (Entrée). Pour cette règle,
-elle demande &alpha;, avec 1 par défaut ; la virgule est acceptée. Quand la règle n'est pas « valeur seule », le
-programme calcule aussi le chargement sans priorité et affiche ce que la priorité <b>coûte</b> en valeur et
-ce qu'elle <b>apporte</b> en priorité moyenne. L'option 6 indique la règle utilisée, la priorité moyenne et le
-nombre de colis chargés pour chaque priorité.</p>
-<figure>
-  <img src="captures/etape7_menu_ponderee.png" style="width: 72%;" alt="Règle pondérée dans le menu">
-  <figcaption>Figure 31 - Exemple 6.1, camion de 14 kg, règle pondérée (&alpha; = 1) : A + C, la priorité coûte 7 de valeur</figcaption>
-</figure>
-<figure>
-  <img src="captures/etape7_menu_regles.png" style="width: 72%;" alt="Règle stricte et alpha = 0,5">
-  <figcaption>Figure 32 - Même exemple : règle stricte (A + C), puis règle pondérée avec &alpha; = 0,5 (A + B, inchangé)</figcaption>
-</figure>
-
-<h2>9.8 Synthèse du choix</h2>
-<table>
-  <tr><td class="k">Problème</td><td>Favoriser les colis prioritaires lors du chargement, sans dépasser la capacité et sans négliger la valeur.</td></tr>
-  <tr><td class="k">Solution</td><td>Maximiser, par la programmation dynamique de la partie 8, l'utilité valeur &times; (1 + &alpha; &times; (priorité - 1) / 4).</td></tr>
-  <tr><td class="k">Temps</td><td>O(n &times; W), inchangé. Calculer les utilités coûte O(n).</td></tr>
-  <tr><td class="k">Espace</td><td>O(n &times; W) octets, inchangé.</td></tr>
-  <tr><td class="k">Alternatives</td><td>Priorité stricte (lexicographique, implémentée), colis obligatoires, somme additive, tri par priorité suivi d'un glouton.</td></tr>
-  <tr><td class="k">Justification</td><td>Règle cohérente avec les trois critères, réglable, qui généralise la partie 5 (&alpha; = 0) et donne un chargement <b>optimal pour la règle</b>, en réutilisant un algorithme déjà prouvé.</td></tr>
+  <tr><td class="k">Opération</td><td>Classer les colis par poids, valeur ou priorité.</td></tr>
+  <tr><td class="k">Complexité</td><td>Tri fusion : O(n log n) en temps, O(n) en mémoire. Tri par comptage : O(n).</td></tr>
+  <tr><td class="k">Évolution</td><td>Quand n est multiplié par 10, le tri fusion est multiplié par environ 12 (10 ms puis 120 ms), un peu plus que 10 à cause du log n. Le tri par comptage est multiplié par 10 (0,3 ms puis 3,1 ms). Le tri par insertion, lui, est multiplié par 100 (0,1 ms, 10 ms, puis 1,06 s).</td></tr>
+  <tr><td class="k">Adaptée aux grandes quantités ?</td><td>Oui pour les quatre tailles, 120 ms au maximum. Pour un million de colis, il faudrait compter environ 1,4 s.</td></tr>
+  <tr><td class="k">Amélioration possible</td><td>Utiliser <code>sorted()</code>, 19 fois plus rapide avec la même complexité. Trier aussi le poids par comptage, puisque dans mes données il ne dépasse pas 30 kg. Ou bien, comme le menu n'affiche que 20 colis à la fois, ne sortir que les 20 premiers avec un tas, en O(n log 20).</td></tr>
 </table>
 
-<h2>9.9 Validation de l'étape</h2>
-<p>Quinze tests (<code>tests/test_priorite.py</code>) vérifient :</p>
-<ul>
-  <li>les utilités et le résultat exact de l'exemple 6.1 : A + C, utilité 71,5, valeur 38, priorité moyenne 4,5 ;</li>
-  <li>que &alpha; = 0 redonne la règle valeur, et la bascule entre &alpha; = 0,5 (A + B) et &alpha; = 0,6 (A + C) ;</li>
-  <li>la règle stricte, y compris par une <b>vérification indépendante de sa formule</b> : sur 150 instances,
-  on énumère tous les chargements possibles et l'on vérifie que le programme obtient le meilleur vecteur
-  (priorité 5, priorité 4, ..., priorité 1) au sens lexicographique ;</li>
-  <li>sur 300 instances et pour les trois règles, l'égalité entre programmation dynamique et force brute ;</li>
-  <li>les saisies du menu : règle par défaut, &alpha; avec une virgule, &alpha; invalide ou négatif.</li>
-</ul>
-<figure>
-  <img src="captures/etape7_tests.png" alt="Tests de l'étape 7">
-  <figcaption>Figure 33 - Exécution des tests de l'étape 7 : 15 tests réussis</figcaption>
-</figure>
-
-<!-- ============================================================ -->
-<!-- 10. ÉTUDE DES PERFORMANCES (étape 8)                         -->
-<!-- ============================================================ -->
-<h1>10. Étude des performances</h1>
-<p>L'entreprise utilise régulièrement le système pour rechercher et organiser ses colis, et pour préparer
-ses camions. Cette partie mesure le comportement des principales opérations pour les quatre tailles de
-données du sujet, analyse trois d'entre elles en détail, puis présente l'optimisation apportée à la plus
-coûteuse : la préparation du camion.</p>
-
-<h2>10.1 Protocole de mesure</h2>
+<h3>Préparer un camion</h3>
 <table>
-  <tr><th>Élément</th><th>Choix</th></tr>
-  <tr><td>Machine</td><td>Apple M5, 16 Go de mémoire, Python 3.14.7</td></tr>
-  <tr><td>Données</td><td>Colis générés par <code>generateur.py</code> (graine fixe : mesures reproductibles), 100, 1&nbsp;000, 10&nbsp;000 et 100&nbsp;000 colis</td></tr>
-  <tr><td>Camion</td><td>Capacité de 1&nbsp;000 kg, règle « valeur seule »</td></tr>
-  <tr><td>Temps</td><td>Meilleur temps sur 3 à 5 exécutions (<code>time.perf_counter</code>), ce qui écarte les perturbations du système. La recherche est une moyenne sur 10&nbsp;000 recherches.</td></tr>
-  <tr><td>Mémoire</td><td>Pic de mémoire allouée pendant le calcul (<code>tracemalloc</code>)</td></tr>
-  <tr><td>Scripts</td><td><code>outils/benchmark.py</code> (mesures, enregistrées dans <code>docs/mesures/benchmark.json</code>) et <code>outils/graphiques.py</code> (courbes)</td></tr>
+  <tr><td class="k">Opération</td><td>Choisir les colis à charger.</td></tr>
+  <tr><td class="k">Complexité</td><td>O(n &times; W) en temps et en mémoire pour la version de base ; O(n log n + n' &times; W) avec l'élagage (7.3), où n' ne dépend plus de n.</td></tr>
+  <tr><td class="k">Évolution</td><td>Sans élagage, le temps et la mémoire augmentent avec n : 2,04 s et 114 Mo pour 100&nbsp;000 colis, c'est de loin l'opération la plus lourde du programme. Avec l'élagage, ça descend à 180 ms et 7 Mo, pour la même valeur.</td></tr>
+  <tr><td class="k">Adaptée aux grandes quantités ?</td><td>Oui pour le nombre de colis. Le problème devient la capacité : le calcul grossit comme W² (2 s pour 5&nbsp;000 kg). Pour un semi-remorque de 20 tonnes compté au kilo près, il faudrait environ un milliard de cases, soit une vingtaine de secondes et un gigaoctet en Python.</td></tr>
+  <tr><td class="k">Amélioration possible</td><td>Stocker les décisions sur un bit au lieu d'un octet (8 fois moins de mémoire), ou utiliser la méthode de Hirschberg, qui retrouve les colis avec seulement O(W) de mémoire mais fait à peu près deux fois plus de calculs. On pourrait aussi compter les poids par tranches de 5 kg (calcul 25 fois plus petit, mais le résultat n'est plus exact), ou écrire la boucle principale en C.</td></tr>
 </table>
 
-<h2>10.2 Résultats</h2>
+<h2>7.3 L'amélioration que j'ai faite : l'élagage</h2>
+<p>En regardant les mesures, j'ai vu que la préparation du camion était la seule opération vraiment lente. En
+y réfléchissant, un camion de W kg ne peut pas contenir plus de W/p colis de poids p : par exemple 1&nbsp;000
+colis de 1 kg, ou 33 colis de 30 kg, pour un camion de 1&nbsp;000 kg. Parmi les colis d'un même poids, seuls les
+W/p meilleurs peuvent donc servir. Avant la programmation dynamique, je regroupe donc les colis par poids et je
+ne garde que ceux-là.</p>
+<p>On ne perd jamais l'optimum avec ça. Si un chargement optimal contenait un colis X qui n'est pas parmi les
+meilleurs de son poids, il manquerait forcément au chargement un des meilleurs, Y, du même poids (puisqu'il y a
+au plus W/p colis de ce poids dans le camion). En remplaçant X par Y, le poids ne change pas et la valeur ne
+baisse pas. Les tests le vérifient aussi : avec ou sans élagage, je trouve toujours la même valeur.</p>
+<p>Il reste au plus W/1 + W/2 + ... + W/30 colis, soit environ 4 &times; W, quel que soit le nombre de colis au
+départ. Pour 1&nbsp;000 kg, ça fait 3&nbsp;983, et c'est exactement le nombre que j'ai mesuré avec 100&nbsp;000
+colis. Au final, à 100&nbsp;000 colis, le calcul va 11 fois plus vite et prend environ 16 fois moins de
+mémoire.</p>
+
+<h1>8. Synthèse des choix algorithmiques</h1>
 <table>
-  <tr><th>Opération</th><th>Complexité</th><th class="n">n = 100</th><th class="n">n = 1&nbsp;000</th><th class="n">n = 10&nbsp;000</th><th class="n">n = 100&nbsp;000</th></tr>
-  <tr><td>Construction (n ajouts)</td><td>O(n)</td><td class="n">4,6 µs</td><td class="n">42,3 µs</td><td class="n">409 µs</td><td class="n">4,6 ms</td></tr>
-  <tr><td>Recherche, table de hachage</td><td>O(1)</td><td class="n">21 ns</td><td class="n">22 ns</td><td class="n">30 ns</td><td class="n">41 ns</td></tr>
-  <tr><td>Recherche séquentielle</td><td>O(n)</td><td class="n">371 ns</td><td class="n">4,6 µs</td><td class="n">40,6 µs</td><td class="n">535 µs</td></tr>
-  <tr><td>Tri par poids, tri fusion</td><td>O(n log n)</td><td class="n">56,5 µs</td><td class="n">777 µs</td><td class="n">9,8 ms</td><td class="n">118,7 ms</td></tr>
-  <tr><td>Tri par poids, <code>sorted()</code></td><td>O(n log n)</td><td class="n">3,4 µs</td><td class="n">44,2 µs</td><td class="n">517 µs</td><td class="n">6,2 ms</td></tr>
-  <tr><td>Tri par priorité, comptage</td><td>O(n)</td><td class="n">4,0 µs</td><td class="n">33,9 µs</td><td class="n">300 µs</td><td class="n">3,2 ms</td></tr>
-  <tr><td>Statistiques</td><td>O(n)</td><td class="n">12,6 µs</td><td class="n">115 µs</td><td class="n">1,2 ms</td><td class="n">12,4 ms</td></tr>
-  <tr><td>Chargement, DP sans élagage</td><td>O(n &times; W)</td><td class="n">2,5 ms</td><td class="n">21,0 ms</td><td class="n">201 ms</td><td class="n">2,03 s</td></tr>
-  <tr><td>Chargement, DP avec élagage</td><td>O(n log n + n' &times; W)</td><td class="n">2,5 ms</td><td class="n">21,3 ms</td><td class="n">70,8 ms</td><td class="n">178,2 ms</td></tr>
-  <tr><td>Chargement, glouton</td><td>O(n log n)</td><td class="n">65 µs</td><td class="n">823 µs</td><td class="n">10,3 ms</td><td class="n">125,2 ms</td></tr>
-  <tr><td>Mémoire, DP sans élagage</td><td>O(n &times; W)</td><td class="n">0,1 Mo</td><td class="n">1,1 Mo</td><td class="n">11,3 Mo</td><td class="n">113,7 Mo</td></tr>
-  <tr><td>Mémoire, DP avec élagage</td><td>O(n + n' &times; W)</td><td class="n">0,1 Mo</td><td class="n">1,1 Mo</td><td class="n">3,8 Mo</td><td class="n">7,3 Mo</td></tr>
-  <tr><td>Colis candidats après élagage (n')</td><td></td><td class="n">100</td><td class="n">1&nbsp;000</td><td class="n">3&nbsp;130</td><td class="n">3&nbsp;983</td></tr>
-</table>
-<figure>
-  <img src="captures/etape8_benchmark.png" style="width: 96%;" alt="Benchmark complet">
-  <figcaption>Figure 34 - Mesures des principales opérations aux quatre niveaux, et effet de la capacité du camion</figcaption>
-</figure>
-
-<p>Les deux graphiques suivants reprennent ces mesures en <b>échelle logarithmique sur les deux axes</b>. Avec
-cette échelle, une opération en O(1) donne une droite horizontale, et une opération en O(n) une droite qui
-monte d'une graduation chaque fois que n est multiplié par 10. On lit donc directement la complexité dans la
-pente des courbes.</p>
-<figure>
-  <img src="graphiques/gestion.svg" style="width: 88%;" alt="Évolution des opérations de gestion">
-  <figcaption>Figure 35 - Opérations de gestion : la recherche par hachage reste horizontale (O(1)), les autres montent d'une décade par décade (O(n), O(n log n))</figcaption>
-</figure>
-<figure>
-  <img src="graphiques/chargement.svg" style="width: 88%;" alt="Évolution du chargement">
-  <figcaption>Figure 36 - Préparation du camion : sans élagage, le coût suit n ; avec élagage, il s'aplatit au-delà de 1&nbsp;000 colis</figcaption>
-</figure>
-
-<h2>10.3 Analyse des opérations</h2>
-<p>Le sujet demande d'analyser au moins deux opérations dont le coût augmente avec la quantité de données.
-Les trois plus importantes sont présentées ci-dessous.</p>
-
-<h3>Opération 1 : rechercher un colis</h3>
-<table>
-  <tr><td class="k">Opération</td><td>Retrouver un colis à partir de son identifiant (option 3 du menu).</td></tr>
-  <tr><td class="k">Complexité</td><td>Table de hachage : O(1) en moyenne en temps, O(n) en espace pour la table (environ 52 octets par colis). Pour comparaison, la recherche séquentielle est en O(n) en temps.</td></tr>
-  <tr><td class="k">Évolution</td><td>Quand n est multiplié par 1&nbsp;000, la recherche par hachage passe seulement de 21 à 41 ns : le nombre d'opérations ne change pas, seul l'accès à la mémoire ralentit un peu quand la table ne tient plus dans le cache du processeur. La recherche séquentielle est multipliée par 10 à chaque décade et atteint 535 µs, soit 13&nbsp;000 fois plus.</td></tr>
-  <tr><td class="k">Adaptation aux grands volumes</td><td><b>Oui</b>, parfaitement : le coût d'une recherche ne dépend pas du nombre de colis.</td></tr>
-  <tr><td class="k">Amélioration possible</td><td>Le nombre d'opérations est déjà minimal. Pour d'autres besoins, on pourrait ajouter des <b>index secondaires</b> (par exemple destination &rarr; liste de colis, pour une recherche par ville en O(1) au lieu de O(n)) ou un <b>arbre B</b> (index de base de données) pour les recherches par intervalle et les données trop volumineuses pour la mémoire.</td></tr>
+  <tr><th>Problème</th><th>Solution</th><th>Temps</th><th>Espace</th><th>Alternative</th><th>Justification</th></tr>
+  <tr><td>Stocker les colis et les retrouver par identifiant</td><td>Dictionnaire (table de hachage)</td><td>O(1) en moyenne</td><td>O(n)</td><td>Liste (O(n)), liste triée et dichotomie (O(log n))</td><td>Recherche et ajout en temps constant, mesurés à quelques dizaines de ns</td></tr>
+  <tr><td>Trier par poids ou par valeur</td><td>Tri fusion</td><td>O(n log n)</td><td>O(n)</td><td>Insertion (O(n²)), tri rapide (O(n²) au pire)</td><td>Complexité garantie et tri stable</td></tr>
+  <tr><td>Trier par priorité</td><td>Tri par comptage</td><td>O(n)</td><td>O(n)</td><td>Tri fusion</td><td>Seulement 5 valeurs possibles : 40 fois plus rapide</td></tr>
+  <tr><td>Choisir les colis à charger</td><td>Programmation dynamique (sac à dos 0/1) avec élagage</td><td>O(n log n + n' &times; W)</td><td>O(n + n' &times; W)</td><td>Glouton (non optimal), force brute (2<sup>n</sup>)</td><td>Toujours optimale, et l'élagage rend le coût presque indépendant de n</td></tr>
+  <tr><td>Tenir compte de la priorité</td><td>Valeur multipliée par un coefficient réglé par &alpha;</td><td>inchangé</td><td>inchangé</td><td>Priorité stricte, colis obligatoires</td><td>Compromis réglable, et le chargement reste optimal pour la règle</td></tr>
 </table>
 
-<h3>Opération 2 : trier les colis</h3>
-<table>
-  <tr><td class="k">Opération</td><td>Organiser les colis par poids, valeur ou priorité (option 4 du menu).</td></tr>
-  <tr><td class="k">Complexité</td><td>Tri fusion (poids, valeur) : O(n log n) en temps, O(n) en espace. Tri par comptage (priorité) : O(n + k) en temps et en espace, avec k = 5.</td></tr>
-  <tr><td class="k">Évolution</td><td>Le tri fusion est multiplié par environ 12 à chaque décade (9,8 ms puis 118,7 ms) : un peu plus que 10, à cause du facteur log n. Le tri par comptage est multiplié par environ 10 (300 µs puis 3,2 ms). Sur la figure 35, la courbe du tri fusion est légèrement plus pentue que celle du comptage.</td></tr>
-  <tr><td class="k">Adaptation aux grands volumes</td><td><b>Oui</b> pour les quatre niveaux : 119 ms au plus pour 100&nbsp;000 colis. En extrapolant, il faudrait environ 1,4 s pour un million de colis, ce qui reste acceptable mais devient perceptible.</td></tr>
-  <tr><td class="k">Amélioration possible</td><td>(1) Utiliser <code>sorted()</code> (Timsort écrit en C), 19 fois plus rapide avec la même complexité. (2) Le poids étant borné entre 1 et 30 kg dans nos données, le trier lui aussi par comptage, en O(n). (3) Comme l'interface n'affiche qu'une page de 20 colis, n'extraire que les 20 premiers à l'aide d'un tas : O(n log 20) au lieu de O(n log n). (4) Si l'on trie souvent, tenir à jour des index déjà triés à chaque ajout (arbre équilibré, O(log n) par ajout).</td></tr>
-</table>
+<h1>9. Questions de réflexion</h1>
 
-<h3>Opération 3 : préparer un camion</h3>
-<table>
-  <tr><td class="k">Opération</td><td>Choisir les colis à charger pour maximiser la valeur (ou l'utilité) sans dépasser la capacité W (option 5 du menu).</td></tr>
-  <tr><td class="k">Complexité</td><td>Programmation dynamique sans élagage : O(n &times; W) en temps et en espace. Avec élagage : O(n log n + n' &times; W) en temps et O(n + n' &times; W) en espace, où le nombre n' de colis candidats ne dépend plus de n (10.4).</td></tr>
-  <tr><td class="k">Évolution</td><td>Sans élagage, le temps et la mémoire sont multipliés par 10 à chaque décade : 2,03 s et 113,7 Mo pour 100&nbsp;000 colis. C'était l'opération la plus coûteuse du programme, de loin. Avec élagage, n' plafonne vers 4&nbsp;000 : il ne faut plus que <b>178 ms et 7,3 Mo</b>, soit 11 fois moins de temps et 15 fois moins de mémoire, pour exactement la même valeur.</td></tr>
-  <tr><td class="k">Adaptation aux grands volumes</td><td><b>Oui pour le nombre de colis</b> : avec l'élagage, passer de 10&nbsp;000 à 100&nbsp;000 colis ne fait passer le temps que de 71 à 178 ms. <b>La limite devient la capacité</b> : n' étant proportionnel à W, le nombre de cases n' &times; W croît comme W². Il faut 2,01 s pour W = 5&nbsp;000 kg (figure 34). Un semi-remorque de 20 tonnes pesé au kilogramme près demanderait environ 10<sup>9</sup> cases, soit une vingtaine de secondes et environ 1 Go en Python.</td></tr>
-  <tr><td class="k">Amélioration possible</td><td><b>Réalisée</b> : l'élagage par dominance (10.4). <b>Possibles</b> : stocker les décisions sur 1 bit au lieu de 1 octet (8 fois moins de mémoire) ; méthode de Hirschberg (« diviser pour régner ») pour reconstruire la solution avec seulement O(W) de mémoire, au prix d'un temps environ doublé ; exprimer les poids par tranches de 5 ou 10 kg (W divisé d'autant, mais résultat approché) ; écrire la boucle interne en C. Pour une réponse immédiate, le glouton (125 ms) peut servir de solution provisoire, sans garantie.</td></tr>
-</table>
+<h3>Quel est le choix algorithmique le plus important du projet ?</h3>
+<p>Pour moi, c'est la programmation dynamique pour le camion. Dans le reste du programme, un mauvais choix
+rend juste les choses plus lentes. Pour le camion, un mauvais choix donne un mauvais résultat : le glouton
+paraît logique, mais il charge 43 au lieu de 45 sur l'exemple du sujet. C'est aussi la partie où j'ai pu à la
+fois prouver que la solution est optimale et le vérifier sur des centaines de cas. Ensuite, c'est l'élagage,
+ajouté après coup, qui l'a rendue rapide sur 100&nbsp;000 colis.</p>
 
-<h2>10.4 Amélioration réalisée : l'élagage par dominance</h2>
-<h3>Idée</h3>
-<p>Un camion de W kg ne peut contenir au plus que ⌊W/p⌋ colis de poids p : 1&nbsp;000 colis de 1 kg, 500 colis de
-2 kg, 33 colis de 30 kg pour un camion de 1&nbsp;000 kg. Parmi tous les colis de poids p, <b>seuls les ⌊W/p⌋
-meilleurs</b> (de plus grande utilité) peuvent donc servir. Avant la programmation dynamique, on regroupe
-les colis par poids et l'on ne garde que ces meilleurs-là. Les colis trop lourds et ceux d'utilité nulle sont
-aussi écartés.</p>
-<h3>Pourquoi l'optimum est conservé</h3>
-<p>Supposons qu'un chargement optimal contienne un colis X de poids p qui ne fait pas partie des ⌊W/p⌋ meilleurs.
-Ce chargement contient au plus ⌊W/p⌋ colis de poids p ; au moins l'un des meilleurs, Y, n'y est donc pas.
-Remplacer X par Y ne change pas le poids total (même poids p) et ne diminue pas l'utilité (Y est au moins aussi
-bon que X). On obtient ainsi un chargement optimal qui n'utilise que des colis gardés : l'élagage ne fait
-<b>jamais perdre l'optimum</b>. Les tests le vérifient contre la force brute sur 300 instances et pour les trois
-règles, et le benchmark le contrôle à chaque mesure : les valeurs avec et sans élagage doivent être égales.</p>
-<h3>Taille du problème après élagage</h3>
-<p>Le nombre de candidats est au plus n' &le; &Sigma;<sub>p</sub> ⌊W/p⌋. Pour des poids de 1 à 30 kg, cette somme
-vaut environ W &times; (ln 30 + 0,58), soit environ 4 W : <b>elle ne dépend pas du nombre de colis</b>. Pour
-W = 1&nbsp;000 kg, la borne vaut 3&nbsp;983, exactement le nombre mesuré pour 100&nbsp;000 colis. Avec 10&nbsp;000
-colis, on mesure 3&nbsp;130 candidats : certains poids n'ont pas assez de colis pour atteindre leur quota.</p>
-<table>
-  <tr><td class="k">Problème</td><td>Réduire le coût O(n &times; W) du chargement optimal, qui atteignait 2 s et 114 Mo pour 100&nbsp;000 colis.</td></tr>
-  <tr><td class="k">Solution</td><td>Élagage par dominance : pour chaque poids p, ne garder que les ⌊W/p⌋ colis de plus grande utilité, puis appliquer la programmation dynamique aux seuls candidats.</td></tr>
-  <tr><td class="k">Temps</td><td>Élagage : O(n) pour regrouper par poids, plus O(n log n) au pire pour trier les groupes (tri fusion). Programmation dynamique : O(n' &times; W) avec n' &le; &Sigma; ⌊W/p⌋ &asymp; 4 W.</td></tr>
-  <tr><td class="k">Espace</td><td>O(n) pour les groupes, plus O(n' &times; W) octets pour les décisions.</td></tr>
-  <tr><td class="k">Alternative</td><td>Garder la programmation dynamique sur tous les colis (O(n &times; W)), ou passer au glouton (rapide mais non optimal).</td></tr>
-  <tr><td class="k">Justification</td><td>Le résultat reste <b>exactement optimal</b> (preuve par échange), et le coût du calcul devient indépendant du nombre de colis : il est divisé par 11 en temps et par 15 en mémoire à 100&nbsp;000 colis.</td></tr>
-</table>
-<p>Dans le menu, l'option 5 indique le nombre de candidats retenus. L'estimation du coût affichée avant un
-très gros calcul tient compte de l'élagage : ce nombre est calculé en O(n), sans trier les colis.</p>
-<figure>
-  <img src="captures/etape8_menu.png" style="width: 72%;" alt="Chargement avec élagage dans le menu">
-  <figcaption>Figure 37 - 100&nbsp;000 colis, camion de 1&nbsp;000 kg : 3&nbsp;983 candidats après élagage, calcul exact en 178 ms (contre 2,06 s en partie 8)</figcaption>
-</figure>
+<h3>Quelle partie risque de poser problème avec plusieurs millions de colis ?</h3>
+<p>D'abord la mémoire. En Python, un colis dans la collection prend environ 190 octets (19 Mo pour
+100&nbsp;000 colis), donc il faudrait à peu près 2 Go pour 10 millions de colis. Ensuite, les opérations en
+O(n log n) écrites en Python, comme le tri fusion : environ 1,4 s pour un million de colis, et plus de 15 s pour
+dix millions. Le camion tient plutôt bien grâce à l'élagage, puisque le nombre de colis gardés ne dépend pas
+de n (le regroupement par poids reste en O(n), ça passe). Pour lui, c'est plutôt une grosse capacité qui
+poserait problème. Avec des millions de colis, je passerais à une base de données avec un index, et
+j'utiliserais le tri natif.</p>
 
-<h2>10.5 Validation de l'étape</h2>
-<p>Sept tests (<code>tests/test_performances.py</code>) vérifient que l'élagage :</p>
-<ul>
-  <li>garde exactement les meilleurs colis de chaque poids, et écarte les colis trop lourds ou sans valeur ;</li>
-  <li>respecte la borne &Sigma; ⌊W/p⌋, quel que soit le nombre de colis ;</li>
-  <li>est correctement compté par la fonction d'estimation utilisée par le menu ;</li>
-  <li><b>ne change jamais la valeur optimale</b> : contre la force brute sur 300 instances et pour les trois règles,
-  contre la version sans élagage sur des instances de 3&nbsp;000 colis, et au niveau 4 du sujet.</li>
-</ul>
-<figure>
-  <img src="captures/etape8_tests.png" alt="Tests de l'étape 8">
-  <figcaption>Figure 38 - Exécution des tests de l'étape 8 : 7 tests réussis</figcaption>
-</figure>
+<h3>Avez-vous privilégié la vitesse au détriment de la mémoire, ou l'inverse ?</h3>
+<p>Plutôt la vitesse. Le dictionnaire prend de la place en plus des colis, mais grâce à lui la recherche est
+immédiate. Pour le camion, je garde un tableau de décisions (un octet par colis gardé et par kilo de capacité)
+pour retrouver les colis en une seule passe. La méthode de Hirschberg aurait pris beaucoup moins de mémoire,
+mais elle fait deux fois plus de calculs, et le code est bien plus compliqué. Le tri fusion utilise aussi des
+tampons de taille n. J'ai quand même fait attention à ne pas gaspiller de mémoire : <code>slots=True</code> sur
+les colis, des octets plutôt que des nombres pour les décisions, et l'élagage, qui réduit à la fois le temps
+et la mémoire.</p>
+
+<h3>Une autre stratégie aurait-elle pu donner un meilleur résultat pour le camion ?</h3>
+<p>Non, pas pour le problème posé, puisque la programmation dynamique donne déjà le meilleur chargement.
+D'autres méthodes exactes, comme la séparation et évaluation, trouveraient la même valeur, parfois plus vite,
+mais pas mieux. Le glouton est plus rapide, mais il se trompe parfois. Pour avoir un « meilleur » résultat dans
+la vraie vie, il faudrait plutôt changer le modèle : prendre en compte le volume des colis, plusieurs camions
+ou l'ordre des livraisons. Mais là, ce serait un autre problème, beaucoup plus difficile.</p>
+
+<h3>Avec le C, changeriez-vous vos choix algorithmiques ?</h3>
+<p>Non, pas les algorithmes, parce que les complexités ne dépendent pas du langage. Je garderais une table de
+hachage, le tri par comptage pour la priorité, un tri fusion (le <code>qsort</code> du C n'est pas stable) et la
+programmation dynamique. Par contre, la façon de les écrire changerait. Il faudrait coder la table de hachage
+moi-même, ou me contenter d'un tableau trié avec une dichotomie. Les colis seraient dans un tableau de
+structures, beaucoup plus compact (une vingtaine d'octets par colis), et je pourrais stocker les décisions sur
+un bit chacune. Comme le C est beaucoup plus rapide, la version sans élagage serait acceptable en temps pour
+100&nbsp;000 colis, mais je garderais l'élagage pour la mémoire. En échange, il faudrait gérer les allocations à
+la main, et le code serait bien plus long.</p>
+
+<h1>10. Conclusion</h1>
+<p>Le programme fait ce que demande le sujet : les six opérations de gestion, le fonctionnement jusqu'à
+100&nbsp;000 colis, le chargement optimal du camion, la prise en compte de la priorité, et un menu pour tout
+tester. Avec 100&nbsp;000 colis, grâce à la table de hachage et aux tris choisis, toutes les opérations de
+gestion restent sous 150 ms.</p>
+<p>La partie qui m'a le plus intéressé, c'est le camion. Je pensais que le glouton suffirait, jusqu'à ce que
+je tombe sur un cas où il se trompe. Et c'est en regardant les mesures que j'ai eu l'idée de l'élagage, qui
+divise le temps par 11 sans perdre l'optimalité. Si je continuais le projet, je travaillerais sur la mémoire
+de la programmation dynamique pour les grandes capacités, parce que c'est maintenant ce qui limite le plus le
+programme.</p>
 
 </body>
 </html>

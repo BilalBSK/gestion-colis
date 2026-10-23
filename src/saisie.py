@@ -1,19 +1,17 @@
-"""Saisies clavier robustes pour l'interface.
+"""Saisies au clavier.
 
-Chaque fonction redemande la saisie tant qu'elle est invalide (texte au lieu
-d'un nombre, valeur hors bornes...) : une erreur de frappe ne fait jamais
-planter le programme. Si l'entrée standard est fermée (Ctrl-D), l'exception
-Abandon est levée pour que l'interface se termine proprement.
+Chaque fonction repose la question tant que la réponse n'est pas valide : je
+ne voulais pas qu'une faute de frappe fasse planter le programme. Ctrl-D lève
+Abandon, que le menu attrape pour se fermer proprement.
 """
 
 
 class Abandon(Exception):
-    """L'utilisateur a fermé l'entrée standard (Ctrl-D) : on quitte proprement."""
+    """Levée quand l'entrée est fermée (Ctrl-D)."""
 
 
 def lire_texte(message, defaut=None):
-    """Lit une ligne de texte. Une saisie vide renvoie ``defaut`` s'il est fourni,
-    sinon la question est reposée."""
+    """Lit une ligne. Si elle est vide : renvoie defaut s'il existe, sinon redemande."""
     while True:
         try:
             texte = input(message).strip()
@@ -27,7 +25,7 @@ def lire_texte(message, defaut=None):
 
 
 def lire_entier(message, minimum=None, maximum=None, defaut=None):
-    """Lit un entier compris entre ``minimum`` et ``maximum`` (bornes incluses)."""
+    """Lit un entier entre minimum et maximum (inclus)."""
     while True:
         texte = lire_texte(message, defaut="" if defaut is not None else None)
         if texte == "":
@@ -46,7 +44,7 @@ def lire_entier(message, minimum=None, maximum=None, defaut=None):
 
 
 def lire_reel(message, minimum=None, defaut=None):
-    """Lit un nombre décimal (le point ou la virgule sont acceptés)."""
+    """Lit un nombre décimal, avec un point ou une virgule."""
     while True:
         texte = lire_texte(message, defaut="" if defaut is not None else None)
         if texte == "":
@@ -63,7 +61,7 @@ def lire_reel(message, minimum=None, defaut=None):
 
 
 def lire_oui_non(message, defaut=False):
-    """Pose une question fermée. Entrée seule : réponse par défaut."""
+    """Question oui / non ; Entrée seule donne la réponse par défaut."""
     suffixe = " [O/n] : " if defaut else " [o/N] : "
     while True:
         texte = lire_texte(message + suffixe, defaut="").lower()

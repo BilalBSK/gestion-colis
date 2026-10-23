@@ -4,108 +4,108 @@
  "resultats": {
   "100": {
    "temps": {
-    "construction": 4.583969712257385e-06,
-    "recherche_hachage": 2.080409904010594e-08,
-    "recherche_sequentielle": 3.709417011123151e-07,
-    "tri_fusion": 5.6541000958532095e-05,
-    "tri_natif": 3.374996595084667e-06,
-    "tri_comptage": 4.00003045797348e-06,
-    "statistiques": 1.2625008821487427e-05,
-    "dp_sans_elagage": 0.0024824999854899943,
-    "dp_avec_elagage": 0.002466582984197885,
-    "glouton": 6.53750030323863e-05
+    "construction": 5.208945367485285e-06,
+    "recherche_hachage": 2.262920024804771e-08,
+    "recherche_sequentielle": 4.086332977749407e-07,
+    "tri_insertion": 9.520800085738301e-05,
+    "tri_fusion": 6.1166996601969e-05,
+    "tri_natif": 3.958004526793957e-06,
+    "tri_comptage": 4.542001988738775e-06,
+    "statistiques": 1.4833000022917986e-05,
+    "dp_sans_elagage": 0.0027277920162305236,
+    "dp_avec_elagage": 0.0026898339856415987,
+    "glouton": 7.299997378140688e-05
    },
    "memoire": {
-    "dp_sans_elagage": 143248,
+    "collection": 15216,
+    "dp_sans_elagage": 143280,
     "dp_avec_elagage": 143365
    },
-   "candidats_sans": 100,
-   "candidats_avec": 100,
-   "valeur_optimale": 3049,
-   "valeur_glouton": 3045
+   "candidats": 100,
+   "glouton_sur_optimum": 0.9986880944571991
   },
   "1000": {
    "temps": {
-    "construction": 4.233303479850292e-05,
-    "recherche_hachage": 2.2158300271257757e-08,
-    "recherche_sequentielle": 4.62479202542454e-06,
-    "tri_fusion": 0.0007767089991830289,
-    "tri_natif": 4.4249987695366144e-05,
-    "tri_comptage": 3.38749960064888e-05,
-    "statistiques": 0.00011516700033098459,
-    "dp_sans_elagage": 0.020981332985684276,
-    "dp_avec_elagage": 0.0213168750051409,
-    "glouton": 0.0008225829806178808
+    "construction": 4.85840137116611e-05,
+    "recherche_hachage": 2.6400003116577865e-08,
+    "recherche_sequentielle": 5.117624998092651e-06,
+    "tri_insertion": 0.010433625022415072,
+    "tri_fusion": 0.0008295829757116735,
+    "tri_natif": 4.7666020691394806e-05,
+    "tri_comptage": 3.408303018659353e-05,
+    "statistiques": 0.0001269589993171394,
+    "dp_sans_elagage": 0.021675708005204797,
+    "dp_avec_elagage": 0.021679208031855524,
+    "glouton": 0.0008338749757967889
    },
    "memoire": {
-    "dp_sans_elagage": 1111240,
+    "collection": 157176,
+    "dp_sans_elagage": 1111272,
     "dp_avec_elagage": 1110821
    },
-   "candidats_sans": 1000,
-   "candidats_avec": 1000,
-   "valeur_optimale": 3918,
-   "valeur_glouton": 3918
+   "candidats": 1000,
+   "glouton_sur_optimum": 1.0
   },
   "10000": {
    "temps": {
-    "construction": 0.00040891702519729733,
-    "recherche_hachage": 3.0075001996010545e-08,
-    "recherche_sequentielle": 4.056499979924411e-05,
-    "tri_fusion": 0.00982920901151374,
-    "tri_natif": 0.0005167080089449883,
-    "tri_comptage": 0.00029991602059453726,
-    "statistiques": 0.0012079579755663872,
-    "dp_sans_elagage": 0.20099487499101087,
-    "dp_avec_elagage": 0.07078070798888803,
-    "glouton": 0.010268457990605384
+    "construction": 0.00042170804226770997,
+    "recherche_hachage": 2.9275001725181937e-08,
+    "recherche_sequentielle": 3.972915990743786e-05,
+    "tri_insertion": 1.0551396670052782,
+    "tri_fusion": 0.010073208017274737,
+    "tri_natif": 0.0005583750316873193,
+    "tri_comptage": 0.00031229201704263687,
+    "statistiques": 0.0012176670134067535,
+    "dp_sans_elagage": 0.20251762500265613,
+    "dp_avec_elagage": 0.07125695800641552,
+    "glouton": 0.010579207970295101
    },
    "memoire": {
-    "dp_sans_elagage": 11296664,
+    "collection": 1556448,
+    "dp_sans_elagage": 11298488,
     "dp_avec_elagage": 3797705
    },
-   "candidats_sans": 10000,
-   "candidats_avec": 3130,
-   "valeur_optimale": 4000,
-   "valeur_glouton": 4000
+   "candidats": 3130,
+   "glouton_sur_optimum": 1.0
   },
   "100000": {
    "temps": {
-    "construction": 0.004642042040359229,
-    "recherche_hachage": 4.105829866603017e-08,
-    "recherche_sequentielle": 0.0005349312501493842,
-    "tri_fusion": 0.11873950000153854,
-    "tri_natif": 0.00616966700181365,
-    "tri_comptage": 0.0032179999980144203,
-    "statistiques": 0.012361083005089313,
-    "dp_sans_elagage": 2.0324799160007387,
-    "dp_avec_elagage": 0.17822670901659876,
-    "glouton": 0.1252126669860445
+    "construction": 0.004639332997612655,
+    "recherche_hachage": 4.3195899343118074e-08,
+    "recherche_sequentielle": 0.0005290812492603436,
+    "tri_insertion": null,
+    "tri_fusion": 0.11968883400550112,
+    "tri_natif": 0.006161416007671505,
+    "tri_comptage": 0.0030525000183843076,
+    "statistiques": 0.012502375000622123,
+    "dp_sans_elagage": 2.037195250042714,
+    "dp_avec_elagage": 0.17957579100038856,
+    "glouton": 0.12700295797549188
    },
    "memoire": {
-    "dp_sans_elagage": 113709912,
-    "dp_avec_elagage": 7337566
+    "collection": 19054496,
+    "dp_sans_elagage": 113710544,
+    "dp_avec_elagage": 7224464
    },
-   "candidats_sans": 100000,
-   "candidats_avec": 3983,
-   "valeur_optimale": 4000,
-   "valeur_glouton": 4000
+   "candidats": 3983,
+   "glouton_sur_optimum": 1.0
   }
  },
  "effet_capacite": {
   "500": {
-   "temps": 0.1177078330074437,
+   "temps": 0.11761216603918001,
    "candidats": 1985
   },
   "1000": {
-   "temps": 0.1791078329551965,
+   "temps": 0.18162995897000656,
    "candidats": 3983
   },
   "2000": {
-   "temps": 0.4282066670130007,
+   "temps": 0.4320802910369821,
    "candidats": 7978
   },
   "5000": {
-   "temps": 2.0136292499955744,
+   "temps": 2.024701333953999,
    "candidats": 18271
   }
  }

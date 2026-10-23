@@ -16,11 +16,11 @@ RACINE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 ENTREE = os.path.join(RACINE, "docs", "mesures", "benchmark.json")
 DOSSIER = os.path.join(RACINE, "docs", "graphiques")
 
-# Palette catégorielle (ordre fixe), encre du texte, quadrillage
+# couleurs des courbes (toujours dans le même ordre), du texte et du quadrillage
 SERIES = ("#2a78d6", "#eb6834", "#1baf7a", "#eda100")
 TEXTE, TEXTE_2, GRILLE, FOND = "#0b0b0b", "#52514e", "#e1e0d9", "#ffffff"
 LARGEUR, HAUTEUR = 680, 420
-GAUCHE, DROITE, HAUT, BAS = 70, 210, 70, 52      # marges (la droite accueille les étiquettes)
+GAUCHE, DROITE, HAUT, BAS = 70, 210, 70, 52      # marges ; celle de droite laisse la place aux étiquettes
 
 GRAPHIQUES = {
     "gestion": [
@@ -106,7 +106,7 @@ def tracer(nom, series, resultats, annotation=None):
     svg.append(f'<text x="16" y="{HAUT + zone_h / 2}" font-size="12" fill="{TEXTE_2}" text-anchor="middle" '
                f'transform="rotate(-90 16 {HAUT + zone_h / 2})">Temps (échelle logarithmique)</text>')
 
-    # Courbes : trait de 2 px, marqueurs de 8 px entourés du fond
+    # une courbe par opération, avec un point par taille
     fins = []
     for i, (cle, libelle, complexite) in enumerate(series):
         points = [(px(n), py(resultats[str(n)]["temps"][cle])) for n in tailles]
@@ -118,7 +118,8 @@ def tracer(nom, series, resultats, annotation=None):
         fins.append([points[-1][1], points[-1][1], i, libelle, complexite,
                      resultats[str(tailles[-1])]["temps"][cle]])
 
-    # Étiquettes directes en bout de courbe, écartées d'au moins 30 px, avec trait de rappel
+    # J'écris la complexité et la dernière mesure au bout de chaque courbe, en les
+    # écartant d'au moins 30 px pour qu'elles ne se chevauchent pas
     fins.sort()
     for k in range(1, len(fins)):
         fins[k][1] = max(fins[k][1], fins[k - 1][1] + 30)
@@ -131,7 +132,7 @@ def tracer(nom, series, resultats, annotation=None):
                    f'{complexite} : {mesure(valeur)}</text>')
         svg.append(f'<text x="{x_fin + 24}" y="{y_texte + 12:.1f}" font-size="11" fill="{TEXTE_2}">{libelle}</text>')
     if annotation:
-        # Remarque placée dans une zone vide (en haut à gauche), reliée à un point par un trait
+        # remarque placée en haut à gauche, où il n'y a rien, et reliée au point concerné
         n, cle, lignes = annotation
         x, y = px(n), py(resultats[str(n)]["temps"][cle])
         y_texte = HAUT + 60

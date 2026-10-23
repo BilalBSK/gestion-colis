@@ -1,12 +1,12 @@
-"""Lecture et écriture de colis au format CSV.
+"""Lecture d'un fichier de colis au format CSV.
 
-Format : une ligne d'en-tête, puis un colis par ligne, champs séparés par « ; »
-(séparateur usuel des tableurs français, la virgule servant de séparateur décimal).
+Une ligne d'en-tête puis un colis par ligne. J'ai pris « ; » comme séparateur
+parce que c'est celui des tableurs en français :
 
     identifiant;poids;valeur;priorite;destination
     101;8;20;2;Paris
 
-Complexité : O(n) en temps pour n lignes, O(n) en mémoire pour la liste renvoyée.
+Lecture en O(n) pour n lignes.
 """
 
 import csv
@@ -19,15 +19,15 @@ CHAMPS = ("identifiant", "poids", "valeur", "priorite", "destination")
 def lire_csv(chemin):
     """Renvoie la liste des colis du fichier, dans l'ordre des lignes.
 
-    Lève ValueError en précisant le numéro de ligne si une donnée est invalide.
+    Si une ligne est invalide, j'indique son numéro dans l'erreur pour qu'on
+    puisse corriger le fichier facilement.
     """
     colis = []
     with open(chemin, newline="", encoding="utf-8") as fichier:
         lecteur = csv.DictReader(fichier, delimiter=";")
         if lecteur.fieldnames is None or tuple(lecteur.fieldnames) != CHAMPS:
             raise ValueError(f"{chemin} : en-tête attendu « {';'.join(CHAMPS)} »")
-        # La ligne 1 est l'en-tête : les données commencent à la ligne 2
-        for numero, ligne in enumerate(lecteur, start=2):
+        for numero, ligne in enumerate(lecteur, start=2):   # la ligne 1 est l'en-tête
             try:
                 colis.append(Colis(
                     identifiant=int(ligne["identifiant"]),
@@ -39,12 +39,3 @@ def lire_csv(chemin):
             except (TypeError, ValueError) as erreur:
                 raise ValueError(f"{chemin}, ligne {numero} : {erreur}") from erreur
     return colis
-
-
-def ecrire_csv(chemin, colis):
-    """Écrit les colis dans le fichier (écrase son contenu)."""
-    with open(chemin, "w", newline="", encoding="utf-8") as fichier:
-        ecrivain = csv.writer(fichier, delimiter=";")
-        ecrivain.writerow(CHAMPS)
-        for c in colis:
-            ecrivain.writerow((c.identifiant, c.poids, c.valeur, c.priorite, c.destination))

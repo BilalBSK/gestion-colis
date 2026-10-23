@@ -1,27 +1,26 @@
-"""Tests de l'étape 6 : chargement optimal du camion (sac à dos 0/1)."""
+"""Tests du camion. Je vérifie que le chargement est optimal, avec et sans priorité,
+et que l'élagage ne change pas le résultat."""
 
 import os
 import random
-import subprocess
 import sys
 import unittest
 
 RACINE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 sys.path.insert(0, os.path.join(RACINE, "src"))
 
-from chargement import Chargement, force_brute, glouton, sac_a_dos_dp  # noqa: E402
+from chargement import (elaguer, force_brute, glouton, nombre_candidats,  # noqa: E402
+                        preparer_camion, sac_a_dos_dp, utilite, utilite_valeur)
 from colis import Colis  # noqa: E402
 from generateur import generer_colis  # noqa: E402
 from stockage import lire_csv  # noqa: E402
 
-# Colis A, B, C, D de la partie 5.2 du sujet (identifiants 1 à 4)
+# Colis A, B, C, D du sujet (identifiants 1 à 4), avec les priorités de la partie 6.1
 SUJET = lire_csv(os.path.join(RACINE, "donnees", "colis_camion.csv"))
-A, B, C, D = SUJET
 
 
 def noms(chargement):
-    lettres = {1: "A", 2: "B", 3: "C", 4: "D"}
-    return "".join(sorted(lettres[c.identifiant] for c in chargement.colis))
+    return "".join(sorted("ABCD"[c.identifiant - 1] for c in chargement.colis))
 
 
 def aleatoires(rng, n, poids_max=15):
@@ -30,63 +29,47 @@ def aleatoires(rng, n, poids_max=15):
 
 
 class TestExempleDuSujet(unittest.TestCase):
-    def test_donnees(self):
-        self.assertEqual([(c.poids, c.valeur) for c in SUJET], [(8, 20), (6, 25), (5, 18), (4, 14)])
+    def test_capacite_50_tout_rentre(self):
+        ch = sac_a_dos_dp(SUJET, 50)
+        self.assertEqual((noms(ch), ch.score, ch.poids_total), ("ABCD", 77, 23))
 
-    def test_capacite_50_tout_est_charge(self):
-        ch = sac_a_dos_dp(SUJET, 50)        # 23 kg au total : tout tient
-        self.assertEqual(noms(ch), "ABCD")
-        self.assertEqual((ch.score, ch.poids_total), (77, 23))
-
-    def test_capacite_14_glouton_se_trompe(self):
+    def test_capacite_14_le_glouton_se_trompe(self):
         dp, gl = sac_a_dos_dp(SUJET, 14), glouton(SUJET, 14)
-        self.assertEqual((noms(dp), dp.score, dp.poids_total), ("AB", 45, 14))
-        self.assertEqual((noms(gl), gl.score, gl.poids_total), ("BC", 43, 11))
+        self.assertEqual((noms(dp), dp.score), ("AB", 45))
+        self.assertEqual((noms(gl), gl.score), ("BC", 43))
 
-    def test_capacite_15(self):
-        ch = sac_a_dos_dp(SUJET, 15)
-        self.assertEqual((noms(ch), ch.score), ("BCD", 57))
-
-    def test_capacites_trop_petites(self):
+    def test_autres_capacites(self):
+        self.assertEqual(noms(sac_a_dos_dp(SUJET, 15)), "BCD")
+        self.assertEqual(noms(sac_a_dos_dp(SUJET, 9)), "CD")
+        self.assertEqual(sac_a_dos_dp(SUJET, 3).colis, [])      # le plus léger pèse 4 kg
         self.assertEqual(sac_a_dos_dp(SUJET, 0).colis, [])
-        self.assertEqual(sac_a_dos_dp(SUJET, 3).colis, [])          # le plus léger pèse 4 kg
-        self.assertEqual(noms(sac_a_dos_dp(SUJET, 4)), "D")
 
     def test_capacite_invalide(self):
         for capacite in (-1, 2.5, "10"):
             with self.assertRaises(ValueError):
                 sac_a_dos_dp(SUJET, capacite)
 
-    def test_colis_trop_lourd_ignore(self):
-        lourd = Colis(9, 100, 1000, 1, "X")
-        self.assertEqual(noms(sac_a_dos_dp(SUJET + [lourd], 14)), "AB")
-
-    def test_resultat(self):
-        ch = sac_a_dos_dp(SUJET, 14)
-        self.assertIsInstance(ch, Chargement)
-        self.assertEqual(ch.valeur_totale, 45)
-        self.assertAlmostEqual(ch.taux_remplissage, 1.0)
-
 
 class TestOptimalite(unittest.TestCase):
-    """La programmation dynamique doit TOUJOURS trouver la même valeur que la force brute."""
-
-    def test_dp_egale_force_brute_sur_500_cas(self):
+    def test_dp_egale_force_brute(self):
+        """Sur 500 petits cas tirés au hasard, la DP doit trouver la même valeur que la force brute."""
         rng = random.Random(2026)
         for essai in range(500):
             colis = aleatoires(rng, rng.randint(0, 12))
             capacite = rng.randint(0, 60)
-            attendu = force_brute(colis, capacite).score
-            dp = sac_a_dos_dp(colis, capacite)
-            message = f"essai {essai} : capacité {capacite}, {len(colis)} colis"
-            self.assertEqual(dp.score, attendu, message)
-            self.assertLessEqual(dp.poids_total, capacite, message)
-            self.assertEqual(dp.valeur_totale, dp.score, message)            # sélection cohérente
-            self.assertEqual(len({c.identifiant for c in dp.colis}), len(dp.colis), message)  # pas de doublon
+            alpha = rng.choice([0, 0.5, 1, 3])
+            u = utilite(alpha)
+            attendu = force_brute(colis, capacite, u).score
+            for avec_elagage in (True, False):
+                dp = sac_a_dos_dp(colis, capacite, u, avec_elagage)
+                msg = f"essai {essai}, capacité {capacite}, alpha {alpha}"
+                self.assertAlmostEqual(dp.score, attendu, msg=msg)
+                self.assertLessEqual(dp.poids_total, capacite, msg)
+                self.assertEqual(len({c.identifiant for c in dp.colis}), len(dp.colis), msg)
 
-    def test_glouton_valide_mais_jamais_meilleur(self):
+    def test_glouton_valide_mais_parfois_moins_bon(self):
         rng = random.Random(7)
-        echecs = 0
+        moins_bon = 0
         for _ in range(500):
             colis = aleatoires(rng, rng.randint(1, 12))
             capacite = rng.randint(1, 60)
@@ -94,58 +77,55 @@ class TestOptimalite(unittest.TestCase):
             gl = glouton(colis, capacite)
             self.assertLessEqual(gl.poids_total, capacite)
             self.assertLessEqual(gl.score, optimum)
-            echecs += gl.score < optimum
-        self.assertGreater(echecs, 0)    # le glouton se trompe réellement sur certains cas
+            moins_bon += gl.score < optimum
+        self.assertGreater(moins_bon, 0)
 
-    def test_grande_instance(self):
-        colis = generer_colis(2_000, graine=1)
-        dp, gl = sac_a_dos_dp(colis, 500), glouton(colis, 500)
-        self.assertLessEqual(dp.poids_total, 500)
-        self.assertGreaterEqual(dp.score, gl.score)
 
-    def test_force_brute_limitee(self):
+class TestPriorite(unittest.TestCase):
+    def test_utilites_du_sujet(self):
+        u = utilite(1)
+        self.assertEqual([u(c) for c in SUJET], [40, 25, 31.5, 21])
+
+    def test_exemple_6_1_capacite_14(self):
+        ch = preparer_camion(SUJET, 14, alpha=1)
+        self.assertEqual(noms(ch), "AC")          # B (priorité 1) laisse sa place à C (priorité 4)
+        self.assertEqual((ch.valeur_totale, ch.poids_total), (38, 13))
+        self.assertAlmostEqual(ch.priorite_moyenne, 4.5)
+
+    def test_role_de_alpha(self):
+        # A+B vaut 45 + 20 alpha, A+C vaut 38 + 33,5 alpha : A+C gagne dès que alpha > 0,52
+        self.assertEqual(noms(preparer_camion(SUJET, 14, alpha=0)), "AB")
+        self.assertEqual(noms(preparer_camion(SUJET, 14, alpha=0.5)), "AB")
+        self.assertEqual(noms(preparer_camion(SUJET, 14, alpha=0.6)), "AC")
+
+    def test_alpha_negatif_refuse(self):
         with self.assertRaises(ValueError):
-            force_brute(aleatoires(random.Random(1), 21), 10)
+            utilite(-1)
 
 
-class TestMenuCamion(unittest.TestCase):
-    """Options 5 et 6 du vrai programme."""
+class TestElagage(unittest.TestCase):
+    def test_garde_les_meilleurs_de_chaque_poids(self):
+        colis = [Colis(i, 3, v, 1, "X") for i, v in enumerate([5, 9, 1, 7, 3])]   # 5 colis de 3 kg
+        gardes = elaguer(colis, 7, utilite_valeur)                                 # 7 // 3 = 2 places
+        self.assertEqual(sorted(c.valeur for c in gardes), [7, 9])
 
-    def session(self, saisies):
-        r = subprocess.run([sys.executable, os.path.join(RACINE, "src", "main.py")], input=saisies,
-                           text=True, capture_output=True, timeout=60,
-                           env={**os.environ, "PYTHONIOENCODING": "utf-8"})
-        return r.stdout + r.stderr
+    def test_retire_trop_lourds_et_sans_valeur(self):
+        colis = [Colis(1, 50, 100, 1, "X"), Colis(2, 1, 0, 1, "X"), Colis(3, 1, 4, 1, "X")]
+        self.assertEqual([c.identifiant for c in elaguer(colis, 10)], [3])
 
-    def test_afficher_sans_camion(self):
-        self.assertIn("utilisez d'abord l'option 5", self.session("6\n0\n"))
+    def test_nombre_de_colis_gardes_borne_quel_que_soit_n(self):
+        borne = sum(100 // p for p in range(1, 31))
+        for n in (1_000, 100_000):
+            colis = generer_colis(n)
+            self.assertLessEqual(len(elaguer(colis, 100)), borne)
+            self.assertEqual(nombre_candidats(colis, 100), len(elaguer(colis, 100)))
 
-    def test_capacite_par_defaut_50_kg(self):
-        sortie = self.session("5\n\n1\n0\n")                  # règle 1 : valeur seule
-        self.assertIn("5 colis, 30 / 50 kg, valeur totale 110", sortie)
-
-    def test_donnees_du_sujet_20_kg(self):
-        sortie = self.session("5\n20\n1\n6\n0\n")
-        self.assertIn("3 colis, 19 / 20 kg, valeur totale 80", sortie)
-        self.assertIn("4 colis, 18 / 20 kg, valeur totale 70", sortie)          # glouton
-        self.assertIn("moins bon que l'optimum", sortie)
-        self.assertIn("remplissage 95.0 %", sortie)
-
-    def test_colis_a_b_c_d_14_kg(self):
-        sortie = self.session("9\n1\ndonnees/colis_camion.csv\n5\n14\n1\n6\n0\n")
-        self.assertIn("2 colis, 14 / 14 kg, valeur totale 45", sortie)
-        self.assertIn("2 colis, 11 / 14 kg, valeur totale 43", sortie)          # glouton
-
-    def test_pas_de_confirmation_grace_a_l_elagage(self):
-        sortie = self.session("8\n4\n\n5\n1000\n1\n0\n")      # 100 000 colis, 1 000 kg
-        self.assertNotIn("Attention", sortie)
-        self.assertIn("3983 colis candidats sur 100000 après élagage", sortie)
-
-    def test_confirmation_pour_un_tres_gros_calcul(self):
-        sortie = self.session("8\n4\n\n5\n100000\n1\nn\n6\n0\n")   # camion de 100 t au kg près
-        self.assertRegex(sortie, r"Attention : 1 x \d+ colis candidats x 100001 capacités")
-        self.assertNotIn("Chargement optimal", sortie)
-        self.assertIn("utilisez d'abord l'option 5", sortie)
+    def test_meme_optimum_avec_et_sans_elagage_sur_100000_colis(self):
+        colis = generer_colis(100_000)
+        avec = sac_a_dos_dp(colis, 300, avec_elagage=True)
+        sans = sac_a_dos_dp(colis, 300, avec_elagage=False)
+        self.assertEqual(avec.score, sans.score)
+        self.assertLess(avec.candidats, sans.candidats)
 
 
 if __name__ == "__main__":

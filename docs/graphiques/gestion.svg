@@ -36,32 +36,33 @@
 <text x="470.0" y="386" font-size="11" fill="#52514e" text-anchor="middle">100 000</text>
 <text x="270.0" y="410" font-size="12" fill="#52514e" text-anchor="middle">Nombre de colis n (échelle logarithmique)</text>
 <text x="16" y="219.0" font-size="12" fill="#52514e" text-anchor="middle" transform="rotate(-90 16 219.0)">Temps (échelle logarithmique)</text>
-<polyline points="70.0,356.1 203.3,355.1 336.7,350.2 470.0,345.2" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<circle cx="70.0" cy="356.1" r="4" fill="#2a78d6" stroke="#ffffff" stroke-width="2"/>
-<circle cx="203.3" cy="355.1" r="4" fill="#2a78d6" stroke="#ffffff" stroke-width="2"/>
-<circle cx="336.7" cy="350.2" r="4" fill="#2a78d6" stroke="#ffffff" stroke-width="2"/>
-<circle cx="470.0" cy="345.2" r="4" fill="#2a78d6" stroke="#ffffff" stroke-width="2"/>
-<polyline points="70.0,309.5 203.3,268.7 336.7,233.6 470.0,191.9" fill="none" stroke="#eb6834" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<circle cx="70.0" cy="309.5" r="4" fill="#eb6834" stroke="#ffffff" stroke-width="2"/>
-<circle cx="203.3" cy="268.7" r="4" fill="#eb6834" stroke="#ffffff" stroke-width="2"/>
-<circle cx="336.7" cy="233.6" r="4" fill="#eb6834" stroke="#ffffff" stroke-width="2"/>
-<circle cx="470.0" cy="191.9" r="4" fill="#eb6834" stroke="#ffffff" stroke-width="2"/>
-<polyline points="70.0,271.1 203.3,236.5 336.7,201.2 470.0,162.8" fill="none" stroke="#1baf7a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<circle cx="70.0" cy="271.1" r="4" fill="#1baf7a" stroke="#ffffff" stroke-width="2"/>
-<circle cx="203.3" cy="236.5" r="4" fill="#1baf7a" stroke="#ffffff" stroke-width="2"/>
-<circle cx="336.7" cy="201.2" r="4" fill="#1baf7a" stroke="#ffffff" stroke-width="2"/>
-<circle cx="470.0" cy="162.8" r="4" fill="#1baf7a" stroke="#ffffff" stroke-width="2"/>
-<polyline points="70.0,228.2 203.3,185.8 336.7,144.8 470.0,104.5" fill="none" stroke="#eda100" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<circle cx="70.0" cy="228.2" r="4" fill="#eda100" stroke="#ffffff" stroke-width="2"/>
-<circle cx="203.3" cy="185.8" r="4" fill="#eda100" stroke="#ffffff" stroke-width="2"/>
-<circle cx="336.7" cy="144.8" r="4" fill="#eda100" stroke="#ffffff" stroke-width="2"/>
-<circle cx="470.0" cy="104.5" r="4" fill="#eda100" stroke="#ffffff" stroke-width="2"/>
-<text x="494" y="102.5" font-size="12" fill="#0b0b0b">O(n log n) : 119 ms</text>
-<text x="494" y="116.5" font-size="11" fill="#52514e">Tri par poids (fusion)</text>
-<text x="494" y="160.8" font-size="12" fill="#0b0b0b">O(n) : 3,2 ms</text>
-<text x="494" y="174.8" font-size="11" fill="#52514e">Tri par priorité (comptage)</text>
-<text x="494" y="190.8" font-size="12" fill="#0b0b0b">O(n) : 535 µs</text>
-<text x="494" y="204.8" font-size="11" fill="#52514e">Recherche séquentielle</text>
-<text x="494" y="343.2" font-size="12" fill="#0b0b0b">O(1) : 41 ns</text>
-<text x="494" y="357.2" font-size="11" fill="#52514e">Recherche, table de hachage</text>
+<polyline points="70.0,354.8 203.3,352.3 336.7,350.6 470.0,344.3" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="70.0" cy="354.8" r="4" fill="#2a78d6" stroke="#ffffff" stroke-width="2"/>
+<circle cx="203.3" cy="352.3" r="4" fill="#2a78d6" stroke="#ffffff" stroke-width="2"/>
+<circle cx="336.7" cy="350.6" r="4" fill="#2a78d6" stroke="#ffffff" stroke-width="2"/>
+<circle cx="470.0" cy="344.3" r="4" fill="#2a78d6" stroke="#ffffff" stroke-width="2"/>
+<polyline points="70.0,308.0 203.3,267.1 336.7,233.9 470.0,192.0" fill="none" stroke="#eb6834" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="70.0" cy="308.0" r="4" fill="#eb6834" stroke="#ffffff" stroke-width="2"/>
+<circle cx="203.3" cy="267.1" r="4" fill="#eb6834" stroke="#ffffff" stroke-width="2"/>
+<circle cx="336.7" cy="233.9" r="4" fill="#eb6834" stroke="#ffffff" stroke-width="2"/>
+<circle cx="470.0" cy="192.0" r="4" fill="#eb6834" stroke="#ffffff" stroke-width="2"/>
+<polyline points="70.0,269.0 203.3,236.4 336.7,200.6 470.0,163.7" fill="none" stroke="#1baf7a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="70.0" cy="269.0" r="4" fill="#1baf7a" stroke="#ffffff" stroke-width="2"/>
+<circle cx="203.3" cy="236.4" r="4" fill="#1baf7a" stroke="#ffffff" stroke-width="2"/>
+<circle cx="336.7" cy="200.6" r="4" fill="#1baf7a" stroke="#ffffff" stroke-width="2"/>
+<circle cx="470.0" cy="163.7" r="4" fill="#1baf7a" stroke="#ffffff" stroke-width="2"/>
+<polyline points="70.0,227.0 203.3,184.8 336.7,144.4 470.0,104.3" fill="none" stroke="#eda100" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="70.0" cy="227.0" r="4" fill="#eda100" stroke="#ffffff" stroke-width="2"/>
+<circle cx="203.3" cy="184.8" r="4" fill="#eda100" stroke="#ffffff" stroke-width="2"/>
+<circle cx="336.7" cy="144.4" r="4" fill="#eda100" stroke="#ffffff" stroke-width="2"/>
+<circle cx="470.0" cy="104.3" r="4" fill="#eda100" stroke="#ffffff" stroke-width="2"/>
+<text x="494" y="102.3" font-size="12" fill="#0b0b0b">O(n log n) : 120 ms</text>
+<text x="494" y="116.3" font-size="11" fill="#52514e">Tri par poids (fusion)</text>
+<text x="494" y="161.7" font-size="12" fill="#0b0b0b">O(n) : 3,1 ms</text>
+<text x="494" y="175.7" font-size="11" fill="#52514e">Tri par priorité (comptage)</text>
+<polyline points="476,192.0 484,193.7 490,193.7" fill="none" stroke="#52514e" stroke-width="1"/>
+<text x="494" y="191.7" font-size="12" fill="#0b0b0b">O(n) : 529 µs</text>
+<text x="494" y="205.7" font-size="11" fill="#52514e">Recherche séquentielle</text>
+<text x="494" y="342.3" font-size="12" fill="#0b0b0b">O(1) : 43 ns</text>
+<text x="494" y="356.3" font-size="11" fill="#52514e">Recherche, table de hachage</text>
 </svg>

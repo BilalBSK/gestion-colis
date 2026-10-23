@@ -1,8 +1,8 @@
 """Capture d'écran de l'exécution réelle d'une commande, pour le rapport.
 
-La commande est exécutée depuis la racine du projet ; sa sortie est mise en
-forme comme une fenêtre de terminal puis photographiée par Google Chrome
-(mode sans interface). L'image est enregistrée dans docs/captures/.
+Je lance la commande depuis la racine du projet, je mets sa sortie en forme
+comme une fenêtre de terminal, puis Google Chrome (sans interface) en fait une
+image dans docs/captures/. Les captures montrent donc la vraie sortie du programme.
 
 Usage, depuis la racine du projet :
     python3 outils/capture.py NOM "COMMANDE" [--saisies "1\\n2\\n0\\n"] [--sans-menu]
@@ -12,8 +12,8 @@ Usage, depuis la racine du projet :
   --sans-menu : retire le texte du menu principal (déjà montré sur une autre
                 capture), pour garder des captures courtes et lisibles.
 Exemples :
-    python3 outils/capture.py etape1_tests "python3 -m unittest discover -s tests -v"
-    python3 outils/capture.py etape4_recherche "python3 src/main.py" --saisies "3\\n103\\n0\\n" --sans-menu
+    python3 outils/capture.py tests "python3 -m unittest discover -s tests"
+    python3 outils/capture.py recherche "python3 src/main.py" --saisies "3\\n103\\n0\\n" --sans-menu
 """
 
 import argparse

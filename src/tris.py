@@ -1,44 +1,30 @@
-"""Algorithmes de tri, implémentés à la main.
+"""Les tris, que j'ai écrits à la main.
 
-  - tri_fusion    : tri par comparaison, stable, O(n log n) dans tous les cas,
-                    O(n) de mémoire supplémentaire. Utilisé pour le poids et la valeur.
-  - tri_comptage  : tri sans comparaison pour des clés entières dans un petit
-                    intervalle [cle_min, cle_max] : O(n + k) avec k = taille de
-                    l'intervalle. Utilisé pour la priorité (k = 5).
-  - tri_insertion : O(n²). N'est pas utilisé par le programme : il sert de
-                    référence « naïve » dans l'étude des performances.
+  - tri_fusion    : O(n log n) dans tous les cas, pour le poids et la valeur.
+  - tri_comptage  : O(n + k) pour des clés entières entre cle_min et cle_max,
+                    pour la priorité (k = 5 valeurs possibles).
+  - tri_insertion : O(n²), pas utilisé par le programme ; il me sert seulement
+                    de point de comparaison dans les mesures.
 
-Les trois fonctions renvoient une NOUVELLE liste (l'entrée n'est pas modifiée)
-et sont STABLES : deux éléments de même clé restent dans leur ordre d'origine.
+Les trois renvoient une nouvelle liste et sont stables : deux éléments de même
+clé restent dans leur ordre de départ.
 """
 
 
 def _avant(a, b, decroissant):
-    """Vrai si la clé a peut être placée avant la clé b sans briser la stabilité.
-
-    En cas d'égalité on répond Vrai : l'élément de gauche (arrivé en premier)
-    reste devant. C'est ce qui rend le tri stable, dans les deux sens.
-    """
+    """Vrai si a peut passer avant b. En cas d'égalité je réponds vrai, ce qui
+    laisse devant l'élément arrivé en premier : c'est ce qui rend les tris stables."""
     return a >= b if decroissant else a <= b
 
 
-# ---------------------------------------------------------------------- #
-# Tri fusion
-# ---------------------------------------------------------------------- #
 def tri_fusion(elements, cle=None, decroissant=False):
-    """Trie ``elements`` selon ``cle`` par la méthode « diviser pour régner ».
+    """Tri fusion : je coupe la liste en deux, je trie chaque moitié, puis je
+    fusionne les deux moitiés triées.
 
-    1. Diviser : on coupe la liste en deux moitiés.
-    2. Régner  : on trie chaque moitié (appel récursif).
-    3. Combiner: on fusionne les deux moitiés triées en une seule liste triée.
-
-    Il y a log2(n) niveaux de découpage, et chaque niveau fusionne au total
-    n éléments : O(n log n) en temps, quel que soit l'ordre initial.
-    Mémoire : un tampon de n cases partagé par toutes les fusions (O(n)),
-    plus la pile des appels récursifs (O(log n)).
-
-    Les clés sont calculées une seule fois par élément (n appels à ``cle``),
-    puis déplacées avec les éléments.
+    Il y a log2(n) niveaux de découpage, et à chaque niveau n éléments sont
+    fusionnés en tout : O(n log n), quel que soit l'ordre de départ. Je crée
+    les tampons une seule fois (O(n) de mémoire) et je ne calcule la clé
+    qu'une fois par élément.
     """
     items = list(elements)
     n = len(items)
@@ -49,7 +35,7 @@ def tri_fusion(elements, cle=None, decroissant=False):
     tampon_cles = [None] * n
 
     def trier(debut, fin):
-        """Trie la tranche [debut, fin[ de ``items`` (et ``cles`` en parallèle)."""
+        """Trie items[debut:fin] (et cles en parallèle)."""
         if fin - debut < 2:
             return                       # 0 ou 1 élément : déjà trié
         milieu = (debut + fin) // 2
@@ -58,9 +44,9 @@ def tri_fusion(elements, cle=None, decroissant=False):
         fusionner(debut, milieu, fin)
 
     def fusionner(debut, milieu, fin):
-        """Fusionne les tranches triées [debut, milieu[ et [milieu, fin[ : O(fin - debut)."""
+        """Fusionne items[debut:milieu] et items[milieu:fin], déjà triés."""
         i, j, k = debut, milieu, debut
-        # Tant que les deux moitiés ont des éléments, on prend le plus petit des deux en tête
+        # je prends à chaque fois le plus petit des deux éléments de tête
         while i < milieu and j < fin:
             if _avant(cles[i], cles[j], decroissant):
                 tampon_items[k], tampon_cles[k] = items[i], cles[i]
@@ -69,7 +55,7 @@ def tri_fusion(elements, cle=None, decroissant=False):
                 tampon_items[k], tampon_cles[k] = items[j], cles[j]
                 j += 1
             k += 1
-        # Une des deux moitiés est épuisée : on recopie le reste de l'autre
+        # une moitié est vide : je recopie la fin de l'autre
         while i < milieu:
             tampon_items[k], tampon_cles[k] = items[i], cles[i]
             i += 1
@@ -78,7 +64,7 @@ def tri_fusion(elements, cle=None, decroissant=False):
             tampon_items[k], tampon_cles[k] = items[j], cles[j]
             j += 1
             k += 1
-        # Le résultat de la fusion remplace la tranche d'origine
+        # je remets le résultat à sa place dans items
         items[debut:fin] = tampon_items[debut:fin]
         cles[debut:fin] = tampon_cles[debut:fin]
 
@@ -86,46 +72,35 @@ def tri_fusion(elements, cle=None, decroissant=False):
     return items
 
 
-# ---------------------------------------------------------------------- #
-# Tri par comptage
-# ---------------------------------------------------------------------- #
 def tri_comptage(elements, cle, cle_min, cle_max, decroissant=False):
-    """Trie des éléments dont la clé est un entier de [cle_min, cle_max].
+    """Tri par comptage, pour des clés entières entre cle_min et cle_max.
 
-    On prépare un « seau » (une liste) par valeur de clé possible, on range
-    chaque élément dans le seau de sa clé, dans l'ordre d'arrivée (stabilité),
-    puis on vide les seaux dans l'ordre croissant (ou décroissant) des clés.
-    Aucune comparaison entre éléments : O(n + k) en temps et en mémoire,
-    avec k = cle_max - cle_min + 1.
+    Un seau par valeur possible : chaque élément va dans le seau de sa clé, dans
+    l'ordre où il arrive, puis je vide les seaux dans l'ordre. Il n'y a aucune
+    comparaison entre éléments, d'où O(n + k) avec k = cle_max - cle_min + 1.
     """
     seaux = [[] for _ in range(cle_max - cle_min + 1)]
-    for x in elements:                       # n étapes
+    for x in elements:
         c = cle(x)
         if not cle_min <= c <= cle_max:
             raise ValueError(f"clé {c} hors de l'intervalle [{cle_min}, {cle_max}]")
         seaux[c - cle_min].append(x)
     if decroissant:
-        seaux.reverse()                      # k étapes
+        seaux.reverse()
     resultat = []
-    for seau in seaux:                       # n + k étapes au total
+    for seau in seaux:
         resultat.extend(seau)
     return resultat
 
 
-# ---------------------------------------------------------------------- #
-# Tri par insertion (référence pour la comparaison)
-# ---------------------------------------------------------------------- #
 def tri_insertion(elements, cle=None, decroissant=False):
-    """Insère chaque élément à sa place dans la partie déjà triée : O(n²).
-
-    Sert uniquement de point de comparaison dans l'étude des performances.
-    """
+    """Chaque élément est inséré à sa place dans la partie déjà triée : O(n²)."""
     items = list(elements)
     cles = [cle(x) for x in items] if cle is not None else list(items)
     for i in range(1, len(items)):
         item, c = items[i], cles[i]
         j = i - 1
-        # On décale vers la droite les éléments qui doivent passer après c
+        # je décale vers la droite ceux qui doivent passer après c
         while j >= 0 and not _avant(cles[j], c, decroissant):
             items[j + 1], cles[j + 1] = items[j], cles[j]
             j -= 1

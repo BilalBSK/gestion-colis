@@ -1,9 +1,7 @@
-"""Génération de jeux de colis aléatoires pour les 4 niveaux du sujet.
+"""Génération de colis aléatoires pour les 4 tailles du sujet.
 
-Les données sont REPRODUCTIBLES : avec la même graine, on obtient exactement
-les mêmes colis, ce qui permet de refaire une mesure ou un test à l'identique.
-
-Coût : O(n) en temps et en mémoire.
+Avec la même graine, j'obtiens toujours les mêmes colis : je peux donc refaire
+une mesure à l'identique. O(n).
 """
 
 import random
@@ -18,19 +16,13 @@ GRAINE_PAR_DEFAUT = 2026
 
 
 def generer_colis(n, graine=GRAINE_PAR_DEFAUT, identifiant_depart=1):
-    """Renvoie une liste de ``n`` colis aléatoires aux identifiants uniques.
+    """n colis aléatoires, avec des identifiants tous différents.
 
-    - Identifiants : les entiers identifiant_depart, ..., identifiant_depart + n - 1,
-      donc tous différents, puis MÉLANGÉS (mélange de Fisher-Yates, O(n)) pour
-      que l'ordre de la collection ne soit pas celui des identifiants.
-    - Poids : uniforme entre 1 et 30 kg.
-    - Valeur : entre 1 et 4 fois le poids. Un colis lourd vaut en général
-      davantage, comme dans la réalité, et la valeur par kilo (entre 1 et 4) ne
-      dépend pas du poids. Avec une valeur indépendante du poids, ou un bonus
-      fixe ajouté à chaque colis, les colis légers seraient bien plus rentables
-      au kilo : le meilleur chargement ne contiendrait que des colis de 1 kg,
-      ce qui rendrait le problème du camion artificiellement facile.
-    - Priorité : uniforme entre 1 et 5. Destination : une des 10 villes.
+    Je prends des identifiants qui se suivent puis je les mélange, pour que
+    l'ordre de la collection ne soit pas celui des identifiants.
+    La valeur est comprise entre 1 et 4 fois le poids. Au début j'ajoutais un
+    petit bonus fixe à chaque valeur, mais les colis de 1 kg devenaient alors
+    bien plus rentables au kilo et le camion ne se remplissait plus qu'avec eux.
     """
     rng = random.Random(graine)
     identifiants = list(range(identifiant_depart, identifiant_depart + n))

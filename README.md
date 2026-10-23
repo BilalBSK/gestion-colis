@@ -4,7 +4,8 @@ Projet informatique : programme permettant de gérer une collection de colis
 (ajout, affichage, recherche, tris) et de préparer le chargement d'un camion
 en maximisant la valeur transportée, tout en tenant compte de la priorité des colis.
 
-> Projet en cours de réalisation : ce README sera complété à chaque étape.
+Les choix algorithmiques, leurs complexités et les mesures sont détaillés dans
+[rapport.pdf](rapport.pdf).
 
 ## Langage
 
@@ -22,7 +23,8 @@ python3 src/main.py
 ```
 
 Les 5 colis d'exemple du sujet sont chargés au démarrage. L'option 8 génère 100, 1 000, 10 000
-ou 100 000 colis pour tester le passage à l'échelle. Menu :
+ou 100 000 colis pour tester le passage à l'échelle, et l'option 9 charge un autre fichier, par
+exemple `donnees/colis_camion.csv` (les colis A, B, C, D de la partie camion). Menu :
 
 ```
 ===== GESTION DES LIVRAISONS =====
@@ -35,7 +37,7 @@ ou 100 000 colis pour tester le passage à l'échelle. Menu :
 6. Afficher le chargement
 7. Afficher les statistiques
 8. Générer des colis (100 à 100 000)
-9. Charger / enregistrer un fichier CSV
+9. Charger un fichier de colis
 0. Quitter
 ```
 
@@ -50,7 +52,10 @@ python3 -m unittest discover -s tests -v
 ```bash
 python3 outils/benchmark.py      # principales opérations, 100 à 100 000 colis
 python3 outils/graphiques.py     # courbes (docs/graphiques/*.svg) à partir des mesures
+python3 outils/etude_exemple_camion.py comparaison   # DP, glouton et force brute sur A, B, C, D
 ```
+
+Le PDF se régénère avec `sh outils/generer_rapport.sh` (Google Chrome est nécessaire).
 
 ## Organisation du dépôt
 
@@ -58,19 +63,18 @@ python3 outils/graphiques.py     # courbes (docs/graphiques/*.svg) à partir des
 projet/
 ├── src/          code source
 │   ├── colis.py      modèle Colis (validation des données)
-│   ├── stockage.py   lecture / écriture des colis au format CSV
+│   ├── stockage.py   lecture des colis au format CSV
 │   ├── gestion.py    collection de colis (table de hachage) : ajout, affichage, recherche, tris
 │   ├── affichage.py  mise en forme des colis en tableau
 │   ├── tris.py       tri fusion et tri par comptage (implémentés à la main)
 │   ├── generateur.py jeux de données aléatoires reproductibles (100 à 100 000 colis)
-│   ├── chargement.py chargement optimal du camion (sac à dos 0/1 : programmation dynamique),
-│   │                 règles de priorité (valeur seule, valeur pondérée, priorité stricte),
-│   │                 élagage par dominance (optimisation exacte)
-│   ├── saisie.py     saisies clavier robustes
+│   ├── chargement.py chargement du camion (sac à dos 0/1) : programmation dynamique avec
+│   │                 élagage, glouton et force brute pour comparer, prise en compte de la priorité
+│   ├── saisie.py     saisies au clavier (redemande tant que la réponse est invalide)
 │   └── main.py       interface en menu (point d'entrée)
 ├── tests/        tests unitaires
-├── donnees/      colis d'exemple du sujet (CSV) : parties 1 et 5.2
-├── docs/         source du rapport et captures d'écran
+├── donnees/      colis d'exemple du sujet (CSV)
+├── docs/         source du rapport, captures d'écran, mesures et graphiques
 ├── outils/       génération du rapport PDF, captures, mesures
 ├── README.md
 └── rapport.pdf

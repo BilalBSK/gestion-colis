@@ -1,9 +1,7 @@
-"""Mise en forme des colis sous forme de tableau texte.
+"""Affichage des colis en tableau.
 
-L'affichage de n colis coûte O(n) : chaque colis doit être mis en forme.
-Pour une grande collection, l'interface n'affiche qu'une page à la fois
-(paramètre ``limite``) : afficher 100 000 lignes dans un terminal prendrait
-plusieurs secondes et serait illisible.
+Avec 100 000 colis, je n'affiche pas tout d'un coup : le menu montre une page
+de 20 colis, et je ne mets en forme que les colis de cette page.
 """
 
 LARGEURS = (8, 10, 8, 9)  # Id, Poids, Valeur, Priorité (la destination suit)
@@ -14,34 +12,14 @@ SEPARATEUR = "-" * (len(ENTETE) + 4)
 
 
 def ligne(colis):
-    """Une ligne de tableau pour un colis. O(1)."""
     return (f"{colis.identifiant:>{LARGEURS[0]}} | {colis.poids:>{LARGEURS[1]}} | "
             f"{colis.valeur:>{LARGEURS[2]}} | {colis.priorite:>{LARGEURS[3]}} | {colis.destination}")
 
 
-def tableau(colis, limite=None):
-    """Lignes du tableau (en-tête compris) pour une séquence de colis.
-
-    Si ``limite`` est donnée, seuls les ``limite`` premiers colis sont mis en
-    forme, suivis d'une ligne indiquant combien de colis ne sont pas affichés :
-    O(min(n, limite)) au lieu de O(n).
-    """
-    total = len(colis)
-    if total == 0:
-        return ["(aucun colis)"]
-    nombre = total if limite is None else min(limite, total)
-    lignes = [ENTETE, SEPARATEUR]
-    lignes.extend(ligne(colis[i]) for i in range(nombre))
-    if nombre < total:
-        lignes.append(f"... {total - nombre} autre(s) colis non affiché(s) sur {total}")
-    return lignes
-
-
 def page(colis, numero, taille):
-    """Lignes de la page ``numero`` (à partir de 0) d'une séquence de colis.
+    """Lignes de la page numero (la première page est la page 0).
 
-    Seuls les ``taille`` colis de la page sont mis en forme : O(taille),
-    quel que soit le nombre total de colis.
+    Le coût dépend de la taille de la page, pas du nombre total de colis.
     """
     total = len(colis)
     debut = numero * taille

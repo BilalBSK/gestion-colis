@@ -1,9 +1,9 @@
 """Exécute un script Python interactif en affichant les saisies lues au clavier.
 
 Quand l'entrée standard est redirigée (fichier, tube), le terminal n'affiche
-pas ce qui est « tapé ». Ce lanceur remplace input() par une version qui
-réécrit chaque saisie après la question, entre deux marqueurs que
-outils/capture.py met en gras. Le programme lui-même n'est pas modifié.
+pas ce qui est « tapé ». J'ai écrit ce lanceur pour les captures : il remplace
+input() par une version qui réécrit chaque saisie après la question, entre deux
+marqueurs que outils/capture.py met en gras. Le programme n'est pas modifié.
 
 Usage :  python3 outils/session.py src/main.py < saisies.txt
 """
